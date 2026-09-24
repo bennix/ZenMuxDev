@@ -693,6 +693,9 @@ export default {
   win: {
     target: ["nsis"],
     artifactName: buildDesktopArtifactName("win"),
+    // Apple Silicon 上 electron-builder 自带的 wine64 是 x86_64，没有 Rosetta 时 rcedit 会直接失败。
+    // 设为 0 时跳过 exe 图标和版本资源改写，安装包仍然可以生成。
+    signAndEditExecutable: process.env.ZCODE_WIN_EDIT_EXECUTABLE !== "0",
   },
   linux: {
     target: process.env.ZCODE_LINUX_TARGETS
