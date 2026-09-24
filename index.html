@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ZenCode — 基于 ZCode，模型走 ZenMux</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0c0d0e;
+        --card: #161718;
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #f4f4f5;
+        --muted: #a1a1aa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      main { max-width: 880px; margin: 0 auto; padding: 64px 24px 96px; }
+      .mark {
+        width: 72px; height: 72px; border-radius: 18px;
+        background: linear-gradient(180deg, #000, #151718);
+        border: 1px solid var(--line);
+        display: grid; place-items: center;
+        font-weight: 700;
+      }
+      h1 { font-size: 40px; margin: 20px 0 8px; }
+      .lede { color: var(--muted); font-size: 18px; line-height: 1.6; }
+      h2 { margin-top: 40px; font-size: 20px; }
+      ul { padding-left: 20px; line-height: 1.7; }
+      a { color: #fff; }
+      .downloads { display: grid; gap: 12px; margin-top: 16px; }
+      .downloads a {
+        display: block; text-decoration: none;
+        border: 1px solid var(--line); border-radius: 12px;
+        padding: 16px 18px; background: var(--card);
+      }
+      .downloads small { display: block; color: var(--muted); margin-top: 4px; }
+      footer { margin-top: 48px; color: var(--muted); font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">worker</div>
+      <h1>ZenCode</h1>
+      <p class="lede">
+        桌面端编程助手。界面和运行时来自
+        <a href="https://github.com/zai-org/ZCode">ZCode</a>，
+        模型供应商换成 ZenMux。源码在
+        <a href="https://github.com/bennix/ZenMuxDev">bennix/ZenMuxDev</a>。
+      </p>
+
+      <h2>能做什么</h2>
+      <ul>
+        <li>在欢迎页和设置里填写 ZenMux API Key，加密显示并保存在本机。没有 Key 时给出邀请链接。</li>
+        <li>默认模型为 openai/gpt-6-sol、anthropic/claude-opus-5.5、x-ai/grok-4.7，也可以自己增改模型名和上下文档位。</li>
+        <li>请求发往 https://zenmux.ai/api/v1，不发送温度参数。</li>
+        <li>对话框下方可以同时打开「控制电脑」和「控制浏览器」。</li>
+      </ul>
+
+      <h2>下载 3.14.3</h2>
+      <div class="downloads">
+        <a id="mac" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.3/ZenCode-3.14.3-mac-arm64.dmg">
+          macOS（Apple 芯片）
+          <small>已签名并公证的 DMG</small>
+        </a>
+        <a id="win" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.3/ZenCode-3.14.3-win-x64.exe">
+          Windows
+          <small>x64 安装包</small>
+        </a>
+        <a id="deb" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.3/ZenCode-3.14.3-linux-amd64.deb">
+          Ubuntu / Debian
+          <small>amd64 deb</small>
+        </a>
+        <a id="rpm" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.3/ZenCode-3.14.3-linux-x86_64.rpm">
+          Linux RPM
+          <small>x86_64 rpm</small>
+        </a>
+      </div>
+      <p class="lede">全部安装包也列在 <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.3">GitHub Release</a>。</p>
+
+      <h2>源自哪里</h2>
+      <p class="lede">
+        ZenCode 改自智谱开源的 ZCode（仓库
+        <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a>）。
+        本仓库保留原项目结构，把可见产品名改为 ZenCode，并把模型接入改为 ZenMux。
+        当前源码分支：
+        <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">cursor/zenmux-zencode-provider</a>。
+      </p>
+      <footer>worker</footer>
+    </main>
+  </body>
+</html>

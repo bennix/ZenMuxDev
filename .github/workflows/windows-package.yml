@@ -2,9 +2,6 @@ name: Windows package
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - cursor/zenmux-zencode-provider
 
 jobs:
   nsis:
