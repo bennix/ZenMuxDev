@@ -273,6 +273,22 @@ export class ProviderConfigService implements ProviderSource<ProviderConfigSnaps
     return Object.freeze({ providerId: createdProviderId });
   }
 
+  /** 本地只保留一个 ZenMux。没有就创建，多出来的删掉。 */
+  async ensureZenMuxPersonalProvider(): Promise<void> {
+    const snapshot = await this.read();
+    if (!snapshot.zcodeBuiltinProviderTemplates.has("zenmux")) return;
+    const zenmuxProviders = snapshot.personalProviders
+      .rules()
+      .filter((rule) => rule.templateId === "zenmux");
+    if (zenmuxProviders.length === 0) {
+      await this.createPersonalProvider({ templateId: "zenmux", locale: "zh-CN" });
+      return;
+    }
+    for (const extra of zenmuxProviders.slice(1)) {
+      await this.deletePersonalProvider(extra.providerId);
+    }
+  }
+
   deletePersonalProvider(providerId: ProviderId): Promise<ProviderConfigLayerSnapshot> {
     assertNonEmptyId("providerId", providerId);
     return this.#updatePersonal((current) => ({

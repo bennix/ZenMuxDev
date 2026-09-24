@@ -27,6 +27,7 @@ import { createJsToolEntry, jsToolEntry } from "./node-repl.js";
 import { globToolEntry } from "./glob.js";
 import { grepToolEntry } from "./grep.js";
 import { webFetchToolEntry } from "./webfetch.js";
+import { computerUseToolEntry } from "./openmuse-computer.js";
 import { webSearchToolEntry } from "./websearch.js";
 import {
   agentToolEntry,
@@ -82,6 +83,7 @@ export const builtInTools: ToolEntry[] = [
   globToolEntry,
   grepToolEntry,
   webFetchToolEntry,
+  computerUseToolEntry,
   webSearchToolEntry,
   todoReadToolEntry,
   todoWriteToolEntry,

@@ -1,46 +1,28 @@
-import {
-  BUILTIN_PROVIDER_TEMPLATE_IDS,
-  type AppSettings,
-  type Locale,
-  type ProviderFamilyDomain,
-} from "@zcode/shared";
+import { ZENMUX_TEMPLATE_ID, type AppSettings, type Locale } from "@zcode/shared";
 import type { ModelSelectionView } from "@zcode/services";
 import { encodeCustomModelValue } from "@/lib/zcodeCustomModelValue.js";
 
-export type ApiKeyProviderChoice = "zai" | "bigmodel";
+export type ApiKeyProviderChoice = "zenmux";
 
-export function resolveLoginApiKeyDefaultProvider(locale: Locale): ApiKeyProviderChoice {
-  return locale === "zh-CN" ? "bigmodel" : "zai";
+export function resolveLoginApiKeyDefaultProvider(_locale: Locale): ApiKeyProviderChoice {
+  return "zenmux";
 }
 
 export function resolveLoginApiKeyTemplateId(
-  choice: ApiKeyProviderChoice,
-): "zai-api" | "bigmodel-api" {
-  return choice === "zai"
-    ? BUILTIN_PROVIDER_TEMPLATE_IDS.zai
-    : BUILTIN_PROVIDER_TEMPLATE_IDS.bigmodel;
+  _choice: ApiKeyProviderChoice,
+): typeof ZENMUX_TEMPLATE_ID {
+  return ZENMUX_TEMPLATE_ID;
 }
 
-export function resolveLoginApiKeyProviderLabel(choice: ApiKeyProviderChoice): string {
-  // Welcome Screen API Key 错误提示需要使用 BigModel 品牌固定写法。
-  return choice === "zai" ? "Z.ai" : "BigModel";
-}
-
-function resolveLoginApiKeyProviderFamilyDomain(
-  choice: ApiKeyProviderChoice,
-): ProviderFamilyDomain {
-  return choice;
+export function resolveLoginApiKeyProviderLabel(_choice: ApiKeyProviderChoice): string {
+  return "ZenMux";
 }
 
 export function buildLoginApiKeySkipSettings(
-  choice: ApiKeyProviderChoice,
+  _choice: ApiKeyProviderChoice,
   now: number,
-): Pick<
-  AppSettings,
-  "providerFamilyDomain" | "providerFamilyDomainUpdatedAt" | "providerFamilyDomainMigrated"
-> {
+): Pick<AppSettings, "providerFamilyDomainUpdatedAt" | "providerFamilyDomainMigrated"> {
   return {
-    providerFamilyDomain: resolveLoginApiKeyProviderFamilyDomain(choice),
     providerFamilyDomainUpdatedAt: now,
     providerFamilyDomainMigrated: true,
   };

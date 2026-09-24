@@ -1,9 +1,36 @@
 {
   "schemaVersion": 1,
-  "revision": 30,
+  "revision": 31,
   "config": {
     "providerConfigRules": {
       "templateRules": [
+        {
+          "templateId": "zenmux",
+          "templateNameMap": {
+            "zh-CN": "ZenMux",
+            "en-US": "ZenMux"
+          },
+          "config": {
+            "access": {
+              "type": "api-key",
+              "apiKeyManagementUrl": "https://zenmux.ai/invite/GBQMC5"
+            },
+            "api": {
+              "type": "openai-chat-completions",
+              "baseUrl": "https://zenmux.ai/api/v1"
+            },
+            "builtinModelIds": [
+              "openai/gpt-6-sol",
+              "anthropic/claude-opus-5.5",
+              "x-ai/grok-4.7",
+              "typesafe/jev-1.13"
+            ],
+            "logo": {
+              "type": "builtin",
+              "key": "zenmux"
+            }
+          }
+        },
         {
           "templateId": "zai-api",
           "templateNameMap": {
@@ -4314,6 +4341,91 @@
         }
       ],
       "templateModelRules": [
+        {
+          "templateId": "zenmux",
+          "modelId": "openai/gpt-6-sol",
+          "config": {
+            "enabled": true,
+            "properties": {
+              "contextWindow": 1050000,
+              "inputFormat": {
+                "supportsText": true,
+                "supportsImage": true,
+                "supportsPdf": true,
+                "supportsVideo": false,
+                "supportsAudio": false
+              }
+            },
+            "optionSpecs": {
+              "maxOutputTokens": {
+                "max": 128000
+              }
+            }
+          }
+        },
+        {
+          "templateId": "zenmux",
+          "modelId": "anthropic/claude-opus-5.5",
+          "config": {
+            "enabled": true,
+            "properties": {
+              "contextWindow": 1000000,
+              "inputFormat": {
+                "supportsText": true,
+                "supportsImage": true,
+                "supportsPdf": true,
+                "supportsVideo": false,
+                "supportsAudio": false
+              }
+            },
+            "optionSpecs": {
+              "maxOutputTokens": {
+                "max": 128000
+              }
+            }
+          }
+        },
+        {
+          "templateId": "zenmux",
+          "modelId": "x-ai/grok-4.7",
+          "config": {
+            "enabled": true,
+            "properties": {
+              "contextWindow": 500000,
+              "inputFormat": {
+                "supportsText": true,
+                "supportsImage": true,
+                "supportsPdf": true,
+                "supportsVideo": false,
+                "supportsAudio": false
+              }
+            },
+            "optionSpecs": {
+              "maxOutputTokens": {
+                "max": 128000
+              }
+            }
+          }
+        },
+        {
+          "templateId": "zenmux",
+          "modelId": "typesafe/jev-1.13",
+          "config": {
+            "enabled": true,
+            "properties": {
+              "contextWindow": 32000,
+              "supportsToolCall": false,
+              "supportsJsonSchemaOutput": false,
+              "inputFormat": {
+                "supportsText": true,
+                "supportsImage": false,
+                "supportsPdf": false,
+                "supportsVideo": false,
+                "supportsAudio": false
+              }
+            }
+          }
+        },
         {
           "templateId": "opencode-go-chat",
           "modelId": "glm-5.3-flash",

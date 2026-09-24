@@ -1,5 +1,4 @@
 import { basename, resolvePath } from "../deps.js";
-import { READ_DEFAULT_MAX_LINES, READ_MAX_FILE_SIZE_BYTES } from "@zcode/contracts";
 import type {
   FilePartSource,
   FileSystemPort,
@@ -12,7 +11,6 @@ import type {
   TurnState,
   TurnId,
 } from "../deps.js";
-import { readTextFileForModel } from "../../tool/handlers/read-text.js";
 import type { ResolvedTurnAttachment } from "../types.js";
 import { readInlineAttachmentContent } from "./attachment-artifacts.js";
 import { parseDataUrlHeader } from "./attachment-data-url.js";
@@ -231,69 +229,14 @@ async function resolveLocalFileAttachment(
       });
     }
 
-    if (!isTextLikePath(absolutePath)) {
-      // 疑似二进制文件不能误当文本读入 prompt，只交付路径引用给后续工具处理。
-      return resolvedPathReferenceAttachment(attachment, attachment.path!, {
-        filename,
-        mime: inferAttachmentMimeFromPath(absolutePath),
-        sizeBytes: stat.sizeBytes,
-        source,
-        reason: "binary_file",
-      });
-    }
-
-    if (attachment.sourceKind === "clipboard-text") {
-      // 长粘贴文本已经落成临时文件，预读会重新把正文塞进 prompt_attachment 系统提示。
-      // 这里只交付真实本地附件引用，等模型明确需要时再通过文件读取工具进入上下文。
-      return resolvedPathReferenceAttachment(attachment, attachment.path!, {
-        filename,
-        mime,
-        sizeBytes: stat.sizeBytes,
-        source,
-        reason: "deferred_clipboard_text",
-      });
-    }
-
-    const isOversizedText = stat.sizeBytes > READ_MAX_FILE_SIZE_BYTES;
-    const read = await readTextFileForModel({
-      abortSignal: options.abortSignal,
-      filePath: absolutePath,
-      fileSystemPort: options.fileSystemPort,
-      ...(isOversizedText
-        ? {
-            allowPartialFallback: true,
-            limit: READ_DEFAULT_MAX_LINES,
-            offset: 1,
-          }
-        : {}),
-      trace: options.traceContext,
-    });
-    return {
-      contentBlock: { type: "text", text: read.content },
+    // 文件附件是引用对象：只把路径交给模型，正文由 Read 按需取回，避免占满上下文。
+    return resolvedPathReferenceAttachment(attachment, attachment.path!, {
       filename,
-      metadata: {
-        originalUrl: attachment.path,
-        preview: {
-          text: read.content,
-          truncated: read.truncated ?? false,
-          ...(read.sizeBytes !== undefined ? { originalBytes: read.sizeBytes } : {}),
-          startLine: read.startLine,
-          totalLines: read.totalLines,
-          ...(read.truncatedByTokenCap !== undefined
-            ? { truncatedByTokenCap: read.truncatedByTokenCap }
-            : {}),
-          ...(read.partialViewNotice !== undefined
-            ? { partialViewNotice: read.partialViewNotice }
-            : {}),
-        },
-        recoverability: read.truncated ? "preview_only" : "provider_ready",
-        ...(read.sizeBytes !== undefined ? { sizeBytes: read.sizeBytes } : {}),
-        storageKind: "inline",
-      },
-      mime: "text/plain",
+      mime: isTextLikePath(absolutePath) ? mime : inferAttachmentMimeFromPath(absolutePath),
+      sizeBytes: stat.sizeBytes,
       source,
-      url: attachment.path!,
-    };
+      reason: attachment.sourceKind === "clipboard-text" ? "deferred_clipboard_text" : "file_reference",
+    });
   } catch {
     return resolvedPlaceholderAttachment(attachment, attachment.path!, "attachment_read_failed", {
       filename,

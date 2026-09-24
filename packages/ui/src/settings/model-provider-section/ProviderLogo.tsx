@@ -17,6 +17,8 @@ import startPlanLogo from "@/assets/provider-icons/model-provider-start-plan.png
 import zaiLogo from "@/assets/provider-icons/model-provider-zai-app.png";
 import openrouterLight from "@/assets/provider-icons/model-provider-openrouter-light.svg";
 import openrouterDark from "@/assets/provider-icons/model-provider-openrouter-dark.svg";
+import zenmuxLight from "@/assets/provider-icons/model-provider-zenmux-light.svg";
+import zenmuxDark from "@/assets/provider-icons/model-provider-zenmux-dark.svg";
 import opencodeLight from "@/assets/provider-icons/model-provider-opencode-light.svg";
 import opencodeDark from "@/assets/provider-icons/model-provider-opencode-dark.svg";
 
@@ -42,6 +44,7 @@ const BUILTIN_PROVIDER_LOGO_ASSETS: Readonly<Record<string, BuiltinProviderLogoA
   anthropic: { light: anthropicLogo },
   xai: { light: xAiLogo },
   openrouter: { light: openrouterLight, dark: openrouterDark },
+  zenmux: { light: zenmuxLight, dark: zenmuxDark },
   opencode: { light: opencodeLight, dark: opencodeDark },
 };
 

@@ -3,6 +3,16 @@
   "reviewedAt": "2026-09-02",
   "logos": [
     {
+      "brand": "ZenMux",
+      "file": "model-provider-zenmux-light.svg",
+      "darkFile": "model-provider-zenmux-dark.svg",
+      "providerIds": ["zenmux"],
+      "sourceUrl": "https://cdn.jsdelivr.net/npm/@zenmux/icons@0.1.1/static/light/zenmux.svg",
+      "darkSourceUrl": "https://cdn.jsdelivr.net/npm/@zenmux/icons@0.1.1/static/dark/zenmux.svg",
+      "sourceOwner": "ZenMux",
+      "normalization": "Official symbol SVGs from @zenmux/icons@0.1.1, unchanged. Black glyph for light backgrounds, white glyph for dark backgrounds. Retrieved 2026-09-24."
+    },
+    {
       "brand": "OpenRouter",
       "file": "model-provider-openrouter-light.svg",
       "darkFile": "model-provider-openrouter-dark.svg",

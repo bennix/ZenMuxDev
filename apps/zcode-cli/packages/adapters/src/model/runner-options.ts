@@ -1,4 +1,5 @@
 import { Output, jsonSchema } from "ai";
+import { isZenMuxSystemOneModel } from "@zcode/shared";
 import type { ModelToolChoice } from "@zcode/contracts";
 import type { EnvRecord } from "./model-execution.js";
 import { toAiSdkMessages } from "./transform.js";
@@ -41,6 +42,7 @@ export function createGenerateTextOptions(input: {
   resolved: ResolvedAiSdkModel;
   statusContext: ModelStatusContext;
 }): AiSdkGenerateTextOptions {
+  assertNotSystemOneChat(input.resolved.modelId);
   const providerOptions = mergeProviderOptions(
     input.resolved.providerOptions,
     input.request.providerOptions,
@@ -107,6 +109,7 @@ export function createStreamTextOptions(input: {
   resolved: ResolvedAiSdkModel;
   statusContext: ModelStatusContext;
 }): AiSdkStreamTextOptions {
+  assertNotSystemOneChat(input.resolved.modelId);
   const providerOptions = mergeProviderOptions(
     input.resolved.providerOptions,
     input.request.providerOptions,
@@ -239,6 +242,13 @@ function asPlainRecord(value: unknown): Record<string, unknown> | undefined {
 function resolveProviderApiFormat(providerOptions?: Record<string, unknown>): string | undefined {
   const apiFormat = providerOptions?.apiFormat;
   return typeof apiFormat === "string" ? apiFormat : undefined;
+}
+
+function assertNotSystemOneChat(modelId: string): void {
+  if (!isZenMuxSystemOneModel(modelId)) return;
+  throw new Error(
+    "typesafe/jev-1.13 使用 POST /api/v1/systemone（state + questions），不能作为聊天模型调用。请用 ComputerUse 的 decide 动作。",
+  );
 }
 
 function removeUndefined<T extends Record<string, unknown>>(value: T): Partial<T> {

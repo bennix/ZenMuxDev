@@ -287,6 +287,9 @@ export function ProviderApiKeySection({
   onApiKeyCompositionStart,
   onApiKeyCompositionEnd,
   onToggleApiKeyVisibility,
+  validationMessage,
+  validating,
+  onValidateApiKey,
 }: {
   apiKeyValue: string;
   apiKeyVisible: boolean;
@@ -299,6 +302,9 @@ export function ProviderApiKeySection({
   onApiKeyCompositionStart?: () => void;
   onApiKeyCompositionEnd?: () => void;
   onToggleApiKeyVisibility: () => void;
+  validationMessage?: string | null;
+  validating?: boolean;
+  onValidateApiKey?: () => void;
 }) {
   const { intl } = useZCodeIntl();
 
