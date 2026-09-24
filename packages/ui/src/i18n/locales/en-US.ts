@@ -4839,6 +4839,8 @@ const enUS: Record<string, string> = {
   "chat.toolbar.mode.label": "Switch mode",
   // CUA composer entry button
   "chat.toolbar.computerUse.label": "Computer Use",
+  "chat.toolbar.control.computer": "Control computer",
+  "chat.toolbar.control.browser": "Control browser",
   "chat.toolbar.computerUse.tooltip.idle":
     "Computer Use is idle — it will start automatically on first use",
   "chat.toolbar.computerUse.tooltip.starting": "Enabling Computer Use plugin…",

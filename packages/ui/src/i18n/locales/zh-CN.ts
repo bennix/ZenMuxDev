@@ -4540,6 +4540,8 @@ const zhCN: Record<string, string> = {
   "chat.toolbar.mode.label": "切换模式",
   // CUA 输入框常驻入口按钮
   "chat.toolbar.computerUse.label": "电脑操作",
+  "chat.toolbar.control.computer": "控制电脑",
+  "chat.toolbar.control.browser": "控制浏览器",
   "chat.toolbar.computerUse.tooltip.idle": "电脑操作空闲——首次使用时自动启动",
   "chat.toolbar.computerUse.tooltip.starting": "正在启用电脑操作插件…",
   "chat.toolbar.computerUse.tooltip.ready": "电脑操作已就绪 · 直接描述你想让 ZenCode 做的事",

@@ -1,5 +1,5 @@
 import { cn } from "@/components/lib/utils.js";
-import zaiLogoUrl from "@/assets/provider-icons/logo-zai.svg";
+import { ZenMuxLogo } from "@/components/ui/ZenMuxLogo.js";
 
 export function WindowsTopLeftLogo({
   className,
@@ -19,12 +19,7 @@ export function WindowsTopLeftLogo({
         className,
       )}
     >
-      <img
-        src={zaiLogoUrl}
-        alt="ZenCode"
-        className={cn("pointer-events-none size-5 select-none", imageClassName)}
-        draggable={false}
-      />
+      <ZenMuxLogo className={cn("pointer-events-none size-5 select-none", imageClassName)} />
     </div>
   );
 }

@@ -152,6 +152,7 @@ import type { CodeViewerSource } from "@/lib/codeViewer.js";
 import { useConversationSelectionReferences } from "@/v4/composer/useConversationSelectionReferences.js";
 import { ConversationBackgroundWorkTrigger } from "@/v4/composer/ConversationBackgroundWorkTrigger.js";
 import { V4ComposerCuaEntry } from "@/v4/composer/V4ComposerCuaEntry.js";
+import { V4ComposerControlToggles } from "@/v4/composer/V4ComposerControlToggles.js";
 import {
   V4ComposerModeSwitch,
   V4ComposerModelControls,
@@ -2157,6 +2158,7 @@ function ConversationComposerImpl({
           remoteSessionId={remoteSessionId}
           currentSessionBusy={canStop}
         />
+        <V4ComposerControlToggles />
         <ConversationBackgroundWorkTrigger
           backgroundWorks={snapshot?.backgroundWorks ?? []}
           runningSubagentCount={runningSubagentCount}

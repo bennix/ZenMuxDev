@@ -2,6 +2,7 @@ import { useState } from "react";
 import { isApiKeyAccess } from "@zcode/provider";
 import { Loader2Icon, TriangleAlertIcon } from "lucide-react";
 import {
+  ZENMUX_INVITE_URL,
   TID_LOGIN_API_KEY_CANCEL_BUTTON,
   TID_LOGIN_API_KEY_CONTINUE_BUTTON,
   TID_LOGIN_API_KEY_ERROR,
@@ -67,7 +68,9 @@ export function LoginApiKeyForm({ onCancel, onSaved, onSkipped }: LoginApiKeyFor
   const templateAccess = providerSettingsView?.providerTemplates.find(
     (template) => template.templateId === templateId,
   )?.config.access;
-  const apiKeyUrl = isApiKeyAccess(templateAccess) ? templateAccess.apiKeyManagementUrl : undefined;
+  const apiKeyUrl =
+    (isApiKeyAccess(templateAccess) ? templateAccess.apiKeyManagementUrl : undefined) ||
+    ZENMUX_INVITE_URL;
   // 用户已经输入或回填 API Key 后，右侧获取入口会挤占密码输入区域。
   const showApiKeyLink = shouldShowLoginApiKeyLink(apiKeyValue, apiKeyUrl ?? undefined);
 
@@ -217,15 +220,26 @@ export function LoginApiKeyForm({ onCancel, onSaved, onSkipped }: LoginApiKeyFor
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ui-base font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 disabled={busy}
                 onClick={() => {
-                  if (apiKeyUrl) {
-                    platform.openExternal(apiKeyUrl);
-                  }
+                  platform.openExternal(apiKeyUrl);
                 }}
               >
                 {intl.formatMessage({ id: "login.apiKey.getApiKey" })}
               </button>
             ) : null}
           </div>
+          {showApiKeyLink ? (
+            <button
+              type="button"
+              className="text-left text-ui-sm text-foreground-subtle underline-offset-4 hover:underline"
+              disabled={busy}
+              onClick={() => platform.openExternal(apiKeyUrl)}
+            >
+              {intl.formatMessage(
+                { id: "settings.modelProvider.apiKeyInviteHint" },
+                { url: apiKeyUrl },
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
 

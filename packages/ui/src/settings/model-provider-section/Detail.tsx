@@ -1,6 +1,7 @@
 import { useCodingPlanEntryGate } from "@/settings/CodingPlanEntryButton.js";
 /* eslint-disable max-lines -- Model Provider 详情页当前集中编排 Plan Card、API Key 表单和 OAuth 套餐态；后续稳定后再按 family/API/OAuth 拆分。 */
 import {
+  ZENMUX_INVITE_URL,
   BIGMODEL_PROVIDER_ID,
   BUILTIN_MODEL_PROVIDER_IDS,
   ZAI_PROVIDER_ID,
@@ -837,9 +838,12 @@ export function ModelProviderSectionDetail({
   }
 
   const customProvider = selectedNavItem.provider;
-  const customApiKeyUrl = customProvider.templateId
-    ? getProviderFormApiKeyManagementUrl(customProvider)
-    : undefined;
+  const customApiKeyUrl =
+    customProvider.templateId === "zenmux"
+      ? (getProviderFormApiKeyManagementUrl(customProvider) ?? ZENMUX_INVITE_URL)
+      : customProvider.templateId
+        ? getProviderFormApiKeyManagementUrl(customProvider)
+        : undefined;
   return (
     // 仅展示预设模板声明的入口，不根据地址猜测自定义 Provider 的 Key 控制台。
     <InlineEditableProviderCard

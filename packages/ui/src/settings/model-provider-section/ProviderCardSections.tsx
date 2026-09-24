@@ -329,6 +329,18 @@ export function ProviderApiKeySection({
         onCompositionEnd={onApiKeyCompositionEnd}
         onToggleVisibility={onToggleApiKeyVisibility}
       />
+      {!apiKeyValue.trim() && presetApiKeyUrl && onOpenPresetApiKey ? (
+        <button
+          type="button"
+          className="mt-2 text-left text-ui-sm text-foreground-subtle underline-offset-4 hover:underline"
+          onClick={onOpenPresetApiKey}
+        >
+          {intl.formatMessage(
+            { id: "settings.modelProvider.apiKeyInviteHint" },
+            { url: presetApiKeyUrl },
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }

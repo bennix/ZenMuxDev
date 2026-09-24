@@ -10,6 +10,7 @@ import {
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { UpdateStatusButton } from "@/UpdateStatusButton.js";
 import { DesktopTopOverlayActionButton } from "@/DesktopTopOverlayActionButton.js";
+import { ZenMuxLogo } from "@/components/ui/ZenMuxLogo.js";
 import {
   createWindowsCaptionControlsStyle,
   WINDOWS_CAPTION_CONTROLS_RIGHT_INSET_VAR,
@@ -65,7 +66,7 @@ export function DesktopTopOverlay({
   canGoBack: _canGoBack,
   canGoForward: _canGoForward,
   showNewTaskButton,
-  appLogoUrl,
+  appLogoUrl: _appLogoUrl,
   platform,
   onToggleSidebar,
   onCreateTask,
@@ -139,12 +140,7 @@ export function DesktopTopOverlay({
               buttonClassName="group relative overflow-hidden rounded-lg"
               onClick={onToggleSidebar}
             >
-              <img
-                src={appLogoUrl}
-                alt="ZenCode"
-                className="size-5 transition-opacity duration-150 group-hover:opacity-0"
-                draggable={false}
-              />
+              <ZenMuxLogo className="size-5 transition-opacity duration-150 group-hover:opacity-0" />
               <SidebarToggleIcon className="absolute inset-0 m-auto size-4 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
             </DesktopTopOverlayActionButton>
           )}
