@@ -54,7 +54,9 @@ export function useProviderAvailabilityLoginEntryGuard({
         : modelSelectionView;
       const availability = resolveProviderAvailabilityState({ modelSelectionView: refreshedView });
       const { hasUsableProvider, providerCount } = availability;
-      const shouldOpenLoginEntry = !providerFamilyDomain || (!user && !hasUsableProvider);
+      // providerFamilyDomain 只表示 zai/bigmodel。ZenMux 的 Key 存在 provider 配置里，
+      // 不能因为没有这个字段就在每次启动重新打开欢迎页。
+      const shouldOpenLoginEntry = !hasUsableProvider && (!user || !providerFamilyDomain);
 
       // 未登录且没有可用模型配置时必须引导用户连接账号或填写 API Key。
       // 启动检查、API Key 设置回流等入口统一走这里，避免各处复制判断后语义分叉。

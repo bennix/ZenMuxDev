@@ -165,6 +165,8 @@ export const PlatformChannels = {
   SelectFile: "zcode:select-file",
   /** 打开系统多文件选择框 */
   SelectFiles: "zcode:select-files",
+  /** Renderer → Main：用隐藏浏览器检索 DuckDuckGo */
+  SearchDuckDuckGo: "zcode:search-duckduckgo",
   /** Renderer → Main：写入宿主 ~/.zcode 临时文本附件 */
   CreateTempTextAttachment: "zcode:create-temp-text-attachment",
   /** Renderer → Main：通过原生另存为对话框保存文件 */
@@ -679,6 +681,10 @@ export interface PlatformChannelMap {
   [PlatformChannels.SelectFiles]: {
     request: void;
     response: string[];
+  };
+  [PlatformChannels.SearchDuckDuckGo]: {
+    request: string;
+    response: import("./duckduckgo.js").DuckDuckGoHit[];
   };
   [PlatformChannels.CreateTempTextAttachment]: {
     request: CreateTempTextAttachmentRequest;

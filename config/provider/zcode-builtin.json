@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 31,
+  "revision": 33,
   "config": {
     "providerConfigRules": {
       "templateRules": [
@@ -20,6 +20,7 @@
               "baseUrl": "https://zenmux.ai/api/v1"
             },
             "builtinModelIds": [
+              "openai/gpt-6-astra",
               "openai/gpt-6-sol",
               "anthropic/claude-opus-5.5",
               "x-ai/grok-4.7",
@@ -4343,6 +4344,32 @@
       "templateModelRules": [
         {
           "templateId": "zenmux",
+          "modelId": "openai/gpt-6-astra",
+          "config": {
+            "enabled": true,
+            "properties": {
+              "contextWindow": 1050000,
+              "inputFormat": {
+                "supportsText": true,
+                "supportsImage": true,
+                "supportsPdf": true,
+                "supportsVideo": false,
+                "supportsAudio": false
+              }
+            },
+            "optionSpecs": {
+              "maxOutputTokens": {
+                "max": 128000
+              },
+              "reasoningLevel": {
+                "values": ["low", "medium", "high", "xhigh", "max"],
+                "map": "{\"reasoning_effort\": reasoningLevel}"
+              }
+            }
+          }
+        },
+        {
+          "templateId": "zenmux",
           "modelId": "openai/gpt-6-sol",
           "config": {
             "enabled": true,
@@ -4359,6 +4386,10 @@
             "optionSpecs": {
               "maxOutputTokens": {
                 "max": 128000
+              },
+              "reasoningLevel": {
+                "values": ["none", "low", "medium", "high", "xhigh", "max"],
+                "map": "{\"reasoning_effort\": reasoningLevel}"
               }
             }
           }
@@ -4381,6 +4412,10 @@
             "optionSpecs": {
               "maxOutputTokens": {
                 "max": 128000
+              },
+              "reasoningLevel": {
+                "values": ["low", "medium", "high"],
+                "map": "{\n  \"thinking\": {\n    \"type\": \"enabled\",\n    \"budget_tokens\": reasoningLevel == \"low\" ? 4000 : reasoningLevel == \"high\" ? 24000 : 10000\n  }\n}"
               }
             }
           }
@@ -4403,6 +4438,10 @@
             "optionSpecs": {
               "maxOutputTokens": {
                 "max": 128000
+              },
+              "reasoningLevel": {
+                "values": ["low", "medium", "high"],
+                "map": "{\"reasoning_effort\": reasoningLevel}"
               }
             }
           }

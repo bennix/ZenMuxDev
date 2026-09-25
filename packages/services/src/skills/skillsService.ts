@@ -1173,6 +1173,61 @@ export function createSkillsService(options?: SkillsServiceOptions): ISkillsServ
       await rm(dirname(skill.path), { recursive: true, force: true });
     },
 
+    async createSkill(params: {
+      workspacePath: string;
+      workspaceIdentity?: string;
+      name: string;
+      description: string;
+      body?: string;
+    }): Promise<{ path: string }> {
+      const runCreate = async () => {
+        const name = params.name.trim();
+        const description = params.description.trim();
+        const body = params.body?.trim() ?? "";
+        // 发送时只认 `$` 后面的小写连字符名称，其它写法选中后不会进入上下文。
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(name)) {
+          throw new Error("技能名称只能使用小写字母、数字和连字符");
+        }
+        if (!description) {
+          throw new Error("技能说明不能为空");
+        }
+        if (description.length > MAX_DESCRIPTION_LENGTH) {
+          throw new Error(`技能说明过长，不能超过 ${MAX_DESCRIPTION_LENGTH} 字`);
+        }
+        const capability = resolveCapabilities(options);
+        const root = capability.userScopeAvailable
+          ? getUserZcodeSkillRoot()
+          : getWorkspaceZcodeSkillRoot(params.workspacePath);
+        const skillDir = join(root, name);
+        const relativeDir = relative(root, skillDir);
+        if (relativeDir.startsWith("..") || isAbsolute(relativeDir)) {
+          throw new Error("技能名称无效");
+        }
+        if (await exists(skillDir)) {
+          throw new Error("同名技能已存在");
+        }
+        const markdown = [
+          "---",
+          `name: ${JSON.stringify(name)}`,
+          `description: ${JSON.stringify(description)}`,
+          "---",
+          "",
+          body,
+          "",
+        ].join("\n");
+        await mkdir(skillDir, { recursive: true });
+        const skillPath = join(skillDir, SKILL_FILE_NAME);
+        await writeFile(skillPath, markdown, "utf-8");
+        return { path: skillPath };
+      };
+      const queued = writeQueue.then(runCreate, runCreate);
+      writeQueue = queued.then(
+        () => undefined,
+        () => undefined,
+      );
+      return queued;
+    },
+
     async deleteSkill(params: {
       workspacePath: string;
       workspaceIdentity?: string;

@@ -16,6 +16,7 @@ export function useSlashCommandMentionPanelSections(
   filteredSubagentSuggestions: PromptInputSuggestionItem[],
   subagentsLoading: boolean,
   subagentsError: string | null,
+  onDeleteSkill?: (suggestion: PromptInputSuggestionItem) => void,
 ): MentionPanelSection[] {
   return useMemo(
     () => [
@@ -58,6 +59,20 @@ export function useSlashCommandMentionPanelSections(
               <span className="truncate text-ui-base text-foreground-subtlest flex-1">
                 {suggestion.description}
               </span>
+              {onDeleteSkill && suggestion.data?.scope !== "plugin" ? (
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  className="shrink-0 text-ui-caption text-foreground-subtle hover:text-destructive"
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onDeleteSkill(suggestion);
+                  }}
+                >
+                  {intl.formatMessage({ id: "common.delete" })}
+                </span>
+              ) : null}
             </span>
           ),
         })),
@@ -95,6 +110,7 @@ export function useSlashCommandMentionPanelSections(
       filteredSkillSuggestions,
       filteredSubagentSuggestions,
       intl,
+      onDeleteSkill,
       skillsError,
       skillsLoading,
       subagentsError,

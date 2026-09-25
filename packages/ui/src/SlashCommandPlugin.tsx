@@ -50,6 +50,7 @@ import {
   type SlashCommandPluginProps,
 } from "./slashCommandHelpers.js";
 import { useSlashCommandMentionPanelSections } from "./slashCommandPanelSections.js";
+import { useSlashSkillActions } from "./slashSkillActions.js";
 import { getCurrentTextNodeSelection } from "./mentions/mentionHelpers.js";
 import {
   getActivePromptInputTokenReplacementRange,
@@ -80,15 +81,23 @@ export function SlashCommandPlugin({
     error: subagentsError,
   } = useSubagents(workspacePath, provider, workspaceIdentity);
   const {
-    skills,
-    loading: skillsLoading,
-    error: skillsError,
+    skills: catalogSkills,
+    loading: catalogSkillsLoading,
+    error: catalogSkillsError,
   } = useSkills({
     workspacePath,
     workspaceIdentity,
     sessionId: sessionId ?? null,
     enabled: !disabled && activeTrigger?.trigger === "/",
   });
+  const skillActions = useSlashSkillActions({
+    workspacePath,
+    workspaceIdentity,
+    enabled: !disabled && activeTrigger?.trigger === "/",
+  });
+  const skills = skillActions.skills ?? catalogSkills;
+  const skillsLoading = skillActions.skills === null ? catalogSkillsLoading : skillActions.loading;
+  const skillsError = skillActions.error ?? catalogSkillsError;
   const [selectedIndex, setSelectedIndex] = useState(0);
   const dismissedSignatureRef = useRef<string | null>(null);
   const activeSignatureRef = useRef<string | null>(null);
@@ -109,7 +118,18 @@ export function SlashCommandPlugin({
   const skillSuggestions = useMemo(
     () =>
       buildSkillSuggestions(
-        filterSkillsForProvider(skills, provider).filter((skill) => skill.enabled),
+        filterSkillsForProvider(
+          skills.map((skill) => ({
+            id: skill.id,
+            name: skill.name,
+            description: skill.description,
+            path: skill.path,
+            scope: skill.scope,
+            enabled: skill.enabled,
+            ...(skill.pluginName ? { pluginName: skill.pluginName } : {}),
+          })),
+          provider,
+        ).filter((skill) => skill.enabled),
         locale,
       ),
     [locale, provider, skills],
@@ -439,23 +459,28 @@ export function SlashCommandPlugin({
     filteredSubagentSuggestions,
     subagentsLoading,
     subagentsError,
+    skillActions.deleteSkill,
   );
 
-  if (!isOpen || !container) {
-    return null;
-  }
-
-  return createPortal(
-    <MentionPanel
-      title={panelTitle}
-      description={panelDescription}
-      trigger="/"
-      sections={panelSections}
-      emptyText=""
-      selectedIndex={selectedIndex}
-      hasActiveQuery={hasActiveQuery}
-      onSelect={selectSuggestion}
-    />,
-    container,
+  return (
+    <>
+      {skillActions.dialog}
+      {isOpen && container
+        ? createPortal(
+            <MentionPanel
+              title={panelTitle}
+              description={panelDescription}
+              trigger="/"
+              sections={panelSections}
+              emptyText=""
+              footer={skillActions.footer}
+              selectedIndex={selectedIndex}
+              hasActiveQuery={hasActiveQuery}
+              onSelect={selectSuggestion}
+            />,
+            container,
+          )
+        : null}
+    </>
   );
 }

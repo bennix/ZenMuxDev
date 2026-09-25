@@ -91,6 +91,8 @@ declare global {
       selectFile(): Promise<string | null>;
       /** 打开系统多文件选择框，返回选中文件路径；取消时返回空数组 */
       selectFiles?(): Promise<string[]>;
+      /** 用隐藏浏览器检索 DuckDuckGo */
+      searchDuckDuckGo?(query: string): Promise<import("@zcode/shared").DuckDuckGoHit[]>;
       /** 通过系统原生另存为对话框保存文件 */
       saveFile?(
         payload: import("@zcode/shared").SaveFileRequest,

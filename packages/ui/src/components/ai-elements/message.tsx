@@ -556,9 +556,16 @@ function findClosingSingleDollarDelimiter(text: string, startIndex: number): num
   return -1;
 }
 
+const commaSeparatedMathIdentifierPattern =
+  /^[A-Za-z](?:[A-Za-z0-9]{0,2}|_[A-Za-z0-9]+)(?:\s*,\s*[A-Za-z](?:[A-Za-z0-9]{0,2}|_[A-Za-z0-9]+))+$/u;
+
 function isLikelySingleDollarMath(content: string): boolean {
   if (!content || content !== content.trim() || /[\r\n]/.test(content)) {
     return false;
+  }
+
+  if (commaSeparatedMathIdentifierPattern.test(content)) {
+    return true;
   }
 
   if (texCommandPattern.test(content) || likelyMathSyntaxPattern.test(content)) {
@@ -656,6 +663,333 @@ function normalizeSingleDollarMathOutsideInlineCode(line: string): string {
 
     output += line.slice(codeStart, codeEnd + codeMarker.length);
     cursor = codeEnd + codeMarker.length;
+  }
+
+  return output;
+}
+
+const bareLatexSignalPattern = /\\[A-Za-z]+|\^\{|_\{/u;
+
+function isBareLatexChar(char: string | undefined): boolean {
+  return char !== undefined && /[A-Za-z0-9\\^_{}()+\-*/=.,]/u.test(char);
+}
+
+function wrapBareLatexSpans(line: string): string {
+  if (!bareLatexSignalPattern.test(line) || line.includes("$")) {
+    return line;
+  }
+
+  let output = "";
+  let cursor = 0;
+  const signal = /\\[A-Za-z]+|\^\{|_\{/gu;
+  let match: RegExpExecArray | null = signal.exec(line);
+
+  while (match) {
+    if (match.index < cursor) {
+      match = signal.exec(line);
+      continue;
+    }
+
+    let start = match.index;
+    let end = match.index + match[0].length;
+    while (start > cursor) {
+      if (isBareLatexChar(line[start - 1])) {
+        start -= 1;
+        continue;
+      }
+      if (line[start - 1] === " " && isBareLatexChar(line[start - 2])) {
+        start -= 1;
+        continue;
+      }
+      break;
+    }
+    while (end < line.length) {
+      if (isBareLatexChar(line[end])) {
+        end += 1;
+        continue;
+      }
+      if (line[end] === " " && isBareLatexChar(line[end + 1])) {
+        end += 1;
+        continue;
+      }
+      break;
+    }
+
+    const span = line.slice(start, end).trim();
+    if (!span || !bareLatexSignalPattern.test(span)) {
+      match = signal.exec(line);
+      continue;
+    }
+
+    const before = line.slice(0, start).replace(/[\[\]\s=]/gu, "");
+    const after = line.slice(end).replace(/[\[\]\s]/gu, "");
+    const display = before.length <= 12 && after.length === 0 && span.length > 24;
+    // 同一行里的 $$...$$ 不会被当成公式块，长公式必须单独成段。
+    const wrapped = display ? `\n\n$$\n${span}\n$$\n` : `$${span}$`;
+    output += `${line.slice(cursor, start)}${wrapped}`;
+    cursor = end;
+    signal.lastIndex = end;
+    match = signal.exec(line);
+  }
+
+  output += line.slice(cursor);
+  const trimmed = output.trim();
+  if (trimmed.startsWith("[") && trimmed.endsWith("]") && trimmed.includes("$")) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return output;
+}
+
+function isShortCjkGap(text: string): boolean {
+  const trimmed = text.trim();
+  return trimmed.length > 0 && trimmed.length <= 24 && /^[\p{Script=Han}0-9A-Za-z.%]+$/u.test(trimmed);
+}
+
+function isLatexOnlyGap(text: string): boolean {
+  return /^\\(?:[A-Za-z]+|%)$/u.test(text.trim());
+}
+
+function shouldJoinSplitMath(left: string, gap: string, right: string): boolean {
+  if (gap.length === 0 || isLatexOnlyGap(gap)) return true;
+  if (!isShortCjkGap(gap)) return false;
+  return /[+*=(\\-]$/u.test(left.trim()) || /^[)\^_/\\]/u.test(right.trim());
+}
+
+/** `\text{$美元}` 里的 `$` 会提前结束公式，KaTeX 一失败整段就退回原文。 */
+function repairDollarInsideTextCommand(line: string): string {
+  const withoutInnerDollar = line.replace(/\\text\{\$/gu, "\\text{");
+  return withoutInnerDollar.replace(
+    /\$([^$\n]*\\[A-Za-z]+[^$\n]*\\text\{[^}\n]*)\}(?!\$)/gu,
+    (_match, body: string) => `$${body}}$`,
+  );
+}
+
+/** 把 `$\times(1+$中文$)^{15}$` 拼成一条公式，避免半截公式让整段退回原文。 */
+function repairSplitInlineMath(line: string): string {
+  if (!line.includes("$")) return line;
+
+  const tokens: Array<{ kind: "text" | "math"; value: string }> = [];
+  let index = 0;
+  while (index < line.length) {
+    if (line.startsWith("$$", index)) {
+      const close = line.indexOf("$$", index + 2);
+      const end = close === -1 ? line.length : close + 2;
+      tokens.push({ kind: "text", value: line.slice(index, end) });
+      index = end;
+      continue;
+    }
+    if (line[index] === "$") {
+      const close = findClosingSingleDollarDelimiter(line, index + 1);
+      if (close === -1) {
+        tokens.push({ kind: "text", value: line.slice(index) });
+        break;
+      }
+      tokens.push({ kind: "math", value: line.slice(index + 1, close) });
+      index = close + 1;
+      continue;
+    }
+    let next = index + 1;
+    while (next < line.length && line[next] !== "$") next += 1;
+    tokens.push({ kind: "text", value: line.slice(index, next) });
+    index = next;
+  }
+
+  const merged: typeof tokens = [];
+  for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex += 1) {
+    const token = tokens[tokenIndex];
+    const previous = merged[merged.length - 1];
+    if (!token || !previous || token.kind !== "text" || previous.kind !== "math") {
+      if (token) merged.push(token);
+      continue;
+    }
+    const following = tokens[tokenIndex + 1];
+    if (following?.kind !== "math" || !shouldJoinSplitMath(previous.value, token.value, following.value)) {
+      merged.push(token);
+      continue;
+    }
+    const gap = token.value.length === 0 || isLatexOnlyGap(token.value) ? token.value : `\\text{${token.value}}`;
+    previous.value += gap + following.value;
+    tokenIndex += 1;
+  }
+
+  return merged.map((token) => (token.kind === "math" ? `$${token.value}$` : token.value)).join("");
+}
+
+/** 行内 `$N_{30}=...$` 里的下标会被 Markdown 吃掉，改成独立公式块才能渲染。 */
+function promoteFragileInlineMath(line: string): string {
+  return line.replace(/\$([^$\n]+)\$/gu, (match, body: string) => {
+    if (!/[_^\\]|[\u3400-\u9fff]/u.test(body)) return match;
+    return `\n\n$$\n${body}\n$$\n`;
+  });
+}
+
+function normalizeBareLatexOutsideInlineCode(line: string): string {
+  let output = "";
+  let cursor = 0;
+
+  while (cursor < line.length) {
+    const codeStart = line.indexOf("`", cursor);
+    if (codeStart === -1) {
+      output += promoteFragileInlineMath(
+        wrapBareLatexSpans(repairSplitInlineMath(repairDollarInsideTextCommand(line.slice(cursor)))),
+      );
+      break;
+    }
+
+    output += promoteFragileInlineMath(
+      wrapBareLatexSpans(
+        repairSplitInlineMath(repairDollarInsideTextCommand(line.slice(cursor, codeStart))),
+      ),
+    );
+    let codeFenceEnd = codeStart + 1;
+    while (line[codeFenceEnd] === "`") {
+      codeFenceEnd += 1;
+    }
+    const codeMarker = line.slice(codeStart, codeFenceEnd);
+    const codeEnd = line.indexOf(codeMarker, codeFenceEnd);
+    if (codeEnd === -1) {
+      output += line.slice(codeStart);
+      break;
+    }
+    output += line.slice(codeStart, codeEnd + codeMarker.length);
+    cursor = codeEnd + codeMarker.length;
+  }
+
+  return output;
+}
+
+function isBareLatexLine(line: string): boolean {
+  const trimmed = line.trim();
+  return trimmed.length > 0 && !trimmed.includes("$") && bareLatexSignalPattern.test(trimmed);
+}
+
+function formulaBraceBalance(text: string): number {
+  let balance = 0;
+  for (const char of text) {
+    if (char === "{") balance += 1;
+    if (char === "}") balance -= 1;
+  }
+  return balance;
+}
+
+/** 公式还没写完：花括号没闭合，或行尾停在 `\`（例如 `\%` 被拆成两行）。 */
+function formulaIsOpen(text: string): boolean {
+  return text.endsWith("\\") || formulaBraceBalance(text) > 0;
+}
+
+function isFormulaContinuation(line: string, accumulated: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.includes("$") || getMarkdownFence(line)) return false;
+  if (isBareLatexLine(trimmed)) return true;
+  if (/^[})\^_\\]/u.test(trimmed)) return true;
+  if ((trimmed === "%" || trimmed === "\\%") && accumulated.endsWith("\\")) return true;
+  // `\text{` 换行后的中文标签，例如「股价年涨幅」。
+  return (
+    formulaIsOpen(accumulated) &&
+    trimmed.length <= 32 &&
+    /^[\p{Script=Han}0-9A-Za-z.%,\s]+$/u.test(trimmed)
+  );
+}
+
+function joinConsecutiveLatexLines(markdown: string): string {
+  const lines = markdown.split("\n");
+  const output: string[] = [];
+  let index = 0;
+  let inFence = false;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? "";
+    const fence = getMarkdownFence(line);
+    if (fence) {
+      inFence = !inFence;
+      output.push(line);
+      index += 1;
+      continue;
+    }
+    if (!inFence && /^\\div$|^÷$/u.test(line.trim())) {
+      while (output.length > 0 && output[output.length - 1]?.trim() === "") output.pop();
+      const previous = output.length > 0 && !output[output.length - 1]?.includes("$") ? output.pop() ?? "" : "";
+      index += 1;
+      while (lines[index]?.trim() === "") index += 1;
+      const denominator = (lines[index] ?? "").trim();
+      if (denominator && !denominator.includes("$")) index += 1;
+      const equals = previous.indexOf("=");
+      const asText = (value: string) => `\\text{${value.trim()}}`;
+      const formula =
+        equals === -1
+          ? `\\frac{${asText(previous)}}{${asText(denominator)}}`
+          : `${asText(previous.slice(0, equals))}=\\frac{${asText(previous.slice(equals + 1))}}{${asText(denominator)}}`;
+      output.push("", "$$", formula, "$$", "");
+      continue;
+    }
+    if (!inFence && isBareLatexLine(line)) {
+      const parts = [line.trim()];
+      index += 1;
+      while (index < lines.length) {
+        while (lines[index]?.trim() === "") index += 1;
+        const next = lines[index] ?? "";
+        if (!isFormulaContinuation(next, parts.join(""))) break;
+        parts.push(next.trim());
+        index += 1;
+      }
+      while (lines[index]?.trim() === "") index += 1;
+      const tail = lines[index]?.trim() ?? "";
+      if (/^[+\-]\s*\p{Script=Han}/u.test(tail)) {
+        parts.push(`${tail[0]}\\text{${tail.slice(1).trim()}}`);
+        index += 1;
+      }
+      output.push("", "$$", parts.join(""), "$$", "");
+      continue;
+    }
+    output.push(line);
+    index += 1;
+  }
+
+  return output.join("\n");
+}
+
+function normalizeBareLatex(markdown: string): string {
+  const withDelimiters = joinConsecutiveLatexLines(
+    markdown
+      .replace(/\\\[([\s\S]*?)\\\]/gu, (_match, body: string) => `$$${body}$$`)
+      .replace(/\\\(([\s\S]*?)\\\)/gu, (_match, body: string) => `$${body}$`),
+  );
+
+  if (!bareLatexSignalPattern.test(withDelimiters)) {
+    return withDelimiters;
+  }
+
+  let output = "";
+  let cursor = 0;
+  let activeFence: { marker: string; length: number } | null = null;
+  let inDisplayMath = false;
+
+  while (cursor < withDelimiters.length) {
+    const newlineIndex = withDelimiters.indexOf("\n", cursor);
+    const lineEnd = newlineIndex === -1 ? withDelimiters.length : newlineIndex;
+    const line = withDelimiters.slice(cursor, lineEnd);
+    const newline = newlineIndex === -1 ? "" : "\n";
+    const fence = getMarkdownFence(line);
+
+    if (line.trim() === "$$") inDisplayMath = !inDisplayMath;
+    if (activeFence || inDisplayMath || line.trim() === "$$") {
+      output += line + newline;
+      if (
+        activeFence &&
+        fence &&
+        fence.marker === activeFence.marker &&
+        fence.length >= activeFence.length
+      ) {
+        activeFence = null;
+      }
+    } else {
+      output += normalizeBareLatexOutsideInlineCode(line) + newline;
+      if (fence) {
+        activeFence = fence;
+      }
+    }
+
+    cursor = lineEnd + newline.length;
   }
 
   return output;
@@ -1344,7 +1678,7 @@ export const MessageResponse = memo(
       () =>
         rewriteMarkdownArtifactImageSources(
           normalizeMessageSingleDollarMath(
-            normalizeConsecutiveMarkdownImageBlocks(projectedCitationMarkdown),
+            normalizeBareLatex(normalizeConsecutiveMarkdownImageBlocks(projectedCitationMarkdown)),
           ),
         ),
       [projectedCitationMarkdown],

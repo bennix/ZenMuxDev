@@ -38,6 +38,7 @@ import { resolveDesktopZoomLevelFromFactor } from "./desktopZoom.js";
 import { resolveDesktopWindowChromeState } from "./desktopWindowChromeState.js";
 import { handleWindowUnreadCountSync } from "./desktopWindowLifecycle.js";
 import { captureWindowScreenshot, openPathInFileManager } from "./desktopMainIpcHelpers.js";
+import { searchDuckDuckGo } from "./duckduckgoSearch.js";
 import { registerCuaPermissionIpcHandlers } from "./desktopCuaPermissionIpc.js";
 import {
   registerDesktopBrowserIpcHandlers,
@@ -119,6 +120,11 @@ export function registerPlatformIpcHandlers(options: {
       return null;
     }
     return result.filePaths[0];
+  });
+
+  ipcMain.handle(PlatformChannels.SearchDuckDuckGo, async (_event, query: unknown) => {
+    if (typeof query !== "string") return [];
+    return searchDuckDuckGo(query);
   });
 
   ipcMain.handle(PlatformChannels.SelectFiles, async () => {

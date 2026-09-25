@@ -26,6 +26,7 @@ import type {
   PrepareCuaHelperPermissionDragResult,
 } from "./cuaAccessibilitySettings.js";
 import type { BrowserViewportSize } from "./browser-use/command-metadata.js";
+import type { DuckDuckGoHit } from "./duckduckgo.js";
 import type {
   PostUpdateReleaseNotesPayload,
   UpdateCheckResultPayload,
@@ -538,6 +539,9 @@ export interface IPlatformService {
 
   /** 打开系统多文件选择框，返回选中的文件路径；取消时返回空数组 */
   selectFiles?(): Promise<string[]>;
+
+  /** 用 DuckDuckGo 检索当前公开信息。Desktop 在主进程的隐藏浏览器里执行。 */
+  searchDuckDuckGo?(query: string): Promise<readonly DuckDuckGoHit[]>;
 
   /** 使用宿主原生另存为对话框写入文件；普通 Web 端不实现 */
   saveFile?(payload: SaveFileRequest): Promise<SaveFileResult>;

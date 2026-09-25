@@ -16,6 +16,7 @@ import {
   ProviderTemplateMap,
   resolveProviderTemplateName,
 } from "./config/index.js";
+import { isApiKeyAccess } from "./config/provider-config.js";
 import { resolveOwnedOrder } from "./owned-order.js";
 import type { ModelSelection } from "@zcode/shared/model-selection";
 import type { ProviderConfigSnapshot, ProviderSource } from "./sources.js";
@@ -284,8 +285,16 @@ export class ProviderConfigService implements ProviderSource<ProviderConfigSnaps
       await this.createPersonalProvider({ templateId: "zenmux", locale: "zh-CN" });
       return;
     }
-    for (const extra of zenmuxProviders.slice(1)) {
-      await this.deletePersonalProvider(extra.providerId);
+    // 欢迎页会再创建一个带 Key 的 ZenMux。若按数组顺序只留第一个，下次启动会删掉真正写了 Key 的那条。
+    const keeper =
+      zenmuxProviders.find((rule) => {
+        const access = rule.config.access;
+        return isApiKeyAccess(access) && Boolean(access.apiKey?.trim());
+      }) ?? zenmuxProviders[0];
+    for (const extra of zenmuxProviders) {
+      if (extra.providerId !== keeper?.providerId) {
+        await this.deletePersonalProvider(extra.providerId);
+      }
     }
   }
 

@@ -84,7 +84,8 @@ export function LoginApiKeyForm({ onCancel, onSaved, onSkipped }: LoginApiKeyFor
     setSaving(true);
     setError(null);
     try {
-      const template = (await providerSettingsService.getView()).providerTemplates.find(
+      const settingsView = await providerSettingsService.getView();
+      const template = settingsView.providerTemplates.find(
         (item) => item.templateId === templateId,
       );
       if (!template || !isApiKeyAccess(template.config.access)) {
@@ -97,13 +98,24 @@ export function LoginApiKeyForm({ onCancel, onSaved, onSkipped }: LoginApiKeyFor
         return;
       }
 
-      const created = await providerSettingsService.createPersonalProvider({
-        templateId,
-        initialConfig: { access: { type: template.config.access.type, apiKey } },
-      });
+      // 启动时已经建好 ZenMux。再 create 会变成第二条，下次启动按“只留一个”删掉带 Key 的那条。
+      const existing = settingsView.providers.find((item) => item.templateId === templateId);
+      const providerId = existing
+        ? existing.providerId
+        : (
+            await providerSettingsService.createPersonalProvider({
+              templateId,
+              initialConfig: { access: { type: template.config.access.type, apiKey } },
+            })
+          ).providerId;
+      if (existing) {
+        await providerSettingsService.savePersonalProviderOverlay(existing.providerId, {
+          access: { type: template.config.access.type, apiKey },
+        });
+      }
       const defaultModelPreference = buildLoginApiKeyDefaultModelPreferenceFromSelection(
         await modelSelectionService.getView(),
-        created.providerId,
+        providerId,
       );
       markApiKeyLoginSuccess(defaultModelPreference);
       await onSaved();

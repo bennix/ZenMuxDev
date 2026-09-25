@@ -58,6 +58,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { ControlHintTooltip } from "@/ControlHintTooltip.js";
+import { WorkspaceAgentBoard } from "@/v4/composer/WorkspaceAgentBoard.js";
 import {
   ChatErrorBanner,
   resolveChatErrorBannerDisplayMessage,
@@ -591,6 +592,7 @@ function ConversationComposerImpl({
     requestedDelivery?: "startNow" | "queue" | "guide";
   } | null>(null);
   const [sendTooltipOpen, setSendTooltipOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   // submit 经 ref 读取最新文本/pending，避免回调随每次输入变更引用。
   const textRef = useRef("");
   const contentRevisionRef = useRef(0);
@@ -2159,6 +2161,20 @@ function ConversationComposerImpl({
           currentSessionBusy={canStop}
         />
         <V4ComposerControlToggles />
+        <Button
+          type="button"
+          variant={workspaceOpen ? "secondary" : "ghost"}
+          aria-pressed={workspaceOpen}
+          className={cn(
+            "h-7 w-fit justify-center gap-1 rounded-lg border px-2 py-1.5 text-ui-base transition-colors",
+            workspaceOpen
+              ? "border-foreground bg-foreground text-background"
+              : "border-transparent",
+          )}
+          onClick={() => setWorkspaceOpen((open) => !open)}
+        >
+          {intl.formatMessage({ id: "chat.workspace.toggle" })}
+        </Button>
         <ConversationBackgroundWorkTrigger
           backgroundWorks={snapshot?.backgroundWorks ?? []}
           runningSubagentCount={runningSubagentCount}
@@ -2180,7 +2196,9 @@ function ConversationComposerImpl({
       remoteSessionId,
       runningSubagentCount,
       snapshot?.backgroundWorks,
+      intl,
       workspaceIdentity,
+      workspaceOpen,
       workspacePath,
     ],
   );
@@ -2228,6 +2246,7 @@ function ConversationComposerImpl({
           />
         </div>
       ) : null}
+      {workspaceOpen ? <WorkspaceAgentBoard modelSelectionView={modelSelectionView} /> : null}
       <div
         className={cn(
           "chat-composer-input-surface w-full",
