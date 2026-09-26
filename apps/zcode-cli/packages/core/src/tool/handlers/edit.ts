@@ -55,6 +55,7 @@ const EDIT_PROVIDER_DESCRIPTION = [
   "- You must Read the file in this conversation before editing, or the call will fail.",
   "- `old_string` must match the file exactly, including indentation, and be unique — the edit fails otherwise. Strip the Read line prefix (line number + tab) before matching.",
   "- `replace_all: true` replaces every occurrence instead.",
+  "- Only call Edit when new_string differs from old_string. An unchanged result needs no retry.",
 ].join("\n");
 const NON_UNIQUE_OLD_STRING_MESSAGE =
   "old_string is not unique in the file. Provide more surrounding context or set replace_all to true.";
@@ -67,6 +68,9 @@ const EDIT_FRESHNESS_SUFFIX = " (file state is current in your context — no ne
 function formatEditModelContent(output: unknown): string {
   const filePath =
     isRecord(output) && typeof output.filePath === "string" ? output.filePath : "the file";
+  if (isRecord(output) && Array.isArray(output.structuredPatch) && output.structuredPatch.length === 0) {
+    return `No changes needed in ${filePath}. The content is already unchanged; no file was written. Do not retry the same replacement.`;
+  }
   const userModified = isRecord(output) && output.userModified === true;
   const replaceAll = isRecord(output) && output.replaceAll === true;
   const modifiedNote = userModified
@@ -101,13 +105,6 @@ const editHandler: ToolHandler = async (input, context) => {
     );
   }
 
-  if (old_string === new_string) {
-    return editFailure(
-      EditErrorCode.NO_CHANGE,
-      "No changes to make: old_string and new_string are exactly the same.",
-    );
-  }
-
   if (!file_path) {
     // 空路径由共享 path-policy 抛出普通异常，绕过了 Edit 自己维护的
     // code + message 失败契约，导致 provider-visible 内容丢失 tool_use_error envelope。
@@ -123,7 +120,7 @@ const editHandler: ToolHandler = async (input, context) => {
 
   const stat = await statEditableFile(filePath, context);
   if (!stat) {
-    if (old_string === "") {
+    if (old_string === "" && new_string !== "") {
       return writeEditResult({
         context,
         filePath,
@@ -496,6 +493,22 @@ async function writeEditResult(input: {
         recoverable: false,
       },
     );
+  }
+
+  // 模型有时重复提交相同替换；先通过读取/匹配检查，再将无变化结果视为成功，避免误报失败和无效写盘。
+  // 比较归一化后的内容也覆盖 CRLF 和引号匹配；不能给缺失文件或过期读取返回假成功。
+  if (input.read && input.newContent === input.originalFile) {
+    return {
+      filePath: input.inputFilePath,
+      oldString: input.actualOldString,
+      newString: input.actualNewString,
+      originalFile: input.originalFile,
+      structuredPatch: [],
+      userModified: false,
+      replaceAll: input.replaceAll,
+      matchStrategy: input.matchStrategy,
+      matchCandidateCount: input.matchCandidateCount,
+    };
   }
 
   const contentToWrite = stampMemoryOriginSessionId({
