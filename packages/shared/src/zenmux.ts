@@ -1,3 +1,6 @@
+// 应用归因必须使用同一标题，避免请求遗漏或被平台后缀分散统计。
+export const ZENMUX_APPLICATION_HEADERS = { "X-Title": "ZenCoder" } as const;
+
 export const ZENMUX_TEMPLATE_ID = "zenmux";
 export const ZENMUX_BASE_URL = "https://zenmux.ai/api/v1";
 export const ZENMUX_INVITE_URL = "https://zenmux.ai/invite/GBQMC5";
@@ -45,6 +48,7 @@ export async function callZenMuxSystemOne(
   const response = await fetchImpl(zenMuxSystemOneUrl(baseUrl), {
     method: "POST",
     headers: {
+      ...ZENMUX_APPLICATION_HEADERS,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
@@ -115,12 +119,25 @@ export interface ZenMuxChatMessage {
   readonly content: string | readonly ZenMuxChatContentPart[];
 }
 
+/** 传输层只标记是否可重试；重试次数和任务状态由调用方拥有。 */
+export class ZenMuxChatError extends Error {
+  constructor(message: string, readonly retryable: boolean, readonly status?: number, readonly retryAfterMs?: number) {
+    super(message);
+    this.name = "ZenMuxChatError";
+  }
+}
+
+const RETRYABLE_CHAT_STATUS = new Set([408, 429, 500, 502, 503, 504]);
+
 /** 流式 chat completions。不传 temperature。reasoning 只放调用方按模型能力准备好的字段。 */
 export async function streamZenMuxChatCompletion(input: {
   apiKey: string;
   model: string;
   messages: readonly ZenMuxChatMessage[];
   reasoning?: Readonly<Record<string, unknown>>;
+  maxTokens?: number;
+  contentOnly?: boolean;
+  requireComplete?: boolean;
   signal?: AbortSignal;
   onDelta: (text: string) => void;
   fetchImpl?: typeof fetch;
@@ -130,6 +147,7 @@ export async function streamZenMuxChatCompletion(input: {
   const response = await (input.fetchImpl ?? fetch)(`${ZENMUX_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
+      ...ZENMUX_APPLICATION_HEADERS,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
@@ -137,9 +155,13 @@ export async function streamZenMuxChatCompletion(input: {
       model: input.model,
       messages: input.messages,
       stream: true,
+      ...(input.maxTokens ? { max_tokens: input.maxTokens } : {}),
       ...input.reasoning,
     }),
     signal: input.signal,
+  }).catch((error: unknown) => {
+    if (input.signal?.aborted) throw error;
+    throw new ZenMuxChatError(error instanceof Error ? error.message : "Network error", true);
   });
   if (!response.ok || !response.body) {
     const detail = await response.text().catch(() => "");
@@ -150,36 +172,61 @@ export async function streamZenMuxChatCompletion(input: {
     } catch {
       message = detail.trim();
     }
-    throw new Error(message || `ZenMux 请求失败 (${response.status})`);
+    const retryAfter = response.headers.get("retry-after");
+    const seconds = retryAfter == null ? NaN : Number(retryAfter);
+    const delay = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(retryAfter ?? "") - Date.now();
+    throw new ZenMuxChatError(message || `ZenMux 请求失败 (${response.status})`, RETRYABLE_CHAT_STATUS.has(response.status), response.status,
+      Number.isFinite(delay) ? Math.max(0, delay) : undefined);
   }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const data = trimmed.slice(5).trim();
-      if (!data || data === "[DONE]") continue;
-      let parsed: {
-        choices?: Array<{ delta?: { content?: string | null; reasoning?: string | null } }>;
-      };
-      try {
-        parsed = JSON.parse(data) as {
-          choices?: Array<{ delta?: { content?: string | null; reasoning?: string | null } }>;
-        };
-      } catch {
-        continue;
-      }
-      const delta = parsed.choices?.[0]?.delta;
-      const text = `${delta?.reasoning ?? ""}${delta?.content ?? ""}`;
-      if (text) input.onDelta(text);
+  let completed = false;
+  type Chunk = {
+    error?: { message?: string; type?: string; code?: string; status?: number };
+    choices?: Array<{ finish_reason?: string | null; delta?: { content?: string | null; reasoning?: string | null } }>;
+  };
+  const consume = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("data:")) return;
+    const data = trimmed.slice(5).trim();
+    if (data === "[DONE]") { completed = true; return; }
+    if (!data) return;
+    let parsed: Chunk;
+    try { parsed = JSON.parse(data) as Chunk; } catch { return; }
+    if (!parsed || typeof parsed !== "object") return;
+    if (parsed.error) {
+      const error = parsed.error;
+      const retryable = RETRYABLE_CHAT_STATUS.has(error.status ?? 0)
+        || ["server_error", "overloaded_error", "rate_limit_error"].includes(error.type ?? error.code ?? "");
+      throw new ZenMuxChatError(error.message || "ZenMux stream error", retryable, error.status);
     }
+    const choice = parsed.choices?.[0];
+    const delta = choice?.delta;
+    const text = input.contentOnly ? (delta?.content ?? "") : `${delta?.reasoning ?? ""}${delta?.content ?? ""}`;
+    if (text) input.onDelta(text);
+    if (choice?.finish_reason) completed = true;
+  };
+  try {
+    while (!completed) {
+      const { done, value } = await reader.read().catch((error: unknown) => {
+        if (input.signal?.aborted) throw error;
+        throw new ZenMuxChatError(error instanceof Error ? error.message : "Network error", true);
+      });
+      if (done) { consume(buffer + decoder.decode()); break; }
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        consume(line);
+        if (completed) break;
+      }
+    }
+    // PPT 不能把无结束标记的断流当作成功，否则半张页面会进入草稿。
+    if (input.requireComplete && !completed) throw new ZenMuxChatError("Stream ended before completion", true);
+  } finally {
+    void reader.cancel().catch(() => {});
+    reader.releaseLock();
   }
 }
 
@@ -212,6 +259,7 @@ export async function completeZenMuxChat(input: {
   tools?: readonly unknown[];
   toolChoice?: "auto" | "required";
   signal?: AbortSignal;
+  maxTokens?: number;
   fetchImpl?: typeof fetch;
 }): Promise<{ content: string; toolCalls: ZenMuxToolCall[] }> {
   const key = input.apiKey.trim();
@@ -219,6 +267,7 @@ export async function completeZenMuxChat(input: {
   const response = await (input.fetchImpl ?? fetch)(`${ZENMUX_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
+      ...ZENMUX_APPLICATION_HEADERS,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
@@ -228,6 +277,7 @@ export async function completeZenMuxChat(input: {
       stream: false,
       tools: input.tools,
       tool_choice: input.toolChoice,
+      ...(input.maxTokens ? { max_tokens: input.maxTokens } : {}),
     }),
     signal: input.signal,
   });
@@ -273,7 +323,7 @@ export async function validateZenMuxApiKey(
   try {
     const response = await fetchImpl(zenMuxModelsUrl(baseUrl), {
       method: "GET",
-      headers: { Authorization: `Bearer ${key}` },
+      headers: { ...ZENMUX_APPLICATION_HEADERS, Authorization: `Bearer ${key}` },
       signal: controller.signal,
     });
     if (response.status === 401 || response.status === 403) {

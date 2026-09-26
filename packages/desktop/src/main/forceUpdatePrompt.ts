@@ -1,6 +1,6 @@
 /* eslint-disable max-lines -- 强制升级提示窗口包含内联 HTML/CSS 和状态脚本，启动前不能依赖 renderer 包 */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { type Locale } from "@zcode/shared";
 import type { ForceUpdateDialogText, ForceUpdateGuardLogger } from "./forceUpdateGuard.js";
 import type { ForceAutoUpdateState } from "./autoUpdater.js";
@@ -28,10 +28,13 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function readForceUpdatePromptIcon(): string | null {
+async function readForceUpdatePromptIcon(isPackaged: boolean): Promise<string | null> {
   try {
-    const iconPath = resolve(process.cwd(), "build/icon.png");
-    const icon = readFileSync(iconPath).toString("base64");
+    // 原路径依赖 cwd，正式包从 Finder 启动时未必指向 build；改为与 Dock 共用 resources 图标。
+    const iconPath = isPackaged
+      ? join(process.resourcesPath, "icon.png")
+      : join(import.meta.dirname, "../../build/icon.png");
+    const icon = (await readFile(iconPath)).toString("base64");
     return `data:image/png;base64,${icon}`;
   } catch {
     return null;
@@ -93,8 +96,11 @@ function buildForceUpdatePromptMessages(locale: Locale) {
   };
 }
 
-function renderForceUpdatePromptHtml(text: ForceUpdateDialogText, locale: Locale): string {
-  const icon = readForceUpdatePromptIcon();
+function renderForceUpdatePromptHtml(
+  text: ForceUpdateDialogText,
+  locale: Locale,
+  icon: string | null,
+): string {
   const messages = buildForceUpdatePromptMessages(locale);
   const detailLines = text.detail
     .split("\n")
@@ -491,7 +497,8 @@ export async function showForceUpdatePrompt(
   logger: ForceUpdateGuardLogger,
   options: ShowForceUpdatePromptOptions = {},
 ): Promise<ForceUpdatePromptAction> {
-  const { BrowserWindow, nativeTheme } = await import("electron");
+  const { app, BrowserWindow, nativeTheme } = await import("electron");
+  const icon = await readForceUpdatePromptIcon(app.isPackaged);
   const parentWindow =
     BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? undefined;
   return new Promise<ForceUpdatePromptAction>((resolvePrompt) => {
@@ -635,7 +642,7 @@ export async function showForceUpdatePrompt(
     });
     fallbackTimer = setTimeout(() => showPromptWindow("timeout"), 1000);
     win.loadURL(
-      `data:text/html;charset=utf-8,${encodeURIComponent(renderForceUpdatePromptHtml(text, locale))}`,
+      `data:text/html;charset=utf-8,${encodeURIComponent(renderForceUpdatePromptHtml(text, locale, icon))}`,
     );
   });
 }

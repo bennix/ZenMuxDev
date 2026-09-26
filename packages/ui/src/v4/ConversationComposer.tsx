@@ -58,6 +58,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { ControlHintTooltip } from "@/ControlHintTooltip.js";
+import { StudioPanel } from "@/v4/composer/studio/StudioPanel.js";
 import { WorkspaceAgentBoard } from "@/v4/composer/WorkspaceAgentBoard.js";
 import {
   ChatErrorBanner,
@@ -593,6 +594,7 @@ function ConversationComposerImpl({
   } | null>(null);
   const [sendTooltipOpen, setSendTooltipOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [studioOpen, setStudioOpen] = useState(false);
   // submit 经 ref 读取最新文本/pending，避免回调随每次输入变更引用。
   const textRef = useRef("");
   const contentRevisionRef = useRef(0);
@@ -2175,6 +2177,20 @@ function ConversationComposerImpl({
         >
           {intl.formatMessage({ id: "chat.workspace.toggle" })}
         </Button>
+        <Button
+          type="button"
+          variant={studioOpen ? "secondary" : "ghost"}
+          aria-pressed={studioOpen}
+          className={cn(
+            "h-7 w-fit justify-center gap-1 rounded-lg border px-2 py-1.5 text-ui-base transition-colors",
+            studioOpen
+              ? "border-foreground bg-foreground text-background"
+              : "border-transparent",
+          )}
+          onClick={() => setStudioOpen((open) => !open)}
+        >
+          {intl.formatMessage({ id: "chat.studio.toggle" })}
+        </Button>
         <ConversationBackgroundWorkTrigger
           backgroundWorks={snapshot?.backgroundWorks ?? []}
           runningSubagentCount={runningSubagentCount}
@@ -2198,6 +2214,7 @@ function ConversationComposerImpl({
       snapshot?.backgroundWorks,
       intl,
       workspaceIdentity,
+      studioOpen,
       workspaceOpen,
       workspacePath,
     ],
@@ -2247,6 +2264,7 @@ function ConversationComposerImpl({
         </div>
       ) : null}
       {workspaceOpen ? <WorkspaceAgentBoard modelSelectionView={modelSelectionView} /> : null}
+      {studioOpen ? <StudioPanel modelSelectionView={modelSelectionView} /> : null}
       <div
         className={cn(
           "chat-composer-input-surface w-full",

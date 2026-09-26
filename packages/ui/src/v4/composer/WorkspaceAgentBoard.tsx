@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button.js";
 import { cn } from "@/components/lib/utils.js";
 import { usePlatform } from "@/hooks/usePlatform.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { defaultEffort, reasoningBody, resolveEffort, supportedEfforts } from "./reasoningEffort.js";
 
 const STORAGE_KEY = "zencode.workspace.board.v1";
 const MAX_AGENTS = 5;
@@ -82,44 +83,6 @@ function fileToDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error ?? new Error("read failed"));
     reader.readAsDataURL(file);
   });
-}
-
-function defaultEffort(efforts: readonly string[]): string {
-  if (efforts.includes("medium")) return "medium";
-  return efforts.at(-1) ?? "";
-}
-
-function resolveEffort(effort: string, efforts: readonly string[]): string {
-  if (effort && efforts.includes(effort)) return effort;
-  return defaultEffort(efforts);
-}
-
-function supportedEfforts(modelId: string, efforts: readonly string[]): readonly string[] {
-  const blocked = /gpt-6-astra/iu.test(modelId)
-    ? new Set(["minimal", "none"])
-    : /gpt-6-sol/iu.test(modelId)
-      ? new Set(["minimal"])
-      : null;
-  return blocked ? efforts.filter((effort) => !blocked.has(effort)) : efforts;
-}
-
-function reasoningBody(modelId: string, effort: string): Record<string, unknown> | undefined {
-  const level = /gpt-6-astra/iu.test(modelId) && (effort === "minimal" || effort === "none")
-    ? "medium"
-    : /gpt-6-sol/iu.test(modelId) && effort === "minimal"
-      ? "medium"
-      : effort;
-  if (!level) return undefined;
-  if (/claude|anthropic\//iu.test(modelId)) {
-    const budget = level === "low" || level === "minimal" ? 4000 : level === "high" ? 24000 : 10000;
-    return { thinking: { type: "enabled", budget_tokens: budget } };
-  }
-  if (/gemini-3/iu.test(modelId)) return { thinking_level: level.toUpperCase() };
-  if (/gemini/iu.test(modelId)) {
-    const budget = level === "low" || level === "minimal" ? 4000 : level === "high" ? 24000 : 10000;
-    return { thinking_budget: budget };
-  }
-  return { reasoning_effort: level };
 }
 
 function modelChoices(view: ModelSelectionView | null): readonly ModelChoice[] {

@@ -38,6 +38,7 @@ import {
 } from "./model-provider-section/constants.js";
 import { ModelProviderSectionDetail } from "./model-provider-section/Detail.js";
 import { ModelProviderSectionLayout } from "./model-provider-section/SectionLayout.js";
+import { StudioMediaSettings } from "@/v4/composer/studio/StudioMediaSettings.js";
 import { ProviderTemplatePicker } from "./model-provider-section/ProviderTemplatePicker.js";
 import type { CodingPlanLoginOptions } from "./model-provider-section/codingPlanPricingCards.js";
 import { useModelProviderNavigation } from "./model-provider-section/useModelProviderNavigation.js";
@@ -1051,6 +1052,7 @@ export function ModelProviderSection({
   }
 
   return (
+    <>
     <ModelProviderSectionLayout
       description={intl.formatMessage({ id: "settings.modelProviderDescription" })}
       refreshLabel={intl.formatMessage({ id: "settings.modelProvider.refresh" })}
@@ -1157,5 +1159,7 @@ export function ModelProviderSection({
         />
       )}
     </ModelProviderSectionLayout>
+    <StudioMediaSettings />
+    </>
   );
 }
