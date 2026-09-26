@@ -52,18 +52,21 @@ export function videoCatalogEntry(id: string): VideoCatalogEntry {
 }
 
 function sanitize(raw: Partial<StudioMediaLibrary> | null): StudioMediaLibrary {
-  const imageIds = unique(raw?.imageIds?.length ? raw.imageIds : IMAGE_CATALOG.map((model) => model.id));
-  const videoIds = unique(raw?.videoIds?.length ? raw.videoIds : VIDEO_CATALOG.map((model) => model.id));
+  let imageIds = unique(raw?.imageIds ?? []);
+  let videoIds = unique(raw?.videoIds ?? []);
+  // 修复：空白 ID 清理后也可能为空；恢复目录才能保证默认模型属于可用列表。
+  if (!imageIds.length) imageIds = IMAGE_CATALOG.map((model) => model.id);
+  if (!videoIds.length) videoIds = VIDEO_CATALOG.map((model) => model.id);
   const defaultImageId = imageIds.includes(raw?.defaultImageId ?? "")
     ? (raw?.defaultImageId as string)
     : imageIds.includes(DEFAULT_IMAGE_ID)
       ? DEFAULT_IMAGE_ID
-      : imageIds[0];
+      : (imageIds[0] ?? DEFAULT_IMAGE_ID);
   const defaultVideoId = videoIds.includes(raw?.defaultVideoId ?? "")
     ? (raw?.defaultVideoId as string)
     : videoIds.includes(DEFAULT_VIDEO_ID)
       ? DEFAULT_VIDEO_ID
-      : videoIds[0];
+      : (videoIds[0] ?? DEFAULT_VIDEO_ID);
   return {
     imageIds,
     videoIds,
