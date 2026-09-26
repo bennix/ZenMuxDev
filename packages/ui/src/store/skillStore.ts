@@ -39,6 +39,7 @@ interface SkillStoreState {
 }
 
 const inFlightSkillLoads = new Map<string, ReturnType<ISkillsService["list"]>>();
+let latestSkillLoadId = 0;
 
 function getSkillLoadKey(
   workspacePath: string,
@@ -91,6 +92,7 @@ export const useSkillStore = create<SkillStoreState>((set, get) => ({
     maybeSkillsService?: ISkillsService,
     workspaceIdentity?: string,
   ) {
+    const requestId = ++latestSkillLoadId;
     const currentState = get();
     const hasProvider = typeof providerOrSkillsService === "string";
     const provider = normalizeAgentProviderToZCodeAgent(
@@ -138,6 +140,8 @@ export const useSkillStore = create<SkillStoreState>((set, get) => ({
         skillsService,
         normalizedWorkspaceIdentity ?? undefined,
       );
+      // 自动刷新可能与工作区切换并发；只有最后一次目录请求能发布投影。
+      if (requestId !== latestSkillLoadId) return;
       set({
         skills: result.skills,
         capability: result.capability,
@@ -147,6 +151,7 @@ export const useSkillStore = create<SkillStoreState>((set, get) => ({
         loadedProvider: provider,
       });
     } catch (error) {
+      if (requestId !== latestSkillLoadId) return;
       logger.error("[skills] initialize failed", {
         workspacePath,
         provider,
@@ -166,6 +171,7 @@ export const useSkillStore = create<SkillStoreState>((set, get) => ({
     if (!workspacePath) {
       return;
     }
+    const requestId = ++latestSkillLoadId;
     const workspaceIdentityFromState =
       workspaceIdentity?.trim() || get().workspaceIdentity || undefined;
     const provider = normalizeAgentProviderToZCodeAgent(get().provider);
@@ -186,6 +192,7 @@ export const useSkillStore = create<SkillStoreState>((set, get) => ({
         skillsService,
         workspaceIdentityFromState,
       );
+      if (requestId !== latestSkillLoadId) return;
       set({
         skills: result.skills,
         capability: result.capability,
@@ -195,6 +202,7 @@ export const useSkillStore = create<SkillStoreState>((set, get) => ({
         loadedProvider: provider,
       });
     } catch (error) {
+      if (requestId !== latestSkillLoadId) return;
       logger.error("[skills] refresh failed", {
         workspacePath,
         provider,

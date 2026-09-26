@@ -61,6 +61,13 @@ export function buildSessionGuidanceSection(toolNames: readonly string[], hasSki
     lines.push("- When the user types `/<skill-name>`, invoke it via Skill. Only use skills listed in the user-invocable skills section \u2014 don't guess.");
   }
 
+  // 首个技能安装时 hasSkills 为 false 也需要目录指引，避免模型写到设置页和运行时都不会扫描的位置。
+  if (tools.has("Write") || tools.has("Bash")) {
+    lines.push(
+      "- When the user explicitly asks to create or install a skill, persist the complete skill directory (including scripts, references and assets). For personal skills use ~/.zcode/skills/<name>/SKILL.md; for workspace-only skills use <workspace>/.zcode/skills/<name>/SKILL.md. These directories are discovered by both the agent and Settings > Skills. Honor an explicit user path or scope; if that path is outside the discovered .zcode/skills or .agents/skills roots, explain that it needs importing in Settings. Do not overwrite an existing skill without checking its contents. Validate the SKILL.md name and description frontmatter and read the installed file before claiming success. Merely invoking Skill does not install it. Report the installed scope and path.",
+    );
+  }
+
   // if (tools.has("AskUserQuestion")) {
   //   lines.push("- Use AskUserQuestion when you need a bounded clarification before proceeding.");
   // }

@@ -58,6 +58,7 @@ import { SkillsImportDialog } from "@/settings/ExternalAgentImportDialog.js";
 import { formatRemoteSkillSyncTarget } from "@/settings/RemoteSkillSyncDialog.js";
 import { RemoteSyncDialogs, shouldShowRemoteSyncActions } from "@/settings/RemoteSyncActions.js";
 import { refreshSharedSkillStoreForWorkspace } from "@/lib/skillStoreRefresh.js";
+import { useSkillCatalogRefresh } from "@/hooks/useSkillCatalogRefresh.js";
 import { usePluginManagementStore } from "@/store/pluginManagementStore.js";
 import {
   groupScopedSkillsBySource,
@@ -348,6 +349,10 @@ export function SkillsSection({
     // 首屏或切换 Scope target 时必须显示阻塞 loading；手动刷新仍走后台刷新，
     // 避免有当前 target 数据时整块闪烁。
     void loadSkills(true);
+    // 目标切换或卸载后，旧 Host 的目录扫描不能覆盖新工作区的设置列表。
+    return () => {
+      latestRequestIdRef.current += 1;
+    };
   }, [activeWorkspacePath, loadSkills, targetServiceResolution.rpcReady]);
 
   const refresh = useCallback(async () => {
@@ -361,6 +366,18 @@ export function SkillsSection({
       skillsService,
     });
   }, [activeWorkspaceIdentity, activeWorkspacePath, skillsService]);
+
+  const refreshCatalog = useCallback(async () => {
+    await Promise.all([refresh(), refreshSharedSkillStoreForCurrentWorkspace()]);
+  }, [refresh, refreshSharedSkillStoreForCurrentWorkspace]);
+
+  useSkillCatalogRefresh({
+    workspacePath: activeWorkspacePath,
+    workspaceIdentity: activeWorkspaceIdentity,
+    taskService: targetServiceResolution.services.zcodeTaskService,
+    enabled: targetServiceResolution.rpcReady,
+    refresh: refreshCatalog,
+  });
 
   const setEnabled = useCallback(
     async (skillId: string, enabled: boolean) => {
