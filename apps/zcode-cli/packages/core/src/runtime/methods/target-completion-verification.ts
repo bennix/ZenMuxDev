@@ -67,11 +67,18 @@ export async function verifyActiveTargetCompletionForContinuation(
     }
 
     const previousTarget = await this.readSessionTargetForContext(input.traceContext);
-    const completedTarget =
-      (await this.sessionStore!.updateTargetStatus({
-        sessionID: this.sessionId,
-        status: "complete",
-      })) ?? input.target;
+    const completedTarget = await this.sessionStore!.updateTargetStatus({
+      sessionID: this.sessionId,
+      status: "complete",
+      expected: { targetID: input.target.targetID, objective: input.target.objective, status: "active" },
+    });
+    // 修复：不能把旧审查通过当作当前目标完成；存储层条件更新失败时不发布完成事件。
+    if (!completedTarget) {
+      return {
+        target: (await this.readSessionTargetForContext(input.traceContext)) ?? input.target,
+        verification: failedGoalCompletionVerification("Goal changed during completion verification; the stale result was discarded."),
+      };
+    }
     await this.recordTargetChanged({
       action: "status_updated",
       previousTarget,

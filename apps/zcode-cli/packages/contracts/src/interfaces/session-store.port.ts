@@ -1211,6 +1211,7 @@ export interface SessionStorePort {
     tokenBudget?: number | null;
   }): Promise<SessionGoal | null>;
   updateTargetStatus(input: {
+    expected?: Pick<SessionGoal, "targetID" | "objective" | "status">;
     sessionID: SessionId;
     status: GoalStatus;
   }): Promise<SessionGoal | null>;

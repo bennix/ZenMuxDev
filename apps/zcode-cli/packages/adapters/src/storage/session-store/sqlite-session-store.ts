@@ -775,6 +775,7 @@ export class SqliteSessionStore
   }
 
   async updateTargetStatus(input: {
+    expected?: Pick<SessionGoal, "targetID" | "objective" | "status">;
     sessionID: SessionId;
     status: GoalStatus;
   }): Promise<SessionGoal | null> {

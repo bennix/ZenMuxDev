@@ -157,18 +157,21 @@ export function createSessionTarget(
 
 export function updateSessionTargetStatus(
   db: DatabaseSync,
-  input: { sessionID: SessionId; status: GoalStatus },
+  input: { sessionID: SessionId; status: GoalStatus; expected?: Pick<SessionGoal, "targetID" | "objective" | "status"> },
 ): SessionGoal | null {
   const now = Date.now();
+  // 修复：审查请求期间目标可能被替换或暂停，条件必须与写入在同一 SQL 中判定。
+  const condition = input.expected ? " and target_id = ? and objective = ? and status = ?" : "";
+  const values = input.expected ? [input.expected.targetID, input.expected.objective, input.expected.status] : [];
   const result = db
     .prepare(
       `
       update session_target
       set status = ?, time_updated = ?
-      where session_id = ?
+      where session_id = ?${condition}
       `,
     )
-    .run(input.status, now, input.sessionID);
+    .run(input.status, now, input.sessionID, ...values);
   if (result.changes === 0) return null;
   touchSessionForTarget(db, input.sessionID, now);
   return mustReadTarget(db, input.sessionID);
