@@ -5,7 +5,18 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright-core");
 const server = await createServer({
   configFile: false,
-  plugins: [{ name: "weixin-test-page", configureServer(server) { server.middlewares.use((request, response, next) => { if (request.url !== "/") return next(); response.setHeader("Content-Type", "text/html"); response.end("<!doctype html><html><body></body></html>"); }); } }],
+  plugins: [
+    {
+      name: "weixin-test-page",
+      configureServer(server) {
+        server.middlewares.use((request, response, next) => {
+          if (request.url !== "/") return next();
+          response.setHeader("Content-Type", "text/html");
+          response.end("<!doctype html><html><body></body></html>");
+        });
+      },
+    },
+  ],
   root: process.cwd(),
   server: { port: 0 },
   resolve: { alias: { "@": `${process.cwd()}/packages/ui/src` } },
@@ -21,12 +32,23 @@ try {
     const { ProviderSettingsCard } =
       await import("/packages/ui/src/BotsDialog/ProviderSettingsCard.tsx");
     const { WeixinEchoSetting } = await import("/packages/ui/src/BotsDialog/WeixinEchoSetting.tsx");
+    const { WeixinAccessSetting } =
+      await import("/packages/ui/src/BotsDialog/WeixinAccessSetting.tsx");
     function Probe() {
+      const [users, setUsers] = React.useState(undefined);
       const [enabled, setEnabled] = React.useState(true);
       return React.createElement(
         ZCodeIntlProvider,
         { initialLocale: "zh-CN" },
         React.createElement(WeixinEchoSetting, { enabled, onChange: setEnabled }),
+        React.createElement(WeixinAccessSetting, {
+          users,
+          scanningUser: "owner@im.wechat",
+          onChange: (next) => {
+            setUsers(next);
+            window.allowedUsers = next ?? "default";
+          },
+        }),
         React.createElement(ProviderSettingsCard, {
           bot: { id: "b", provider: "weixin", enabled: true, name: "Test" },
           credentialValue: "",
@@ -62,6 +84,21 @@ try {
   assert.equal(await toggle.getAttribute("aria-checked"), "true");
   await toggle.click();
   assert.equal(await toggle.getAttribute("aria-checked"), "false");
+  const allowlist = page.getByRole("textbox", { name: "微信用户白名单" });
+  assert.equal(await allowlist.inputValue(), "owner@im.wechat");
+  await allowlist.fill("invalid");
+  assert.equal(await page.getByRole("button", { name: "保存白名单" }).isEnabled(), false);
+  await allowlist.fill("friend@im.wechat, owner@im.wechat");
+  await page.getByRole("button", { name: "保存白名单" }).click();
+  assert.deepEqual(await page.evaluate(() => window.allowedUsers), [
+    "friend@im.wechat",
+    "owner@im.wechat",
+  ]);
+  await allowlist.fill("");
+  await page.getByRole("button", { name: "保存白名单" }).click();
+  assert.deepEqual(await page.evaluate(() => window.allowedUsers), []);
+  await page.getByRole("button", { name: "仅允许扫码用户" }).click();
+  assert.equal(await allowlist.inputValue(), "owner@im.wechat");
   await page.getByRole("textbox", { name: "手机显示的验证码" }).fill("123456");
   await page.getByRole("button", { name: "验证", exact: true }).click();
   assert.equal(await page.evaluate(() => window.submittedVerification), "123456");

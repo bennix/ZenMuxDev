@@ -1,3 +1,4 @@
+import { isWeixinActorAllowed } from "./weixinAccess.js";
 import { replyWeixinEcho } from "./weixinEcho.js";
 import { WeixinSessionExpiredError } from "./providers/weixinProtocol.js";
 import type { BotConfig, BotProviderCallbackResult, BotsConfigFile } from "@zcode/shared";
@@ -46,6 +47,8 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
       bot.credentialRef ?? "",
       bot.weixinBaseUrl ?? "",
       String(bot.weixinEchoMode ?? false),
+      bot.weixinUserId ?? "",
+      JSON.stringify(bot.weixinAllowedUsers ?? null),
       credential ?? "",
     ]);
   }
@@ -137,6 +140,7 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
             if (signal.aborted) {
               return;
             }
+            if (!isWeixinActorAllowed(bot, inbound.actor)) continue;
             if (bot.weixinEchoMode) {
               await replyWeixinEcho(bot, inbound, provider);
               continue;

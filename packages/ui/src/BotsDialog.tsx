@@ -1,3 +1,4 @@
+import { WeixinAccessSetting } from "@/BotsDialog/WeixinAccessSetting.js";
 import { WeixinEchoSetting } from "@/BotsDialog/WeixinEchoSetting.js";
 /* eslint-disable max-lines -- BotsDialog 现在保留数据加载、保存和轮询编排；右侧卡片已拆到 BotsDialog/* 子组件，后续再继续下沉状态 hook。 */
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
@@ -1255,10 +1256,18 @@ export function BotsDialog({
                 />
 
                 {selectedBot.provider === "weixin" ? (
+                  <>
                   <WeixinEchoSetting
                     enabled={selectedBot.weixinEchoMode === true}
                     onChange={(enabled) => patchSelectedBot({ weixinEchoMode: enabled })}
                   />
+                    <WeixinAccessSetting
+                      key={selectedBot.id}
+                      users={selectedBot.weixinAllowedUsers}
+                      scanningUser={selectedBot.weixinUserId}
+                      onChange={(users) => patchSelectedBot({ weixinAllowedUsers: users })}
+                    />
+                  </>
                 ) : null}
                 <SettingsGroupCard>
                   <BotReplyGranularityCard bot={selectedBot} onPatchBot={patchSelectedBot} />

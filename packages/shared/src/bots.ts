@@ -114,6 +114,7 @@ export interface BotConfig {
   weixinBaseUrl?: string;
   weixinUserId?: string;
   weixinEchoMode?: boolean;
+  weixinAllowedUsers?: string[];
   providerUserId?: string;
   displayName?: string;
   allowedWorkspaces: string[];
@@ -471,6 +472,7 @@ export const botConfigSchema = z
     weixinBaseUrl: z.string().url().optional(),
     weixinUserId: z.string().min(1).optional(),
     weixinEchoMode: z.boolean().optional(),
+    weixinAllowedUsers: z.array(z.string().trim().regex(/^[^\s@]+@im\.wechat$/u)).optional(),
     providerUserId: z.string().min(1).optional(),
     displayName: z.string().optional(),
     allowedWorkspaces: z.array(z.string().min(1)),

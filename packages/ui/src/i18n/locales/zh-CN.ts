@@ -659,6 +659,11 @@ const zhCN: Record<string, string> = {
   "bots.providerSettings.discord": "Discord 暂未开放配置。",
   "bots.providerSettings.wecom": "企业微信暂未开放配置。",
   "bots.telegramBotToken": "关联机器人",
+  "bots.weixinAccess.title": "微信用户白名单",
+  "bots.weixinAccess.description": "默认仅允许扫码用户。多个用户 ID 用逗号分隔；保存空列表将拒绝所有用户。名单内用户共用此 Bot 的工作区和会话。关闭 Echo 后使用当前配置的 AI 模型。",
+  "bots.weixinAccess.invalid": "请输入以 @im.wechat 结尾的用户 ID。",
+  "bots.weixinAccess.save": "保存白名单",
+  "bots.weixinAccess.reset": "仅允许扫码用户",
   "bots.weixinEcho.title": "文字连通测试（Echo）",
   "bots.weixinEcho.description":
     "发送 ping 回复 pong；其他私聊文字原样返回，不调用 AI。新配对默认开启。测试前请停用同账号的其他 Gateway。",

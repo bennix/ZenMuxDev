@@ -665,6 +665,27 @@ export async function getWeixinUpdates(params: {
 }
 
 export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAdapter {
+  const typingOperations = new Map<string, Promise<void>>();
+  function setTyping(bot: BotConfig, target: BotTypingTarget, status: 1 | 2): Promise<void> {
+    const key = JSON.stringify([bot.id, target.providerUserId]);
+    // 修复：开始/结束请求必须串行，避免迟到的开始请求覆盖取消状态。
+    const operation = (typingOperations.get(key) ?? Promise.resolve()).catch(() => undefined).then(async () => {
+      const config = (await requestWeixinJson(bot, deps, "/getconfig", {
+        ilink_user_id: target.providerUserId,
+        ...(target.providerContextToken ? { context_token: target.providerContextToken } : {}),
+      })) as WeixinTestResponse;
+      if (!config.typing_ticket) return;
+      await requestWeixinJson(bot, deps, "/sendtyping", {
+        ilink_user_id: target.providerUserId,
+        typing_ticket: config.typing_ticket,
+        status,
+      });
+    });
+    typingOperations.set(key, operation);
+    return operation.finally(() => {
+      if (typingOperations.get(key) === operation) typingOperations.delete(key);
+    });
+  }
   return {
     async test(bot) {
       if (!bot.enabled) {
@@ -709,20 +730,8 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
       }
     },
 
-    async sendTyping(bot, target: BotTypingTarget) {
-      const config = (await requestWeixinJson(bot, deps, "/getconfig", {
-        ilink_user_id: target.providerUserId,
-        ...(target.providerContextToken ? { context_token: target.providerContextToken } : {}),
-      })) as WeixinTestResponse;
-      if (!config.typing_ticket) {
-        return;
-      }
-      await requestWeixinJson(bot, deps, "/sendtyping", {
-        ilink_user_id: target.providerUserId,
-        typing_ticket: config.typing_ticket,
-        status: 1,
-      });
-    },
+    sendTyping: (bot, target) => setTyping(bot, target, 1),
+    stopTyping: (bot, target) => setTyping(bot, target, 2),
 
     async downloadAttachment(_bot, attachment) {
       const aesKey = attachment.providerMetadata?.weixinAesKey;

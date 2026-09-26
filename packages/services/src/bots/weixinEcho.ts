@@ -1,3 +1,4 @@
+import { isWeixinActorAllowed } from "./weixinAccess.js";
 import type { BotConfig, BotInboundMessage } from "@zcode/shared";
 import type { BotProviderAdapter } from "./providers/types.js";
 
@@ -8,11 +9,7 @@ export async function replyWeixinEcho(
   provider: Pick<BotProviderAdapter, "send">,
 ): Promise<void> {
   const actor = inbound.actor;
-  if (
-    !actor.providerUserId.endsWith("@im.wechat") ||
-    (actor.chatId && actor.chatId !== actor.providerUserId)
-  )
-    return;
+  if (!isWeixinActorAllowed(bot, actor)) return;
   if (!inbound.text.trim()) return;
   await provider.send(bot, {
     botId: bot.id,

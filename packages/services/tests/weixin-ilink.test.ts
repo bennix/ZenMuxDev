@@ -60,11 +60,13 @@ test("confirmed login preserves routing and account identity", async () => {
 
 const bot = {
   id: "test",
+  enabled: true,
+  weixinUserId: "u@im.wechat",
   provider: "weixin",
   credentialRef: "test-token",
   providerUserId: "b@im.bot",
   weixinBaseUrl: "https://alternate.weixin.qq.com",
-} as never;
+} as unknown as import("@zcode/shared").BotConfig;
 const deps = { loadCredential: async () => "test-token" };
 
 test("echo reply uses authenticated protocol headers and exact context token", async () => {
@@ -153,7 +155,13 @@ test("milestone B replies pong without entering the agent and ignores groups", a
     bot,
     {
       text: "ping",
-      actor: { providerUserId: "u@im.wechat", providerContextToken: "context" },
+      actor: {
+        botId: "test",
+        provider: "weixin",
+        chatType: "private",
+        providerUserId: "u@im.wechat",
+        providerContextToken: "context",
+      },
     } as never,
     provider,
   );
@@ -185,4 +193,51 @@ test("cursor persists without workspace and survives stale context writes", asyn
     setDataBaseDir(null);
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("Weixin access defaults to scanner and rejects groups, strangers and explicit empty list", async () => {
+  const { isWeixinActorAllowed } = await import("../src/bots/weixinAccess.js");
+  const { findAuthorizedBot, findBoundUser } = await import("../src/bots/botConfigHelpers.js");
+  const configured = { ...bot, enabled: true, weixinUserId: "owner@im.wechat" };
+  const actor = {
+    botId: "test",
+    provider: "weixin",
+    providerUserId: "owner@im.wechat",
+    chatType: "private",
+  } as const;
+  assert.equal(isWeixinActorAllowed(configured, actor), true);
+  assert.equal(
+    isWeixinActorAllowed(configured, { ...actor, providerUserId: "stranger@im.wechat" }),
+    false,
+  );
+  assert.equal(isWeixinActorAllowed({ ...configured, weixinUserId: undefined }, actor), false);
+  assert.equal(isWeixinActorAllowed({ ...configured, weixinAllowedUsers: [] }, actor), false);
+  assert.equal(isWeixinActorAllowed(configured, { ...actor, chatType: "group" }), false);
+  assert.equal(isWeixinActorAllowed(configured, { ...actor, chatId: "group" }), false);
+  const custom = { ...configured, weixinAllowedUsers: ["other@im.wechat"] };
+  assert.equal(isWeixinActorAllowed(custom, { ...actor, providerUserId: "other@im.wechat" }), true);
+  assert.equal(findAuthorizedBot({ bots: [custom] } as never, actor), null);
+  assert.equal(findBoundUser(custom, actor), null);
+});
+
+test("typing starts then cancels with original context; no ticket sends nothing", async () => {
+  await withFetch(
+    [{ typing_ticket: "ticket" }, { ret: 0 }, { typing_ticket: "ticket" }, { ret: 0 }],
+    async (calls) => {
+      const provider = createWeixinBotProvider(deps);
+      const target = { providerUserId: "u@im.wechat", providerContextToken: "original" };
+      await Promise.all([provider.sendTyping!(bot, target), provider.stopTyping!(bot, target)]);
+      assert.deepEqual(
+        calls.map((call) => new URL(call.url).pathname.split("/").pop()),
+        ["getconfig", "sendtyping", "getconfig", "sendtyping"],
+      );
+      assert.equal(JSON.parse(String(calls[0]!.init.body)).context_token, "original");
+      assert.equal(JSON.parse(String(calls[1]!.init.body)).status, 1);
+      assert.equal(JSON.parse(String(calls[3]!.init.body)).status, 2);
+    },
+  );
+  await withFetch([{}], async (calls) => {
+    await createWeixinBotProvider(deps).sendTyping!(bot, { providerUserId: "u@im.wechat" });
+    assert.equal(calls.length, 1);
+  });
 });

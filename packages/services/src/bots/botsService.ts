@@ -1,3 +1,4 @@
+import { isWeixinActorAllowed } from "./weixinAccess.js";
 /* eslint-disable max-lines -- Bots 服务仍复用原 RPC 文件名，先把鉴权、命令路由、ZCode Agent 桥接收口集中在同一服务内。 */
 import { Buffer } from "node:buffer";
 import { createHash, randomBytes } from "node:crypto";
@@ -2105,6 +2106,8 @@ export function createBotsService(
       return;
     }
     if (adapter.sendTyping) {
+      // 修复：周期 typing 也需保留目标，任务结束才能发送取消输入状态。
+      typingTargets.set(taskId, { bot, target });
       void adapter.sendTyping(bot, target).catch(() => undefined);
       typingIntervals.set(
         taskId,
@@ -2579,6 +2582,7 @@ export function createBotsService(
         : undefined;
     for (const inbound of parsedInboundMessages) {
       const bot = findBot(config, inbound.botId);
+      if (bot?.provider === "weixin" && !isWeixinActorAllowed(bot, inbound.actor)) continue;
       if (bot?.provider === "webhook" && bot.webhookSecretRef) {
         const expectedSecret = await deps.credentialService.load(bot.webhookSecretRef);
         if (expectedSecret && expectedSecret !== inboundSecret) {
@@ -2633,7 +2637,7 @@ export function createBotsService(
       }
       botsLogger.info(
         undefined,
-        `provider callback provider=${provider} bot=${inboundMessage.botId} user=${inboundMessage.actor.providerUserId} displayName=${inboundMessage.actor.displayName ?? ""} text=${inboundMessage.text}`,
+        `provider callback provider=${provider} bot=${inboundMessage.botId} textLength=${inboundMessage.text.length}`,
       );
       let outbound: BotOutboundMessage[];
       let reconnectStartingReply: BotOutboundMessage | null = null;

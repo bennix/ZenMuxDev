@@ -727,6 +727,11 @@ const enUS: Record<string, string> = {
   "bots.providerSettings.discord": "Discord support is not available yet.",
   "bots.providerSettings.wecom": "WeCom support is not available yet.",
   "bots.telegramBotToken": "Link bot",
+  "bots.weixinAccess.title": "Weixin user allowlist",
+  "bots.weixinAccess.description": "Defaults to the scanning user. Separate IDs with commas; saving an empty list denies everyone. Allowed users share this bot’s workspace and session. Turn off Echo to use the configured AI model.",
+  "bots.weixinAccess.invalid": "Enter user IDs ending in @im.wechat.",
+  "bots.weixinAccess.save": "Save allowlist",
+  "bots.weixinAccess.reset": "Scanning user only",
   "bots.weixinEcho.title": "Text connectivity test (Echo)",
   "bots.weixinEcho.description":
     "Send ping for pong; other private text is echoed without AI. Enabled for new pairings. Stop other gateways using this account first.",

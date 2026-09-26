@@ -1,3 +1,4 @@
+import { isWeixinActorAllowed } from "./weixinAccess.js";
 import {
   normalizeBotReplyGranularity,
   type BotActor,
@@ -44,7 +45,7 @@ export function findAuthorizedBot(
   actor: BotActor,
 ): BotConfig | null {
   if (actor.provider === "weixin") {
-    return config.bots.find((bot) => bot.enabled && bot.provider === "weixin" && bot.id === actor.botId) ?? null;
+    return config.bots.find((bot) => isWeixinActorAllowed(bot, actor)) ?? null;
   }
   return (
     config.bots.find(
@@ -57,7 +58,7 @@ export function findAuthorizedBot(
 }
 
 export function findBoundUser(bot: BotConfig, actor: BotActor): BotConfig | null {
-  return actor.provider === "weixin" || bot.providerUserId === actor.providerUserId ? bot : null;
+  return (actor.provider === "weixin" ? isWeixinActorAllowed(bot, actor) : bot.providerUserId === actor.providerUserId) ? bot : null;
 }
 
 export function normalizeBotConfig(bot: BotConfig): BotConfig {
