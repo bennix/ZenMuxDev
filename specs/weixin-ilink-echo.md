@@ -61,3 +61,11 @@ Cursor correction: transport progress must not depend on a selected workspace. S
 new cursors in the same Bot repository's optional `weixinCursors[botId]` map; read the
 legacy `bots[botId].weixinGetUpdatesBuf` only for migration, remove it on the next
 write. Stop the old poller before saving replacement credentials and clear its cursor.
+
+## Live acceptance record
+
+2026-09-27: the user confirmed receiving `pong` after pairing in ZenCode Settings
+and sending `ping` from Weixin. This is user-reported live acceptance, not an
+independently captured transport trace. Milestone B passes its live gate.
+Milestones C (allowlist, typing and model text replies) and D (media) remain
+separate changes; this acceptance does not verify those capabilities.
