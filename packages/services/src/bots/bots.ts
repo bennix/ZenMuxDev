@@ -66,17 +66,22 @@ export interface BotWeixinRegistrationBeginResult {
 
 export interface BotWeixinRegistrationPollParams {
   qrCode: string;
+  baseUrl?: string;
+  verifyCode?: string;
 }
 
 export type BotWeixinRegistrationPollResult =
   | {
-      status: "pending" | "scanned";
+      status: "pending" | "scanned" | "need_verifycode" | "redirect";
       interval: number;
+      baseUrl?: string;
     }
   | {
       status: "success";
       botToken: string;
       botId?: string;
+      baseUrl: string;
+      userId?: string;
     }
   | {
       status: "expired" | "error";

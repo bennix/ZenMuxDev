@@ -128,11 +128,13 @@ export function ProviderSettingsCard({
   onRemoveSecret,
   onOpenTelegramBotFather,
   onStartWeixinRegistration,
+  onSubmitWeixinVerification,
   onStartFeishuRegistration,
   onCreateBindCode,
   onUnbind,
   onCopyBindCommand,
 }: {
+  onSubmitWeixinVerification: (code: string) => void;
   bot: BotConfig;
   runtime: BotServiceStatus["botRuntime"][number] | undefined;
   credentialValue: string;
@@ -157,6 +159,7 @@ export function ProviderSettingsCard({
   onCopyBindCommand: () => void;
 }) {
   const { intl } = useZCodeIntl();
+  const [verifyCode, setVerifyCode] = useState("");
   if (bot.provider === "webhook") {
     return null;
   }
@@ -418,6 +421,28 @@ export function ProviderSettingsCard({
           ) : null}
           <div className="min-w-52 flex-1 space-y-3 text-ui-base text-foreground-subtle">
             <div>{intl.formatMessage({ id: "bots.weixinRegistrationScanHint" })}</div>
+            {weixinRegistration.status === "need_verifycode" ? (
+              <form
+                className="flex gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (verifyCode.trim()) {
+                    onSubmitWeixinVerification(verifyCode.trim());
+                    setVerifyCode("");
+                  }
+                }}
+              >
+                <Input
+                  value={verifyCode}
+                  onChange={(event) => setVerifyCode(event.target.value)}
+                  autoComplete="one-time-code"
+                  aria-label={intl.formatMessage({ id: "bots.weixinVerification.label" })}
+                />
+                <Button type="submit" disabled={!verifyCode.trim()}>
+                  {intl.formatMessage({ id: "bots.weixinVerification.submit" })}
+                </Button>
+              </form>
+            ) : null}
             <div>
               {weixinRegistration.status === "pending" ||
               weixinRegistration.status === "scanned" ? (

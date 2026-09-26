@@ -111,6 +111,9 @@ export interface BotConfig {
   webhookUrl?: string;
   webhookAuthHeaderName?: string;
   feishuAppId?: string;
+  weixinBaseUrl?: string;
+  weixinUserId?: string;
+  weixinEchoMode?: boolean;
   providerUserId?: string;
   displayName?: string;
   allowedWorkspaces: string[];
@@ -194,6 +197,7 @@ export type BotContextState = BotState;
 
 export interface BotsStateFile {
   version: 3;
+  weixinCursors?: Record<string, string>;
   bots: Record<string, BotState>;
 }
 
@@ -464,6 +468,9 @@ export const botConfigSchema = z
     webhookUrl: z.string().url().optional(),
     webhookAuthHeaderName: z.string().min(1).optional(),
     feishuAppId: z.string().min(1).optional(),
+    weixinBaseUrl: z.string().url().optional(),
+    weixinUserId: z.string().min(1).optional(),
+    weixinEchoMode: z.boolean().optional(),
     providerUserId: z.string().min(1).optional(),
     displayName: z.string().optional(),
     allowedWorkspaces: z.array(z.string().min(1)),
@@ -488,6 +495,7 @@ export const botsConfigFileSchema = z
 export const botsStateFileSchema = z
   .object({
     version: z.literal(3),
+    weixinCursors: z.record(z.string(), z.string()).optional(),
     bots: z.record(
       z.string(),
       z.object({

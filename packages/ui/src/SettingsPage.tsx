@@ -1,3 +1,4 @@
+import { WeixinPairingSettings } from "@/settings/WeixinPairingSettings.js";
 /* oxlint-disable eslint(max-lines) */
 import { ArrowLeft, Rocket, type LucideIcon } from "lucide-react";
 import {
@@ -1652,6 +1653,11 @@ export function SettingsPage({
                       </div>
                       <div className="space-y-8">
                         {activeSection === "general" ? (
+                          <>
+                            <WeixinPairingSettings
+                              workspacePath={activeWorkspacePath ?? captionWorkspacePath ?? ""}
+                              workspaceIdentity={activeWorkspaceIdentity ?? undefined}
+                            />
                           <GeneralSectionContent
                             localePreference={localePreference}
                             interfaceMode={interfaceMode}
@@ -1764,7 +1770,9 @@ export function SettingsPage({
                             onToolGroupingChangesEnabledChange={
                               handleToolGroupingChangesEnabledChange
                             }
-                            onZCodeInteractionBehaviorChange={handleZCodeInteractionBehaviorChange}
+                              onZCodeInteractionBehaviorChange={
+                                handleZCodeInteractionBehaviorChange
+                              }
                             onAskUserQuestionAutoResolutionEnabledChange={
                               handleAskUserQuestionAutoResolutionEnabledChange
                             }
@@ -1781,6 +1789,7 @@ export function SettingsPage({
                               })
                             }
                           />
+                          </>
                         ) : activeSection === "appearance" ? (
                           <AppearanceSectionContent
                             codePreviewSettings={codePreviewSettings}

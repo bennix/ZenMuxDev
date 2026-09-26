@@ -61,7 +61,8 @@ const enUS: Record<string, string> = {
   "occupationOnboarding.migration": "Migrate conversations",
   "occupationOnboarding.migrationDescription": "Migrate conversation history from Claude Code",
   "occupationOnboarding.memory": "Enable Workspace Memory",
-  "occupationOnboarding.memoryDescription": "Let ZenCode remember your preferences and work context.",
+  "occupationOnboarding.memoryDescription":
+    "Let ZenCode remember your preferences and work context.",
   "occupationOnboarding.suggestions": "Enable proactive task suggestions",
   "occupationOnboarding.suggestionsDescription":
     "Show suggestions in new conversations. Click to fill the composer.",
@@ -726,6 +727,17 @@ const enUS: Record<string, string> = {
   "bots.providerSettings.discord": "Discord support is not available yet.",
   "bots.providerSettings.wecom": "WeCom support is not available yet.",
   "bots.telegramBotToken": "Link bot",
+  "bots.weixinEcho.title": "Text connectivity test (Echo)",
+  "bots.weixinEcho.description":
+    "Send ping for pong; other private text is echoed without AI. Enabled for new pairings. Stop other gateways using this account first.",
+  "bots.weixinPairing.title": "Weixin pairing",
+  "bots.weixinPairing.description":
+    "Scan to connect ClawBot / iLink and verify ping → pong in Weixin.",
+  "bots.weixinPairing.open": "Pair and manage",
+  "bots.weixinVerification.label": "Verification code shown on your phone",
+  "bots.weixinVerification.submit": "Verify",
+  "bots.weixinRegistration.need_verifycode": "Enter the verification code shown on your phone",
+  "bots.weixinRegistration.redirect": "Switching Weixin login endpoint",
   "bots.weixinRegistrationTitle": "Weixin QR login",
   "bots.weixinRegistrationDescription":
     "Scan to log in, then send any message in Weixin to activate the chat.",
@@ -2783,8 +2795,10 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.apiKeyValidating": "Checking the API key with ZenMux…",
   "settings.modelProvider.apiKeyValid": "API key verified and saved on this device.",
   "settings.modelProvider.apiKeyInvalid": "ZenMux rejected this API key. It was not saved.",
-  "settings.modelProvider.apiKeyNetworkError": "ZenMux could not be reached. The key was not saved.",
-  "settings.modelProvider.apiKeyUnexpected": "ZenMux returned an unexpected result. The key was not saved.",
+  "settings.modelProvider.apiKeyNetworkError":
+    "ZenMux could not be reached. The key was not saved.",
+  "settings.modelProvider.apiKeyUnexpected":
+    "ZenMux returned an unexpected result. The key was not saved.",
   "settings.modelProvider.viewUsage": "View usage",
   "settings.modelProvider.useSubscription": "Use subscription",
   "settings.modelProvider.or": "or",
@@ -3562,7 +3576,8 @@ const enUS: Record<string, string> = {
   "sidebar.usage.plan.toolCalls": "Tool calls",
   "sidebar.usage.plan.mcp": "ZenCode MCP",
   "sidebar.usage.plan.zcodeMcp": "ZenCode MCP",
-  "sidebar.usage.plan.zcodeMcpDescription": "Daily aggregate quota for ZenCode built-in plugin MCPs",
+  "sidebar.usage.plan.zcodeMcpDescription":
+    "Daily aggregate quota for ZenCode built-in plugin MCPs",
   "chat.planUsage.title": "Plan usage",
   "chat.planUsage.titleWithPlan": "{plan} Plan usage",
   "chat.planUsage.providerFallback": "Current provider",
@@ -4847,15 +4862,18 @@ const enUS: Record<string, string> = {
   "chat.studio.elements": "Elements ({count})",
   "chat.studio.moveSelection": "Drag to move selected elements",
   "chat.studio.resize": "Resize: {direction}",
-  "chat.studio.geometryHint": "{count} selected · Drag to move, drag handles to resize, Esc to cancel",
+  "chat.studio.geometryHint":
+    "{count} selected · Drag to move, drag handles to resize, Esc to cancel",
   "chat.studio.retry": "Request interrupted. Retrying in {seconds}s (attempt {attempt}/{max})",
   "chat.studio.phase.failedEmpty": "Generation failed; no slides completed",
   "chat.studio.phase.layout": "Checking and repairing layout of slide {page}/{total}",
   "chat.studio.repairLayout": "Repair current slide layout",
   "chat.studio.layout.checking": "Slide {page}/{total} · Checking layout ({attempt} repairs)",
-  "chat.studio.layout.repairing": "Slide {page}/{total} · Repair {attempt}: {count} issues. You can stop anytime.",
+  "chat.studio.layout.repairing":
+    "Slide {page}/{total} · Repair {attempt}: {count} issues. You can stop anytime.",
   "chat.studio.layout.passed": "Slide {page}/{total} · Layout passed ({attempt} repairs)",
-  "chat.studio.layout.retained": "Slide {page}/{total} · Kept after {attempt} repairs with {count} unresolved issues",
+  "chat.studio.layout.retained":
+    "Slide {page}/{total} · Kept after {attempt} repairs with {count} unresolved issues",
   "chat.studio.layoutKept": "Slide retained with layout issues; repair later",
   "chat.studio.layoutDone": "Current slide layout repaired",
   "chat.studio.phase.style": "Planning style",
@@ -4924,21 +4942,24 @@ const enUS: Record<string, string> = {
   "chat.studio.duration": "Duration (sec)",
   "settings.studioMedia.repairModel": "PPT repair model",
   "settings.studioMedia.followWriter": "Use the drafting model",
-  "settings.studioMedia.repairHelp": "Enter a ZenMux text model ID for automatic and manual HTML/layout repairs. Saved automatically; applies to the next task.",
+  "settings.studioMedia.repairHelp":
+    "Enter a ZenMux text model ID for automatic and manual HTML/layout repairs. Saved automatically; applies to the next task.",
   "settings.studioMedia.imageTitle": "Image models",
   "settings.studioMedia.videoTitle": "Video models",
   "settings.studioMedia.modelId": "Model id, or pick from the catalog",
   "settings.studioMedia.add": "Add",
   "settings.studioMedia.remove": "Remove",
   "chat.workspace.title": "Multi-agent workspace",
-  "chat.workspace.hint": "Up to 5 agents speak in order. Each one sees the previous output. Google is searched in a browser first. A judge accepts the result.",
+  "chat.workspace.hint":
+    "Up to 5 agents speak in order. Each one sees the previous output. Google is searched in a browser first. A judge accepts the result.",
   "chat.workspace.searching": "Searching Google: {query}",
   "chat.workspace.searchEmpty": "No web results this time",
   "chat.workspace.add": "Add agent",
   "chat.workspace.remove": "Remove",
   "chat.workspace.judge": "Judge",
   "chat.workspace.whiteboard": "Shared whiteboard",
-  "chat.workspace.whiteboardHint": "Constraints, known numbers, and premises for every agent. Checked content is sent with each turn.",
+  "chat.workspace.whiteboardHint":
+    "Constraints, known numbers, and premises for every agent. Checked content is sent with each turn.",
   "chat.workspace.task": "Task",
   "chat.workspace.run": "Run",
   "chat.workspace.cancel": "Cancel",

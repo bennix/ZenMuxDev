@@ -844,35 +844,12 @@ export function createBotsService(
   }
 
   async function readWeixinGetUpdatesBuf(botId: string): Promise<string | undefined> {
-    return (await repo.readState()).bots[botId]?.weixinGetUpdatesBuf;
+    const state = await repo.readState();
+    return state.weixinCursors?.[botId] ?? state.bots[botId]?.weixinGetUpdatesBuf;
   }
 
   async function writeWeixinGetUpdatesBuf(botId: string, buf: string): Promise<void> {
-    const state = await repo.readState();
-    const existing = state.bots[botId];
-    if (existing) {
-      state.bots[botId] = {
-        ...existing,
-        weixinGetUpdatesBuf: buf,
-        updatedAt: Date.now(),
-      };
-    } else {
-      const bot = findBot(await repo.readConfig(), botId);
-      const workspace = bot ? firstAllowedWorkspace(await listWorkspaceRefs(), bot) : null;
-      if (bot && workspace) {
-        state.bots[botId] = {
-          botId,
-          workspacePath: workspace.workspacePath,
-          workspaceIdentity: workspace.workspaceIdentity,
-          workspaceId: workspace.id,
-          mode: "draft",
-          activeTaskId: null,
-          weixinGetUpdatesBuf: buf,
-          updatedAt: Date.now(),
-        };
-      }
-    }
-    await repo.writeState(state);
+    await repo.updateWeixinCursor(botId, buf);
   }
 
   async function readContext(_actor: BotActor, bot: BotConfig): Promise<BotContextState | null> {
@@ -5232,6 +5209,11 @@ export function createBotsService(
         replyMode: normalizeBotReplyGranularity(params.bot.provider, params.bot.replyMode),
       };
       if (params.credentialValue?.trim()) {
+        if (bot.provider === "weixin") {
+          // 先停旧 token 的唯一 poller，再重置游标，不能让旧请求在新配对后覆盖状态。
+          await weixinRuntime.stopPolling(bot.id);
+          await writeWeixinGetUpdatesBuf(bot.id, "");
+        }
         const key = buildBotCredentialKey(bot.id);
         await deps.credentialService.save(key, params.credentialValue.trim());
         bot = { ...bot, credentialRef: key };
@@ -5293,7 +5275,7 @@ export function createBotsService(
         feishuRuntime.stopWebSocket(bot.id);
       }
       if (bot.provider === "weixin") {
-        weixinRuntime.stopPolling(bot.id);
+        await weixinRuntime.stopPolling(bot.id);
       }
       // Bugfix: 只移除密钥时如果保留旧绑定身份，UI 会显示“已连通”，但运行时已经没有 token 可用。
       // 这里同步清理绑定状态，让 Bot token 行回到可重新添加的状态。
@@ -5302,6 +5284,8 @@ export function createBotsService(
         credentialRef: undefined,
         webhookSecretRef: undefined,
         providerUserId: undefined,
+        weixinBaseUrl: undefined,
+        weixinUserId: undefined,
         displayName: undefined,
         feishuAppId: isFeishuBotProvider(bot.provider) ? undefined : bot.feishuAppId,
       });
@@ -5311,6 +5295,7 @@ export function createBotsService(
       });
       const state = await repo.readState();
       delete state.bots[bot.id];
+      if (bot.provider === "weixin") await repo.updateWeixinCursor(bot.id, null);
       await repo.writeState(state);
       clearCandidateCaches();
       telegramRuntime.scheduleRefresh(savedConfig);
@@ -5334,7 +5319,7 @@ export function createBotsService(
         feishuRuntime.stopWebSocket(bot.id);
       }
       if (bot?.provider === "weixin") {
-        weixinRuntime.stopPolling(bot.id);
+        await weixinRuntime.stopPolling(bot.id);
       }
       await repo.writeConfig({
         ...config,

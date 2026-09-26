@@ -1,10 +1,8 @@
-import type {
-  BotConfig,
-  BotProviderCallbackResult,
-  BotsConfigFile,
-} from "@zcode/shared";
+import { replyWeixinEcho } from "./weixinEcho.js";
+import { WeixinSessionExpiredError } from "./providers/weixinProtocol.js";
+import type { BotConfig, BotProviderCallbackResult, BotsConfigFile } from "@zcode/shared";
 import type { ICredentialService } from "../credential/credential.js";
-import { getWeixinUpdates } from "./providers/weixinProvider.js";
+import { createWeixinBotProvider, getWeixinUpdates } from "./providers/weixinProvider.js";
 import {
   acquireWeixinPollingLock,
   assertBotCallbackSucceeded,
@@ -25,10 +23,7 @@ interface WeixinChannelRuntimeDeps {
   readConfig(): Promise<BotsConfigFile>;
   readWeixinGetUpdatesBuf(botId: string): Promise<string | undefined>;
   writeWeixinGetUpdatesBuf(botId: string, buf: string): Promise<void>;
-  processProviderCallback(
-    provider: "weixin",
-    payload: unknown,
-  ): Promise<BotProviderCallbackResult>;
+  processProviderCallback(provider: "weixin", payload: unknown): Promise<BotProviderCallbackResult>;
 }
 
 export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
@@ -39,6 +34,7 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
   }
 
   const runtimes = new Map<string, RuntimeEntry>();
+  const expiredCredentials = new Map<string, string>();
   const refreshQueue = createLatestRuntimeRefreshQueue();
 
   async function getConnectionFingerprint(bot: BotConfig): Promise<string> {
@@ -48,14 +44,14 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
     return createBotConnectionFingerprint([
       bot.provider,
       bot.credentialRef ?? "",
+      bot.weixinBaseUrl ?? "",
+      String(bot.weixinEchoMode ?? false),
       credential ?? "",
     ]);
   }
 
   async function pollBot(bot: BotConfig, signal: AbortSignal): Promise<void> {
-    const token = bot.credentialRef
-      ? await deps.credentialService.load(bot.credentialRef)
-      : null;
+    const token = bot.credentialRef ? await deps.credentialService.load(bot.credentialRef) : null;
     if (!token?.trim()) {
       deps.statusSink.setRuntimeStatus({
         botId: bot.id,
@@ -66,13 +62,14 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
       return;
     }
 
+    if (expiredCredentials.get(bot.id) === token) return;
+    const provider = createWeixinBotProvider({
+      loadCredential: (key) => deps.credentialService.load(key),
+    });
     while (!signal.aborted) {
       let lock: Awaited<ReturnType<typeof acquireWeixinPollingLock>>;
       try {
-        lock = await acquireWeixinPollingLock(
-          token,
-          bot.id,
-        );
+        lock = await acquireWeixinPollingLock(token, bot.id);
       } catch (error) {
         if (signal.aborted) return;
         // Bugfix：每个窗口都有独立 host。微信锁 I/O 失败必须退避重试，不能让后台 Promise 退出。
@@ -133,9 +130,16 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
               );
             }
           }
+          if (bot.weixinEchoMode && result.buf !== undefined) {
+            await deps.writeWeixinGetUpdatesBuf(bot.id, result.buf);
+          }
           for (const inbound of result.messages) {
             if (signal.aborted) {
               return;
+            }
+            if (bot.weixinEchoMode) {
+              await replyWeixinEcho(bot, inbound, provider);
+              continue;
             }
             const callbackResult = await deps.processProviderCallback("weixin", {
               botId: bot.id,
@@ -156,7 +160,7 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
             });
             assertBotCallbackSucceeded("Weixin", callbackResult);
           }
-          if (result.buf) {
+          if (!bot.weixinEchoMode && result.buf) {
             // Bugfix: 微信 get_updates_buf 代表服务端游标，必须等本批消息全部进入业务处理后再持久化。
             // 之前先写游标再处理回复，进程在中途失败会跳过未完成消息，导致 AskUserQuestion 回复顺序错乱或丢失。
             await deps.writeWeixinGetUpdatesBuf(bot.id, result.buf);
@@ -180,6 +184,11 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
           status: "error",
           message: `Weixin polling failed: ${error instanceof Error ? error.message : String(error)}`,
         });
+        if (error instanceof WeixinSessionExpiredError) {
+          // -14 只能由重新配对恢复，重复轮询失效 token 会持续报错并妨碍重新登录。
+          expiredCredentials.set(bot.id, token);
+          return;
+        }
         await waitFor(5_000, signal);
       } finally {
         // Bugfix：微信 buf 是第三方队列确认点；只有持锁 owner 能消费和写入，退出时必须释放给其他 host 接管。
@@ -259,10 +268,7 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
     }
     const activeWeixinIds = new Set(
       currentConfig.bots
-        .filter(
-          (bot) =>
-            bot.provider === "weixin" && bot.enabled && bot.credentialRef,
-        )
+        .filter((bot) => bot.provider === "weixin" && bot.enabled && bot.credentialRef)
         .map((bot) => bot.id),
     );
     for (const botId of runtimes.keys()) {

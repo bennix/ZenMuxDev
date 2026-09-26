@@ -1,6 +1,13 @@
+import {
+  WEIXIN_BASE_INFO,
+  WeixinSessionExpiredError,
+  normalizeWeixinBaseUrl,
+  splitWeixinText,
+  weixinPostHeaders,
+} from "./weixinProtocol.js";
 /* eslint-disable max-lines -- 微信 iLink provider 集中处理轮询、文本/媒体解析、发送和 typing 协议。 */
 import { Buffer } from "node:buffer";
-import { createDecipheriv, randomInt, randomUUID } from "node:crypto";
+import { createDecipheriv, randomUUID } from "node:crypto";
 import type {
   BotInboundAttachment,
   BotConfig,
@@ -12,11 +19,10 @@ import { fetchBotProviderJson } from "#src/bots/providers/providerRequest.js";
 
 export const DEFAULT_WEIXIN_ILINK_BASE_URL = "https://ilinkai.weixin.qq.com";
 const WEIXIN_BOT_API_PREFIX = "/ilink/bot";
-const WEIXIN_CHANNEL_VERSION = "2.0.0";
 const WEIXIN_MESSAGE_TYPE_BOT = 2;
 const WEIXIN_MESSAGE_STATE_FINISH = 2;
 const WEIXIN_CDN_AES_ALGORITHM = "aes-128-ecb";
-const WEIXIN_GET_UPDATES_TIMEOUT_MS = 90_000;
+const WEIXIN_GET_UPDATES_TIMEOUT_MS = 40_000;
 
 interface WeixinProviderDeps {
   loadCredential(key: string): Promise<string | null>;
@@ -46,12 +52,18 @@ function readString(record: Record<string, unknown> | null | undefined, key: str
   return typeof value === "string" ? value : "";
 }
 
-function readNumber(record: Record<string, unknown> | null | undefined, key: string): number | null {
+function readNumber(
+  record: Record<string, unknown> | null | undefined,
+  key: string,
+): number | null {
   const value = record?.[key];
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-function readNumberOrString(record: Record<string, unknown> | null | undefined, key: string): string {
+function readNumberOrString(
+  record: Record<string, unknown> | null | undefined,
+  key: string,
+): string {
   const value = record?.[key];
   if (typeof value === "string") {
     return value;
@@ -89,26 +101,13 @@ function decryptWeixinCdnMedia(data: Uint8Array, aesKey: string): Uint8Array {
   return Buffer.concat([decipher.update(data), decipher.final()]);
 }
 
-function getWeixinApiBaseUrl(): string {
-  // 微信 iLink 是内置通道地址，不应复用 webhookUrl，否则旧配置会把出站 Webhook 当成微信 API。
-  return DEFAULT_WEIXIN_ILINK_BASE_URL.replace(/\/+$/u, "");
+function getWeixinApiBaseUrl(bot: BotConfig): string {
+  // 登录返回的路由必须持久使用，固定默认地址会导致已扫码账号后续请求失败。
+  return normalizeWeixinBaseUrl(bot.weixinBaseUrl ?? DEFAULT_WEIXIN_ILINK_BASE_URL);
 }
 
 async function readAccessToken(bot: BotConfig, deps: WeixinProviderDeps): Promise<string | null> {
   return bot.credentialRef ? deps.loadCredential(bot.credentialRef) : null;
-}
-
-function buildRandomWechatUin(): string {
-  return Buffer.from(String(randomInt(0, 0x1_0000_0000)), "utf8").toString("base64");
-}
-
-function buildHeaders(token: string): Record<string, string> {
-  return {
-    "content-type": "application/json",
-    AuthorizationType: "ilink_bot_token",
-    Authorization: `Bearer ${token}`,
-    "X-WECHAT-UIN": buildRandomWechatUin(),
-  };
 }
 
 function appendBaseInfo(body: unknown): unknown {
@@ -116,8 +115,8 @@ function appendBaseInfo(body: unknown): unknown {
     return body;
   }
   return {
-    base_info: { channel_version: WEIXIN_CHANNEL_VERSION },
     ...body,
+    base_info: WEIXIN_BASE_INFO,
   };
 }
 
@@ -134,10 +133,10 @@ async function requestWeixinJson(
     throw new Error("Weixin iLink bot token is missing. Scan the Weixin login QR code first.");
   }
   const response = await fetchBotProviderJson<unknown>(
-    `${getWeixinApiBaseUrl()}${WEIXIN_BOT_API_PREFIX}${path}`,
+    `${getWeixinApiBaseUrl(bot)}${WEIXIN_BOT_API_PREFIX}${path}`,
     {
       method: "POST",
-      headers: buildHeaders(token.trim()),
+      headers: weixinPostHeaders(token.trim()),
       body: JSON.stringify(appendBaseInfo(body ?? {})),
       signal,
     },
@@ -150,8 +149,12 @@ async function requestWeixinJson(
   const data = isRecord(payload) ? payload : null;
   const ret = readNumber(data, "ret");
   const errcode = readNumber(data, "errcode");
+  if (ret === -14 || errcode === -14) throw new WeixinSessionExpiredError();
   if ((ret !== null && ret !== 0) || (errcode !== null && errcode !== 0)) {
-    const message = readString(data, "errmsg") || readString(data, "message") || `ret=${ret ?? ""} errcode=${errcode ?? ""}`.trim();
+    const message =
+      readString(data, "errmsg") ||
+      readString(data, "message") ||
+      `ret=${ret ?? ""} errcode=${errcode ?? ""}`.trim();
     throw new Error(`Weixin iLink ${path} failed: ${message}`);
   }
   return payload;
@@ -184,11 +187,21 @@ function inferWeixinAttachmentKind(item: Record<string, unknown>): BotInboundAtt
   if (isRecord(item.image_item)) {
     return "image";
   }
-  const explicit = readString(item, "kind") || readString(item, "media_type") || readString(item, "mediaType") || readString(item, "type_name");
+  const explicit =
+    readString(item, "kind") ||
+    readString(item, "media_type") ||
+    readString(item, "mediaType") ||
+    readString(item, "type_name");
   const mimeType = readString(item, "mime_type") || readString(item, "mimeType");
-  const filename = readString(item, "filename") || readString(item, "file_name") || readString(item, "name");
+  const filename =
+    readString(item, "filename") || readString(item, "file_name") || readString(item, "name");
   const normalized = `${explicit} ${mimeType} ${filename}`.toLowerCase();
-  if (normalized.includes("image") || normalized.includes("photo") || normalized.includes("picture") || /\.(svg|png|jpe?g|gif|webp|heic|bmp)$/iu.test(filename)) {
+  if (
+    normalized.includes("image") ||
+    normalized.includes("photo") ||
+    normalized.includes("picture") ||
+    /\.(svg|png|jpe?g|gif|webp|heic|bmp)$/iu.test(filename)
+  ) {
     return "image";
   }
   if (normalized.includes("audio") || normalized.includes("voice")) {
@@ -207,13 +220,17 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
   if (readWeixinTextItem(item)) {
     return null;
   }
-  const media =
-    isRecord(item.image_item) ? item.image_item :
-      isRecord(item.file_item) ? item.file_item :
-        isRecord(item.video_item) ? item.video_item :
-          isRecord(item.audio_item) ? item.audio_item :
-            isRecord(item.media_item) ? item.media_item :
-              item;
+  const media = isRecord(item.image_item)
+    ? item.image_item
+    : isRecord(item.file_item)
+      ? item.file_item
+      : isRecord(item.video_item)
+        ? item.video_item
+        : isRecord(item.audio_item)
+          ? item.audio_item
+          : isRecord(item.media_item)
+            ? item.media_item
+            : item;
   const mediaPayload = isRecord(media.media) ? media.media : null;
   const mediaSource = mediaPayload ? { ...media, ...mediaPayload } : media;
   const providerFileId =
@@ -251,7 +268,13 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
     readString(mediaSource, "mime_type") ||
     readString(mediaSource, "mimeType") ||
     inferMimeTypeFromFilename(filename) ||
-    (kind === "image" ? "image/jpeg" : kind === "audio" ? "audio/mpeg" : kind === "video" ? "video/mp4" : "application/octet-stream");
+    (kind === "image"
+      ? "image/jpeg"
+      : kind === "audio"
+        ? "audio/mpeg"
+        : kind === "video"
+          ? "video/mp4"
+          : "application/octet-stream");
   const sizeBytes =
     readNumber(mediaSource, "size") ??
     readNumber(mediaSource, "sizeBytes") ??
@@ -295,20 +318,12 @@ function inferMimeTypeFromFilename(filename: string): string {
   return "";
 }
 
-function readWeixinDirectAttachment(
-  item: unknown,
-  index: number,
-): BotInboundAttachment | null {
+function readWeixinDirectAttachment(item: unknown, index: number): BotInboundAttachment | null {
   if (!isRecord(item)) {
     return null;
   }
   const kind = readString(item, "kind");
-  if (
-    kind !== "image" &&
-    kind !== "audio" &&
-    kind !== "video" &&
-    kind !== "file"
-  ) {
+  if (kind !== "image" && kind !== "audio" && kind !== "video" && kind !== "file") {
     return null;
   }
   const id = readString(item, "id") || `weixin-${index + 1}`;
@@ -316,15 +331,22 @@ function readWeixinDirectAttachment(
   const mimeType =
     readString(item, "mimeType") ||
     readString(item, "mime_type") ||
-    (kind === "image" ? "image/jpeg" : kind === "audio" ? "audio/mpeg" : kind === "video" ? "video/mp4" : "application/octet-stream");
+    (kind === "image"
+      ? "image/jpeg"
+      : kind === "audio"
+        ? "audio/mpeg"
+        : kind === "video"
+          ? "video/mp4"
+          : "application/octet-stream");
   const sizeBytes = readNumber(item, "sizeBytes") ?? readNumber(item, "size");
   const providerFileId = readString(item, "providerFileId") || readString(item, "file_id");
   const downloadUrl = readString(item, "downloadUrl") || readString(item, "download_url");
   const dataBase64 = readString(item, "dataBase64") || readString(item, "data_base64");
   const providerMetadata = isRecord(item.providerMetadata)
     ? Object.fromEntries(
-      Object.entries(item.providerMetadata)
-        .filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+        Object.entries(item.providerMetadata).filter(
+          (entry): entry is [string, string] => typeof entry[1] === "string",
+        ),
     )
     : null;
   return {
@@ -341,18 +363,39 @@ function readWeixinDirectAttachment(
 }
 
 function readWeixinText(message: Record<string, unknown>): string {
-  const text = readString(message, "text") || readString(message, "content") || readString(message, "message");
+  const text =
+    readString(message, "text") || readString(message, "content") || readString(message, "message");
   if (text) {
     return text;
   }
-  const inner = isRecord(message.msg) ? message.msg : isRecord(message.message) ? message.message : null;
-  const itemList = Array.isArray(message.item_list) ? message.item_list : Array.isArray(inner?.item_list) ? inner.item_list : [];
-  return itemList.map(readWeixinTextItem).filter(Boolean).join("\n") || readString(inner, "text") || readString(inner, "content");
+  const inner = isRecord(message.msg)
+    ? message.msg
+    : isRecord(message.message)
+      ? message.message
+      : null;
+  const itemList = Array.isArray(message.item_list)
+    ? message.item_list
+    : Array.isArray(inner?.item_list)
+      ? inner.item_list
+      : [];
+  return (
+    itemList.map(readWeixinTextItem).filter(Boolean).join("\n") ||
+    readString(inner, "text") ||
+    readString(inner, "content")
+  );
 }
 
 function readWeixinAttachments(message: Record<string, unknown>): BotInboundAttachment[] {
-  const inner = isRecord(message.msg) ? message.msg : isRecord(message.message) ? message.message : null;
-  const itemList = Array.isArray(message.item_list) ? message.item_list : Array.isArray(inner?.item_list) ? inner.item_list : [];
+  const inner = isRecord(message.msg)
+    ? message.msg
+    : isRecord(message.message)
+      ? message.message
+      : null;
+  const itemList = Array.isArray(message.item_list)
+    ? message.item_list
+    : Array.isArray(inner?.item_list)
+      ? inner.item_list
+      : [];
   const directAttachments = Array.isArray(message.attachments)
     ? message.attachments
     : Array.isArray(inner?.attachments)
@@ -401,7 +444,11 @@ function readWeixinChatId(message: Record<string, unknown>): string | undefined 
 function readWeixinDisplayName(message: Record<string, unknown>): string | undefined {
   const from = isRecord(message.from) ? message.from : null;
   const sender = isRecord(message.sender) ? message.sender : null;
-  const inner = isRecord(message.msg) ? message.msg : isRecord(message.message) ? message.message : null;
+  const inner = isRecord(message.msg)
+    ? message.msg
+    : isRecord(message.message)
+      ? message.message
+      : null;
   return (
     readString(message, "name") ||
     readString(message, "displayName") ||
@@ -416,7 +463,11 @@ function readWeixinDisplayName(message: Record<string, unknown>): string | undef
 }
 
 function readWeixinMessageId(message: Record<string, unknown>): string | undefined {
-  const inner = isRecord(message.msg) ? message.msg : isRecord(message.message) ? message.message : null;
+  const inner = isRecord(message.msg)
+    ? message.msg
+    : isRecord(message.message)
+      ? message.message
+      : null;
   const messageId =
     readString(message, "id") ||
     readString(message, "msgid") ||
@@ -441,7 +492,8 @@ function readWeixinMessageId(message: Record<string, unknown>): string | undefin
 
 function readWeixinMessages(payload: unknown): Record<string, unknown>[] {
   const container = readMessagesContainer(payload);
-  const rawMessages = container.msgs ?? container.messages ?? container.updates ?? container.items ?? container.list;
+  const rawMessages =
+    container.msgs ?? container.messages ?? container.updates ?? container.items ?? container.list;
   if (Array.isArray(rawMessages)) {
     return rawMessages.filter(isRecord);
   }
@@ -465,7 +517,11 @@ function readNextBuf(payload: unknown): string | undefined {
 }
 
 function readWeixinContextToken(message: Record<string, unknown>): string | undefined {
-  const inner = isRecord(message.msg) ? message.msg : isRecord(message.message) ? message.message : null;
+  const inner = isRecord(message.msg)
+    ? message.msg
+    : isRecord(message.message)
+      ? message.message
+      : null;
   return (
     readString(message, "context_token") ||
     readString(message, "contextToken") ||
@@ -485,7 +541,10 @@ function buildWeixinText(message: BotOutboundMessage): string {
   return message.text.replace(/\r\n|\r|\n/g, "\r\n");
 }
 
-function buildInboundMessage(botId: string, rawMessage: Record<string, unknown>): BotInboundMessage | null {
+function buildInboundMessage(
+  botId: string,
+  rawMessage: Record<string, unknown>,
+): BotInboundMessage | null {
   if (readNumber(rawMessage, "message_type") === 2) {
     return null;
   }
@@ -514,7 +573,11 @@ function buildInboundMessage(botId: string, rawMessage: Record<string, unknown>)
 }
 
 function summarizeWeixinRawMessage(rawMessage: Record<string, unknown>, index: number): string {
-  const inner = isRecord(rawMessage.msg) ? rawMessage.msg : isRecord(rawMessage.message) ? rawMessage.message : null;
+  const inner = isRecord(rawMessage.msg)
+    ? rawMessage.msg
+    : isRecord(rawMessage.message)
+      ? rawMessage.message
+      : null;
   const itemList = Array.isArray(rawMessage.item_list)
     ? rawMessage.item_list
     : Array.isArray(inner?.item_list)
@@ -522,17 +585,27 @@ function summarizeWeixinRawMessage(rawMessage: Record<string, unknown>, index: n
       : [];
   const itemTypes = itemList
     .filter(isRecord)
-    .map((item) => readNumber(item, "type") ?? readNumber(item, "item_type") ?? readNumber(item, "message_type") ?? "unknown")
+    .map(
+      (item) =>
+        readNumber(item, "type") ??
+        readNumber(item, "item_type") ??
+        readNumber(item, "message_type") ??
+        "unknown",
+    )
     .slice(0, 6)
     .join(",");
   const firstItem = itemList.find(isRecord);
-  const firstMedia =
-    isRecord(firstItem?.image_item) ? firstItem.image_item :
-      isRecord(firstItem?.file_item) ? firstItem.file_item :
-        isRecord(firstItem?.video_item) ? firstItem.video_item :
-          isRecord(firstItem?.audio_item) ? firstItem.audio_item :
-            isRecord(firstItem?.media_item) ? firstItem.media_item :
-              null;
+  const firstMedia = isRecord(firstItem?.image_item)
+    ? firstItem.image_item
+    : isRecord(firstItem?.file_item)
+      ? firstItem.file_item
+      : isRecord(firstItem?.video_item)
+        ? firstItem.video_item
+        : isRecord(firstItem?.audio_item)
+          ? firstItem.audio_item
+          : isRecord(firstItem?.media_item)
+            ? firstItem.media_item
+            : null;
   const mediaTypes = firstMedia
     ? Object.entries(firstMedia)
       .slice(0, 8)
@@ -598,7 +671,10 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
         return { ok: false, message: "Weixin bot is disabled." };
       }
       if (!bot.credentialRef) {
-        return { ok: false, message: "Weixin iLink bot token is missing. Scan the Weixin login QR code first." };
+        return {
+          ok: false,
+          message: "Weixin iLink bot token is missing. Scan the Weixin login QR code first.",
+        };
       }
       await requestWeixinJson(bot, deps, "/getconfig");
       return {
@@ -610,22 +686,27 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
     async send(bot, message) {
       // Bugfix: 微信 iLink 发送协议必须走 /ilink/bot/sendmessage，并把文本放进 msg.item_list。
       // 之前把 openclaw-weixin 当成本地 gateway 依赖，会导致 ZCode 不能独立完成微信接入。
+      if (!message.providerContextToken) throw new Error("Weixin reply requires context_token");
+      for (const text of splitWeixinText(buildWeixinText(message))) {
       await requestWeixinJson(bot, deps, "/sendmessage", {
         msg: {
-          from_user_id: bot.providerUserId ?? "",
+            from_user_id: "",
           to_user_id: message.providerUserId,
           client_id: buildWeixinClientId(),
           message_type: WEIXIN_MESSAGE_TYPE_BOT,
           message_state: WEIXIN_MESSAGE_STATE_FINISH,
-          ...(message.providerContextToken ? { context_token: message.providerContextToken } : {}),
+            ...(message.providerContextToken
+              ? { context_token: message.providerContextToken }
+              : {}),
           item_list: [
             {
               type: 1,
-              text_item: { text: buildWeixinText(message) },
+                text_item: { text },
             },
           ],
         },
       });
+      }
     },
 
     async sendTyping(bot, target: BotTypingTarget) {

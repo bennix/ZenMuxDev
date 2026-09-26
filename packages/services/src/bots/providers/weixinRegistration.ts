@@ -1,30 +1,12 @@
 import { DEFAULT_WEIXIN_ILINK_BASE_URL } from "./weixinProvider.js";
 
-interface WeixinRegistrationBeginResult {
-  qrCode: string;
-  qrUrl: string;
-  interval: number;
-  expiresAt: number;
-}
-
-interface WeixinRegistrationPollParams {
-  qrCode: string;
-}
-
-type WeixinRegistrationPollResult =
-  | {
-      status: "pending" | "scanned";
-      interval: number;
-    }
-  | {
-      status: "success";
-      botToken: string;
-      botId?: string;
-    }
-  | {
-      status: "expired" | "error";
-      message?: string;
-    };
+import type {
+  BotWeixinRegistrationBeginResult,
+  BotWeixinRegistrationPollParams,
+  BotWeixinRegistrationPollResult,
+} from "../bots.js";
+import { fetchBotProviderJson } from "./providerRequest.js";
+import { WEIXIN_APP_HEADERS, normalizeWeixinBaseUrl, weixinPostHeaders } from "./weixinProtocol.js";
 
 interface WeixinQrBeginResponse {
   ret?: number;
@@ -67,7 +49,10 @@ function readString(record: Record<string, unknown> | null | undefined, key: str
   return typeof value === "string" ? value : "";
 }
 
-function readNumber(record: Record<string, unknown> | null | undefined, key: string): number | null {
+function readNumber(
+  record: Record<string, unknown> | null | undefined,
+  key: string,
+): number | null {
   const value = record?.[key];
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
@@ -83,25 +68,35 @@ function unwrapData(payload: unknown): Record<string, unknown> {
   return isRecord(payload.data) ? { ...payload, ...payload.data } : payload;
 }
 
-async function getWeixinRegistrationJson<T>(baseUrl: string, path: string): Promise<T & Record<string, unknown>> {
-  const response = await fetch(`${baseUrl}${WEIXIN_BOT_API_PREFIX}${path}`, {
-    method: "GET",
-    headers: { "iLink-App-ClientVersion": "1" },
-    signal: AbortSignal.timeout(WEIXIN_LOGIN_REQUEST_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    throw new Error(`Weixin login ${path} failed: HTTP ${response.status}`);
-  }
-  const payload = unwrapData(await response.json()) as T & Record<string, unknown>;
+async function getWeixinRegistrationJson<T>(
+  baseUrl: string,
+  path: string,
+  post = false,
+): Promise<T & Record<string, unknown>> {
+  const response = await fetchBotProviderJson<unknown>(
+    `${normalizeWeixinBaseUrl(baseUrl)}${WEIXIN_BOT_API_PREFIX}${path}`,
+    {
+      method: post ? "POST" : "GET",
+      headers: post ? weixinPostHeaders() : WEIXIN_APP_HEADERS,
+      ...(post ? { body: JSON.stringify({ local_token_list: [] }) } : {}),
+    },
+    WEIXIN_LOGIN_REQUEST_TIMEOUT_MS,
+  );
+  if (!response.ok) throw new Error(`Weixin login request failed: HTTP ${response.status}`);
+  const payload = unwrapData(response.payload) as T & Record<string, unknown>;
   const ret = readNumber(payload, "ret");
   const errcode = readNumber(payload, "errcode");
   if ((ret !== null && ret !== 0) || (errcode !== null && errcode !== 0)) {
-    throw new Error(readString(payload, "errmsg") || `ret=${ret ?? ""} errcode=${errcode ?? ""}`.trim());
+    throw new Error(
+      readString(payload, "errmsg") || `ret=${ret ?? ""} errcode=${errcode ?? ""}`.trim(),
+    );
   }
   return payload;
 }
 
-function normalizeQrStatus(status: unknown): "pending" | "scanned" | "success" | "expired" | "error" {
+function normalizeQrStatus(
+  status: unknown,
+): "pending" | "scanned" | "need_verifycode" | "redirect" | "success" | "expired" | "error" {
   if (typeof status === "number") {
     if (status === 0) return "pending";
     if (status === 1) return "scanned";
@@ -112,6 +107,9 @@ function normalizeQrStatus(status: unknown): "pending" | "scanned" | "success" |
     return "pending";
   }
   const normalized = status.toLowerCase();
+  if (normalized === "need_verifycode") return "need_verifycode";
+  if (normalized === "scaned_but_redirect") return "redirect";
+  if (normalized === "verify_code_blocked" || normalized === "binded_redirect") return "error";
   if (["confirmed", "confirm", "authorized", "success", "ok"].includes(normalized)) {
     return "success";
   }
@@ -127,11 +125,15 @@ function normalizeQrStatus(status: unknown): "pending" | "scanned" | "success" |
   return "pending";
 }
 
-export async function beginWeixinRegistration(): Promise<WeixinRegistrationBeginResult> {
+export async function beginWeixinRegistration(): Promise<BotWeixinRegistrationBeginResult> {
   const baseUrl = getWeixinRegistrationBaseUrl();
-  const payload = await getWeixinRegistrationJson<WeixinQrBeginResponse>(baseUrl, "/get_bot_qrcode?bot_type=3");
+  const payload = await getWeixinRegistrationJson<WeixinQrBeginResponse>(
+    baseUrl,
+    "/get_bot_qrcode?bot_type=3",
+    true,
+  );
   const qrCode = readString(payload, "qrcode") || readString(payload, "qr_code");
-  const qrUrl = readString(payload, "qrcode_img_content") || readString(payload, "qrcode_url") || qrCode;
+  const qrUrl = readString(payload, "qrcode_img_content") || readString(payload, "qrcode_url");
   if (!qrCode || !qrUrl) {
     throw new Error("Weixin login did not return a QR code.");
   }
@@ -145,14 +147,16 @@ export async function beginWeixinRegistration(): Promise<WeixinRegistrationBegin
 }
 
 export async function pollWeixinRegistration(
-  params: WeixinRegistrationPollParams,
-): Promise<WeixinRegistrationPollResult> {
-  const baseUrl = getWeixinRegistrationBaseUrl();
+  params: BotWeixinRegistrationPollParams,
+): Promise<BotWeixinRegistrationPollResult> {
+  const baseUrl = params.baseUrl
+    ? normalizeWeixinBaseUrl(params.baseUrl)
+    : getWeixinRegistrationBaseUrl();
   let payload: WeixinQrPollResponse & Record<string, unknown>;
   try {
     payload = await getWeixinRegistrationJson<WeixinQrPollResponse>(
       baseUrl,
-      `/get_qrcode_status?qrcode=${encodeURIComponent(params.qrCode)}`,
+      `/get_qrcode_status?qrcode=${encodeURIComponent(params.qrCode)}${params.verifyCode ? `&verify_code=${encodeURIComponent(params.verifyCode)}` : ""}`,
     );
   } catch (error) {
     if (error instanceof DOMException && error.name === "TimeoutError") {
@@ -162,7 +166,9 @@ export async function pollWeixinRegistration(
     }
     throw error;
   }
-  const status = normalizeQrStatus(payload.status ?? payload["qrcode_status"] ?? payload["qr_status"]);
+  const status = normalizeQrStatus(
+    payload.status ?? payload["qrcode_status"] ?? payload["qr_status"],
+  );
   if (status === "success") {
     const botToken = readString(payload, "bot_token") || readString(payload, "token");
     if (!botToken) {
@@ -171,7 +177,20 @@ export async function pollWeixinRegistration(
     return {
       status: "success",
       botToken,
+      baseUrl: normalizeWeixinBaseUrl(
+        readString(payload, "baseurl") || readString(payload, "base_url") || baseUrl,
+      ),
+      userId: readString(payload, "ilink_user_id") || undefined,
       botId: readString(payload, "ilink_bot_id") || readString(payload, "bot_id") || undefined,
+    };
+  }
+  if (status === "redirect") {
+    const host = readString(payload, "redirect_host");
+    if (!host) return { status: "error", message: "Weixin redirect is missing its host." };
+    return {
+      status,
+      interval: WEIXIN_LOGIN_INTERVAL_SECONDS,
+      baseUrl: normalizeWeixinBaseUrl(host.includes("://") ? host : `https://${host}`),
     };
   }
   if (status === "expired") {
