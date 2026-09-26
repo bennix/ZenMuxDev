@@ -1,3 +1,7 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button.js";
+import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { showOfficePreviewPage } from "@/lib/officePageNavigation.js";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { renderAsync, type Options } from "docx-preview";
 import {
@@ -58,6 +62,10 @@ export function PreviewPaneOfficeDocxContent({
   onOpenBrowserUrl?: (url: string) => void;
   sourcePath: string;
 }) {
+  const { intl } = useZCodeIntl();
+  const pagesRef = useRef<HTMLElement[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const renderContainerRef = useRef<HTMLDivElement | null>(null);
@@ -115,6 +123,9 @@ export function PreviewPaneOfficeDocxContent({
     renderRoot.append(styleContainer, bodyContainer);
 
     setRenderState("loading");
+    pagesRef.current = [];
+    setPageCount(0);
+    setPageIndex(0);
     setFit(null);
     visibleContainer.replaceChildren();
 
@@ -145,6 +156,11 @@ export function PreviewPaneOfficeDocxContent({
 
         disposeLinkSafety = installDocumentLinkSafety(renderRoot, onOpenBrowserUrl);
 
+        pagesRef.current = Array.from(
+          bodyContainer.querySelectorAll<HTMLElement>(`.${className}-wrapper>section.${className}`),
+        );
+        setPageCount(pagesRef.current.length);
+        showOfficePreviewPage(pagesRef.current, 0);
         visibleContainer.replaceChildren(renderRoot);
         setRenderState("ready");
       })
@@ -177,6 +193,7 @@ export function PreviewPaneOfficeDocxContent({
       return;
     }
 
+    showOfficePreviewPage(pagesRef.current, pageIndex);
     updateFit();
     if (typeof ResizeObserver === "undefined") {
       return;
@@ -192,15 +209,43 @@ export function PreviewPaneOfficeDocxContent({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [renderState, updateFit]);
+  }, [pageIndex, renderState, updateFit]);
 
   return (
     <div
       aria-busy={renderState === "loading" ? "true" : undefined}
-      className="h-full min-h-0 w-full min-w-0 bg-background"
+      className="flex h-full min-h-0 w-full min-w-0 flex-col bg-background"
       data-office-preview-kind="docx"
       data-office-preview-pending={renderState === "loading" ? "" : undefined}
     >
+      {renderState === "ready" && pageCount > 0 ? (
+        <div
+          className="flex shrink-0 items-center justify-center gap-2 border-b border-border p-2"
+          data-docx-page-navigation
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={pageIndex === 0}
+            aria-label={intl.formatMessage({ id: "codeViewer.pdf.previousPage" })}
+            onClick={() => setPageIndex((index) => index - 1)}
+          >
+            <ChevronLeft className="size-4" />
+          </Button>
+          <span className="text-ui-caption" aria-live="polite">
+            {pageIndex + 1} / {pageCount}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={pageIndex >= pageCount - 1}
+            aria-label={intl.formatMessage({ id: "codeViewer.pdf.nextPage" })}
+            onClick={() => setPageIndex((index) => index + 1)}
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      ) : null}
       {renderState === "error" ? (
         <div className="p-3 text-ui-base text-destructive" role="alert">
           {errorMessage}
@@ -210,7 +255,7 @@ export function PreviewPaneOfficeDocxContent({
         className={
           renderState === "error"
             ? "hidden"
-            : "h-full min-h-0 w-full min-w-0 overflow-auto p-4 max-sm:p-2"
+            : "min-h-0 w-full min-w-0 flex-1 overflow-auto p-4 max-sm:p-2"
         }
       >
         <div ref={viewportRef} className="w-full min-w-0" data-docx-fit-viewport>

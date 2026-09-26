@@ -177,6 +177,30 @@ export const BUILTIN_ZCODE_SLASH_COMMAND_HELP_ENTRIES: readonly BuiltinZCodeSlas
       usage: "/skill [<skill-name> [task]]",
     },
     {
+      details: ["Loads the bundled officecli skill and uses the normal agent tool execution path."],
+      name: "office",
+      summary: "Work with Word, Excel and PowerPoint using OfficeCLI.",
+      usage: "/office [file and requested operation]",
+    },
+    {
+      details: ["Loads the bundled officecli skill and uses the normal agent tool execution path."],
+      name: "office-create",
+      summary: "Create an Office document.",
+      usage: "/office-create [format, content and output path]",
+    },
+    {
+      details: ["Loads the bundled officecli skill and uses the normal agent tool execution path."],
+      name: "office-edit",
+      summary: "Edit an Office document while preserving its structure.",
+      usage: "/office-edit [file and requested changes]",
+    },
+    {
+      details: ["Loads the bundled officecli skill and uses the normal agent tool execution path."],
+      name: "office-preview",
+      summary: "Preview an Office document without changing it.",
+      usage: "/office-preview [file]",
+    },
+    {
       aliases: ["target"],
       details: [
         "Shows the current session goal when called without arguments.",

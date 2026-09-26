@@ -1,3 +1,4 @@
+import { expandOfficeCommand } from "./builtin-office-command.js";
 import { join } from "node:path";
 import {
   BUILTIN_WORKFLOW_COMMAND_NAME,
@@ -26,6 +27,9 @@ export function resolveZCodeBuiltinPromptCommand(
   if (!invocation) {
     return undefined;
   }
+
+  const officePrompt = expandOfficeCommand(invocation.name, invocation.args);
+  if (officePrompt !== undefined) return officePrompt;
 
   if (invocation.name === INIT_COMMAND_NAME) {
     const workingDirectory = options.workingDirectory ?? process.cwd();

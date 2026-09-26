@@ -159,3 +159,9 @@ weights or external delivery channels have been enabled by this task yet.
 Office preview acceptance must render a real OOXML DOCX fixture through the actual
 PreviewPaneOfficeDocxContent component, traverse all 20 pages using its controls,
 and verify page bounds and source-switch reset. DOM-only helper tests are not enough.
+
+2026-09-27 validation: 5 Office command/runtime tests pass. The actual DOCX preview
+component renders a generated 20-page OOXML fixture, navigates every page with real
+clicks and application CSS, enforces first/last bounds and resets on source change.
+CLI typecheck passes (27 tasks). OfficeCLI 1.0.152 runs locally with full help.
+Release bundling and live composer execution still need verification.

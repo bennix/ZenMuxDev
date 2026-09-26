@@ -1,0 +1,13 @@
+{
+  "version": "1.0.152",
+  "assets": {
+    "officecli-linux-alpine-arm64": "65c65e05100bac1376e23f6ca97086a046afdfcaf50f2bc215a8c139b3bc22ba",
+    "officecli-linux-alpine-x64": "390e246303bf43b4739e3195e9b171a660223b4c11218b65894d5fadf9a52755",
+    "officecli-linux-arm64": "bc06deaa0ad931f5208717a40b94018dc44cdff0d8eefa842c4f4daf89fb35a8",
+    "officecli-linux-x64": "e54d3c1d248372365f0634aac56d6f1918bd04d6e71afc792ad50e075f56cfe9",
+    "officecli-mac-arm64": "e2ed6eba5cd46d6800139f2835097828b8ccd7c8c9b679463b50e45ba2f1dbf5",
+    "officecli-mac-x64": "5071abef56c1d4a4d60e28ed12bc66183d8dc6a9783529c3f1a9cf6bdfe6c2dd",
+    "officecli-win-arm64.exe": "82408eca64c0f7a79679754162320aae510b26f4cf93933c9304dbd07a379c83",
+    "officecli-win-x64.exe": "047705402974c3690a4437e55f620d03afac4beba4fdd28fdb59af610a3afff2"
+  }
+}

@@ -37,7 +37,7 @@ export type SlashCommand =
     }
   | {
       args: string;
-      name: "workflow";
+      name: "workflow" | "office" | "office-create" | "office-edit" | "office-preview";
       rawName: string;
       type: "known";
     }

@@ -214,11 +214,11 @@ export function createCommandCenter(deps: CommandCenterDeps): TuiSubmitPrompt {
         return attachCurrentSessionMetadata(await app.submitPrompt(prompt, options), deps, app);
       }
 
-      if (command.name === "workflow") {
+      if (command.name === "workflow" || command.name === "office" || command.name === "office-create" || command.name === "office-edit" || command.name === "office-preview") {
         const app = await deps.getApp();
-        const prompt = command.args ? `/workflow ${command.args}` : "/workflow";
+        const prompt = command.args ? `/${command.name} ${command.args}` : `/${command.name}`;
         // 与 /init 同款：原文交给 app.submitPrompt，由 bootstrap 的 builtin resolver 展开成
-        // 「先加载 dynamic-workflows 技能，再写脚本调 CreateWorkflow」的提示词。
+        // 对应的 workflow 或 Office 技能提示词，避免 TUI 维护第二条执行路径。
         return attachCurrentSessionMetadata(await app.submitPrompt(prompt, options), deps, app);
       }
 

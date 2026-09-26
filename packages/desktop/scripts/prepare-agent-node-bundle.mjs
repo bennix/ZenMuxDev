@@ -119,6 +119,10 @@ const officialPluginPackages = [
 const bundledSkillPack = {
   relativePath: "apps/zcode-cli/packages/bundled-skills",
   requiredPaths: [
+    "skills/officecli/SKILL.md",
+    "skills/officecli/scripts/officecli.mjs",
+    "skills/officecli/scripts/release.json",
+    "skills/officecli/LICENSE.OfficeCLI",
     "skills/dynamic-workflows/SKILL.md",
     "skills/dynamic-workflows/patterns.md",
     "skills/dynamic-workflows/examples.md",
