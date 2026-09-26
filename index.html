@@ -3,108 +3,281 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ZenCode — 基于 ZCode，模型走 ZenMux</title>
+    <title>ZenCode 3.14.5 — 桌面编程与创作</title>
+    <meta name="description" content="ZenCode 是基于 ZCode 的桌面端。模型走 ZenMux。3.14.5 增加生图、生视频和可编辑幻灯片。" />
     <style>
       :root {
-        color-scheme: dark;
-        --bg: #0c0d0e;
-        --card: #161718;
-        --line: rgba(255, 255, 255, 0.12);
-        --text: #f4f4f5;
-        --muted: #a1a1aa;
+        color-scheme: light;
+        --paper: #f3efe6;
+        --ink: #1c1915;
+        --muted: #5e584e;
+        --line: rgba(28, 25, 21, 0.14);
+        --navy: #1b2a41;
+        --gold: #8c7348;
       }
       * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: var(--bg);
-        color: var(--text);
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 480px at 80% -10%, rgba(140, 115, 72, 0.16), transparent 60%),
+          var(--paper);
+        font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+        font-size: 17px;
+        line-height: 1.7;
       }
-      main { max-width: 880px; margin: 0 auto; padding: 64px 24px 96px; }
-      .mark {
-        width: 72px; height: 72px; border-radius: 18px;
-        background: linear-gradient(180deg, #000, #151718);
-        border: 1px solid var(--line);
-        display: grid; place-items: center;
-        font-weight: 700;
+      a { color: inherit; }
+      img { display: block; }
+      .wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        backdrop-filter: blur(16px);
+        background: rgba(243, 239, 230, 0.86);
+        border-bottom: 1px solid var(--line);
       }
-      h1 { font-size: 40px; margin: 20px 0 8px; }
-      .lede { color: var(--muted); font-size: 18px; line-height: 1.6; }
-      h2 { margin-top: 40px; font-size: 20px; }
-      ul { padding-left: 20px; line-height: 1.7; }
-      a { color: #fff; }
-      .downloads { display: grid; gap: 12px; margin-top: 16px; }
-      .downloads a {
-        display: block; text-decoration: none;
-        border: 1px solid var(--line); border-radius: 12px;
-        padding: 16px 18px; background: var(--card);
+      .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 72px;
+        gap: 24px;
       }
-      .downloads small { display: block; color: var(--muted); margin-top: 4px; }
+      .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 600; letter-spacing: 0.04em; }
+      .brand img { width: 36px; height: 36px; border-radius: 8px; }
+      nav { display: flex; gap: 28px; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
+      nav a { text-decoration: none; color: var(--muted); }
+      nav a:hover { color: var(--ink); }
+      .hero { padding: 88px 0 40px; }
+      .kicker {
+        margin: 0 0 18px;
+        color: var(--gold);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+      h1 {
+        margin: 0;
+        max-width: 14ch;
+        font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", serif;
+        font-size: clamp(52px, 7vw, 88px);
+        font-weight: 500;
+        line-height: 0.96;
+        letter-spacing: -0.03em;
+      }
+      .lede { max-width: 38em; margin: 28px 0 0; color: var(--muted); font-size: 19px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+      .actions a {
+        text-decoration: none;
+        padding: 14px 22px;
+        border: 1px solid var(--ink);
+      }
+      .actions a.primary { background: var(--navy); color: #f7f3ea; border-color: var(--navy); }
+      .stage { margin: 28px 0 8px; }
       video {
         width: 100%;
-        margin-top: 28px;
-        border-radius: 16px;
+        aspect-ratio: 16 / 9;
+        background: #111;
         border: 1px solid var(--line);
-        background: #000;
       }
-      footer { margin-top: 48px; color: var(--muted); font-size: 14px; }
+      section { padding: 72px 0; }
+      h2 {
+        margin: 0 0 8px;
+        font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", serif;
+        font-size: clamp(32px, 4vw, 44px);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .section-note { margin: 0 0 36px; max-width: 40em; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--line); }
+      article {
+        padding: 28px 28px 32px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      article:nth-child(odd) { padding-right: 40px; border-right: 1px solid var(--line); }
+      article:nth-child(even) { padding-left: 40px; }
+      article span {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--gold);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+      }
+      article h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
+      article p { margin: 0; color: var(--muted); }
+      .downloads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+      .downloads a {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 168px;
+        padding: 22px;
+        text-decoration: none;
+        background: #fffdf8;
+        border: 1px solid var(--line);
+      }
+      .downloads a:hover { border-color: var(--navy); }
+      .downloads strong { font-size: 18px; font-weight: 600; }
+      .downloads small { color: var(--muted); font-size: 14px; }
+      .origin {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 40px;
+        padding-top: 8px;
+      }
+      footer {
+        padding: 28px 0 48px;
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        border-top: 1px solid var(--line);
+      }
+      @media (max-width: 800px) {
+        .wrap { width: min(100% - 32px, 1120px); }
+        nav { display: none; }
+        .hero { padding-top: 48px; }
+        .grid, .downloads, .origin { grid-template-columns: 1fr; }
+        article, article:nth-child(odd), article:nth-child(even) {
+          padding: 24px 0;
+          border-right: 0;
+        }
+      }
     </style>
   </head>
   <body>
-    <main>
-      <div class="mark" aria-hidden="true">worker</div>
-      <h1>ZenCode</h1>
-      <p class="lede">
-        桌面端编程助手。界面和运行时来自
-        <a href="https://github.com/zai-org/ZCode">ZCode</a>，
-        模型供应商换成 ZenMux。源码在
-        <a href="https://github.com/bennix/ZenMuxDev">bennix/ZenMuxDev</a>。
-      </p>
-      <video controls playsinline preload="metadata" src="ZenCode-Promo-v2-28s.mp4">
-        <a href="ZenCode-Promo-v2-28s.mp4">观看 ZenCode 介绍</a>
-      </video>
-
-      <h2>能做什么</h2>
-      <ul>
-        <li>在欢迎页和设置里填写 ZenMux API Key，加密显示并保存在本机。没有 Key 时给出邀请链接。</li>
-        <li>默认模型为 openai/gpt-6-sol、anthropic/claude-opus-5.5、x-ai/grok-4.7，也可以自己增改模型名和上下文档位。</li>
-        <li>请求发往 https://zenmux.ai/api/v1，不发送温度参数。</li>
-        <li>对话框下方可以同时打开「控制电脑」和「控制浏览器」。</li>
-        <li>创作面板可以生图、生视频，也可以按页生成可编辑的 PPT，保存后其他软件能打开。</li>
-        <li>幻灯片可以翻页预览。打开选择模式后，点选一个或多个元素，用自然语言交给模型修改。</li>
-        <li>参考图、手绘和附件可以粘贴或拖放。</li>
-      </ul>
-
-      <h2>下载 3.14.5</h2>
-      <div class="downloads">
-        <a id="mac" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-mac-arm64.dmg">
-          macOS（Apple 芯片）
-          <small>已签名并公证的 DMG</small>
+    <header>
+      <div class="wrap bar">
+        <a class="brand" href="#top">
+          <img src="packages/desktop/build/icon.png" alt="" width="36" height="36" />
+          ZenCode
         </a>
-        <a id="win" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-win-x64.exe">
-          Windows
-          <small>x64 安装包</small>
-        </a>
-        <a id="deb" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-linux-amd64.deb">
-          Ubuntu / Debian
-          <small>amd64 deb</small>
-        </a>
-        <a id="rpm" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-linux-x86_64.rpm">
-          Linux RPM
-          <small>x86_64 rpm</small>
-        </a>
+        <nav>
+          <a href="#new">这一版</a>
+          <a href="#work">工作方式</a>
+          <a href="#download">下载</a>
+          <a href="https://github.com/bennix/ZenMuxDev">源码</a>
+        </nav>
       </div>
-      <p class="lede">全部安装包也列在 <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.5">GitHub Release</a>。</p>
+    </header>
 
-      <h2>源自哪里</h2>
-      <p class="lede">
-        ZenCode 改自智谱开源的 ZCode（仓库
-        <a href="https://github.com/zai-org/ZCode">zai-org/ZCode</a>）。
-        本仓库保留原项目结构，把可见产品名改为 ZenCode，并把模型接入改为 ZenMux。
-        当前源码分支：
-        <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">cursor/zenmux-zencode-provider</a>。
-      </p>
-      <footer>worker</footer>
+    <main id="top">
+      <div class="wrap hero">
+        <p class="kicker">Desktop · 3.14.5</p>
+        <h1>把编程、画面和幻灯片放在同一张桌上。</h1>
+        <p class="lede">
+          ZenCode 是桌面端工作台。代码、文件和对话留在本机；模型请求走 ZenMux。
+          这一版在对话框里加上创作：生图、生视频，以及可以交给其他软件继续改的幻灯片。
+        </p>
+        <div class="actions">
+          <a class="primary" href="#download">下载 3.14.5</a>
+          <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">查看源码</a>
+        </div>
+        <div class="stage">
+          <video controls playsinline preload="metadata" src="ZenCode-Promo-v2-28s.mp4">
+            <a href="ZenCode-Promo-v2-28s.mp4">观看介绍</a>
+          </video>
+        </div>
+      </div>
+
+      <section id="new">
+        <div class="wrap">
+          <h2>这一版新做的</h2>
+          <p class="section-note">3.14.5 的增量都在创作面板里。生成之前先讨论，生成之后可以按元素修改，幻灯片保存成标准文件。</p>
+          <div class="grid">
+            <article>
+              <span>01</span>
+              <h3>生图与生视频</h3>
+              <p>在对话框里直接出图或出视频。比例和时长按所选模型给出。生成结果可以拷贝，也可以存到本地。</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>讨论之后再生成</h3>
+              <p>意图、美术、挑刺、成稿四个角色按顺序发言。成稿的最终提示词单独列出，然后才交给生图或生视频模型。意图和成稿模型可以各自选择，思考强度跟主界面一致。</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>按页写幻灯片</h3>
+              <p>页数可选 5、8、10、12、15、20，也可以自己指定。一页写完就能预览，写满指定页数才算完成。深色代码块用浅色字；讲流程、分支或步骤的页面自带示意图。</p>
+            </article>
+            <article>
+              <span>04</span>
+              <h3>保存成可编辑的 PPT</h3>
+              <p>导出的是标准 PPTX。文字仍是文本框，色块仍是形状，照片和示意图仍是图片，其他办公软件可以打开并继续改。</p>
+            </article>
+            <article>
+              <span>05</span>
+              <h3>只改选中的元素</h3>
+              <p>选择模式默认关闭。打开后，悬停是虚线框，点中的元素有蓝色实线。可以多选，再用自然语言交给模型。回复会流式出现，并只替换这些元素。</p>
+            </article>
+            <article>
+              <span>06</span>
+              <h3>手绘、参考图和附件</h3>
+              <p>图片和文档可以粘贴或拖放，以缩略图列出。手绘默认说明要画什么，结果是自然照片，除非明确要求线稿。已经有照片时，笔迹只改盖住的区域。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="work">
+        <div class="wrap">
+          <h2>原来就在的工作方式</h2>
+          <p class="section-note">创作是加在现有桌面端上的，没有换掉编程和本机文件这一层。</p>
+          <div class="grid">
+            <article>
+              <span>模型</span>
+              <h3>只接 ZenMux</h3>
+              <p>在欢迎页或设置里填写 API Key，加密显示，保存在本机。没有 Key 时给出邀请链接。请求发往 zenmux.ai，不附带温度参数。默认模型包括 openai/gpt-6-sol、anthropic/claude-opus-5.5 和 x-ai/grok-4.7，也可以自己增改。</p>
+            </article>
+            <article>
+              <span>桌面</span>
+              <h3>代码、电脑和浏览器</h3>
+              <p>对话改本机工作区里的文件，并可以限制工作区搜索范围。对话框下方可以同时打开控制电脑和控制浏览器。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="download">
+        <div class="wrap">
+          <h2>下载 3.14.5</h2>
+          <p class="section-note">四个安装包都挂在 <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.5">GitHub Release</a>。macOS 包由开发者签名并完成公证。</p>
+          <div class="downloads">
+            <a id="mac" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-mac-arm64.dmg">
+              <strong>macOS</strong>
+              <small>Apple 芯片 · 已公证 DMG</small>
+            </a>
+            <a id="win" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-win-x64.exe">
+              <strong>Windows</strong>
+              <small>x64 安装包</small>
+            </a>
+            <a id="deb" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-linux-amd64.deb">
+              <strong>Ubuntu / Debian</strong>
+              <small>amd64 deb</small>
+            </a>
+            <a id="rpm" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.5/ZenCode-3.14.5-linux-x86_64.rpm">
+              <strong>Linux RPM</strong>
+              <small>x86_64 rpm</small>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="origin">
+        <div class="wrap origin">
+          <h2>源自哪里</h2>
+          <p class="section-note">
+            ZenCode 改自智谱开源的 <a href="https://github.com/zai-org/ZCode">ZCode</a>。
+            仓库结构仍沿用上游，可见产品名改为 ZenCode，模型供应商改为 ZenMux。
+            当前源码在 <a href="https://github.com/bennix/ZenMuxDev">bennix/ZenMuxDev</a> 的
+            <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">cursor/zenmux-zencode-provider</a> 分支。
+          </p>
+        </div>
+      </section>
     </main>
+    <footer>
+      <div class="wrap">ZenCode · 基于 ZCode · 模型由 ZenMux 提供</div>
+    </footer>
   </body>
 </html>
