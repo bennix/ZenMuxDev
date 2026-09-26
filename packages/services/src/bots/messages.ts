@@ -37,7 +37,8 @@ const messages = {
     deletedTaskReplaced:
       "原任务已删除，已为你新建任务。本条消息将在新任务中处理，不会继承原任务的对话上下文。",
     received: "已收到。",
-    attachmentOnlyPrompt: "请查看附件并根据内容协助我。",
+    taskInterrupted: "本次处理已停止，尚未返回完整结果。你可以发送具体问题继续处理已收到的附件。",
+    attachmentOnlyPrompt: "请先简要概括附件的主要内容，确认实际总页数并覆盖全文（包括末尾习题）。直接给出摘要，不要擅自扩展为代码审查、法律核查或联网研究；如有无法读取的部分，请明确说明。",
     attachmentRejected: "附件处理失败：{message}",
     attachmentDownloadUnavailable:
       "无法下载附件。文件可能已过期、已撤回，或机器人没有读取权限。请重新发送附件后再试。",
@@ -154,7 +155,8 @@ const messages = {
     deletedTaskReplaced:
       "The previous task was deleted, so I created a new task for you. This message will be processed in the new task without the previous conversation history.",
     received: "Received.",
-    attachmentOnlyPrompt: "Please review the attachment and help based on its content.",
+    taskInterrupted: "Processing stopped before a complete answer was returned. Send your question to continue with the received attachment.",
+    attachmentOnlyPrompt: "First give a concise summary of the attachment. Check its actual page count and cover the whole document, including any final exercises. Do not expand this into unsolicited code review, legal verification or web research. State any unreadable portions clearly.",
     attachmentRejected: "Failed to process attachment: {message}",
     attachmentDownloadUnavailable:
       "Could not download the attachment. The file may have expired, been removed, or the bot may not have permission to read it. Please send the attachment again and try once more.",

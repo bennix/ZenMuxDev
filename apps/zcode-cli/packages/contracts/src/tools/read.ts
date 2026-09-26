@@ -239,6 +239,7 @@ export interface ReadPartsOutput {
   type: "parts";
   filePath: string;
   numParts: number;
+  totalPages?: number;
   originalSize: number;
   pages: Array<ReadImageOutput & { pageNumber: number }>;
 }
@@ -351,6 +352,7 @@ export const ReadPartsOutputSchema = z
     type: z.literal("parts"),
     filePath: z.string(),
     numParts: z.number().int().nonnegative(),
+    totalPages: z.number().int().positive().optional(),
     originalSize: z.number().int().nonnegative(),
     pages: z.array(ReadImageOutputSchema.extend({ pageNumber: z.number().int().positive() })),
   })

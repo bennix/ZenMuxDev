@@ -241,3 +241,21 @@ test("typing starts then cancels with original context; no ticket sends nothing"
     assert.equal(calls.length, 1);
   });
 });
+
+test("typing refresh bursts coalesce and cancellation stays last", async () => {
+  await withFetch(
+    [{ typing_ticket: "ticket" }, {}, { typing_ticket: "ticket" }, {}],
+    async (calls) => {
+      const provider = createWeixinBotProvider(deps);
+      const target = { providerUserId: "u@im.wechat", providerContextToken: "ctx" };
+      await Promise.all([
+        provider.sendTyping!(bot, target),
+        provider.sendTyping!(bot, target),
+        provider.sendTyping!(bot, target),
+        provider.stopTyping!(bot, target),
+      ]);
+      assert.equal(calls.length, 4);
+      assert.equal(JSON.parse(String(calls[3]!.init.body)).status, 2);
+    },
+  );
+});

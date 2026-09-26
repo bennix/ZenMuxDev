@@ -218,6 +218,8 @@ async function readPdfPages(
   }
 
   try {
+    // 修复：课件页脚可能仍写旧页数；返回 PDF 的真实总页数，避免只读前半部分就总结全文。
+    const totalPages = await context.pdfDocumentPort.getPageCount({ filePath, trace }, { signal: context.abortSignal });
     const renderedPages = await context.pdfDocumentPort.renderPages(
       {
         filePath,
@@ -266,6 +268,7 @@ async function readPdfPages(
       type: "parts",
       filePath,
       numParts: preparedPages.length,
+      ...(totalPages !== undefined ? { totalPages } : {}),
       originalSize: sizeBytes,
       pages: preparedPages,
     };
@@ -323,7 +326,7 @@ export function formatReadPdfPagesOutput(output: ReadPartsOutput): ModelMessageC
   return [
     {
       type: "text",
-      text: `PDF pages extracted: ${output.numParts} page(s) from ${output.filePath} (${formatFileSize(output.originalSize)})`,
+      text: `PDF pages extracted: ${output.numParts} page(s) from ${output.filePath} (${formatFileSize(output.originalSize)}). ${output.totalPages !== undefined ? `Document total: ${output.totalPages} pages. ` : ""}Pages in this result: ${output.pages.map((page) => page.pageNumber).join(", ")}. This result covers only those pages; do not assume the entire document has been read.`,
     },
     ...output.pages.map((page) => ({
       type: "image" as const,

@@ -2068,12 +2068,14 @@ export function createBotsService(
   async function stopInboundTyping(bot: BotConfig, actor: BotActor): Promise<void> {
     const adapter = providers[bot.provider];
     const targetId = actor.chatId ?? actor.providerUserId;
-    if (!adapter?.stopTyping || !targetId || !actor.providerMessageId) {
+    if (!adapter?.stopTyping || !targetId || (bot.provider !== "weixin" && !actor.providerMessageId)) {
       return;
     }
     const isLongRunningTyping = Array.from(typingTargets.values()).some(
       (typing) =>
-        typing.bot.id === bot.id && typing.target.providerMessageId === actor.providerMessageId,
+        typing.bot.id === bot.id && (bot.provider === "weixin"
+          ? typing.target.providerUserId === targetId
+          : typing.target.providerMessageId === actor.providerMessageId),
     );
     if (isLongRunningTyping) {
       return;
@@ -2123,7 +2125,11 @@ export function createBotsService(
     if (activeTyping) {
       typingTargets.delete(taskId);
       const adapter = providers[activeTyping.bot.provider];
-      void adapter?.stopTyping?.(activeTyping.bot, activeTyping.target).catch(() => undefined);
+      // 修复：附件准备与正式任务共享接收者，释放一个租约不能取消另一个仍在工作的输入状态。
+      const stillTyping = activeTyping.bot.provider === "weixin" && Array.from(typingTargets.values()).some(
+        (entry) => entry.bot.id === activeTyping.bot.id && entry.target.providerUserId === activeTyping.target.providerUserId,
+      );
+      if (!stillTyping) void adapter?.stopTyping?.(activeTyping.bot, activeTyping.target).catch(() => undefined);
     }
     const intervalId = typingIntervals.get(taskId);
     if (!intervalId) {
@@ -2639,6 +2645,9 @@ export function createBotsService(
         undefined,
         `provider callback provider=${provider} bot=${inboundMessage.botId} textLength=${inboundMessage.text.length}`,
       );
+      const preparationTypingId = bot?.provider === "weixin" ? `inbound:${getActorContextKey(inboundMessage.actor)}:${inboundMessage.actor.providerMessageId ?? randomBytes(8).toString("hex")}` : undefined;
+      if (preparationTypingId && bot) startTyping(bot, inboundMessage.actor, preparationTypingId);
+      try {
       let outbound: BotOutboundMessage[];
       let reconnectStartingReply: BotOutboundMessage | null = null;
       let inboundBusinessFailure = false;
@@ -2810,6 +2819,9 @@ export function createBotsService(
           releaseInboundDelivery(inboundMessage);
           throw error;
         }
+      }
+      } finally {
+        if (preparationTypingId) stopTyping(preparationTypingId);
       }
     }
     return {
@@ -4034,7 +4046,6 @@ export function createBotsService(
       if (event.type === "task_complete" || event.type === "task_error") {
         runningTasks.delete(event.taskId);
         liveStatusProgressByTaskId.delete(event.taskId);
-        stopTyping(event.taskId);
         if (context.pendingElicitation?.taskId === event.taskId) {
           clearPendingElicitationSelection(context.pendingElicitation);
           await writeContext({ ...context, pendingElicitation: undefined });
@@ -4103,6 +4114,11 @@ export function createBotsService(
           return;
         }
 
+        if (event.stopReason === "cancelled") {
+          // 修复：前面的“准备阅读”属于进度；取消后必须另发终态，不能无声结束。
+          await sendOutbound(bot, createOutbound(actor, msg(await readMessageLocale(), "taskInterrupted")));
+          return;
+        }
         const mode = getMode();
         const locale = await readMessageLocale();
         const completedSnapshot = await zcodeTaskService
@@ -4171,7 +4187,13 @@ export function createBotsService(
     const enqueueStreamEvent = (
       event: ZCodeStreamEvent | TaskStreamMirrorableEvent,
     ): Promise<void> => {
-      const nextStreamEvent = streamEventQueue.then(() => handleStreamEvent(event));
+      const nextStreamEvent = streamEventQueue.then(async () => {
+        try { await handleStreamEvent(event); }
+        finally {
+          // 修复：完成事件先到并不表示正文已发完；必须在出站发送结束后取消输入状态。
+          if (event.type === "task_complete" || event.type === "task_error") stopTyping(event.taskId);
+        }
+      });
       // Bugfix: ZCode Agent 事件分发不保证等待 async listener。微信这类离散消息如果并发发送，
       // task_complete 的 Change summary 可能抢在前面正文 flush 之前到达客户端，所以这里按任务串行消费。
       streamEventQueue = nextStreamEvent.catch((error: unknown) => {
@@ -4760,7 +4782,7 @@ export function createBotsService(
         const locale = await readMessageLocale();
         const userFacingMessage = formatUserFacingBotError(error, locale);
         runningTasks.delete(taskId);
-        stopTyping(taskId);
+        try {
         await broadcastTaskListChange(context, taskId, "error", {
           error: message,
         });
@@ -4773,6 +4795,7 @@ export function createBotsService(
               : msg(locale, "taskFailed", { message: userFacingMessage }),
           ),
         ).catch(() => undefined);
+        } finally { stopTyping(taskId); }
       });
   }
 

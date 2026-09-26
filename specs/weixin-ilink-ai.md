@@ -47,3 +47,11 @@ streams are unchanged. No database migration. Media capabilities are milestone D
   persisted controlled Echo switch; input labels available in both locales.
 - Existing agent reply route remains authoritative; live AI reply requires a user
   test after installation and is not implied by B's ping/pong acceptance.
+
+Typing lifecycle refinement: begin at authorized inbound processing, including file
+preparation, with a temporary lease in the existing typing owner. Transfer coverage
+to the task lease before releasing preparation. Multiple leases for the same recipient
+must not cancel each other. Retain typing through final message delivery, then stop
+in finally on completion/error. Coalesce pending refresh calls to avoid a growing
+queue on a slow network. Missing typing ticket is a protocol capability limitation;
+do not claim the Weixin UI displayed a state based only on a successful API call.

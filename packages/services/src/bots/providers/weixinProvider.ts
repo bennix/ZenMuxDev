@@ -1,3 +1,4 @@
+import { downloadWeixinCiphertext } from "./weixinMediaDownload.js";
 import {
   WEIXIN_BASE_INFO,
   WeixinSessionExpiredError,
@@ -180,10 +181,13 @@ function readWeixinTextItem(item: unknown): string {
     return "";
   }
   const textItem = isRecord(item.text_item) ? item.text_item : null;
-  return readString(textItem, "text") || readString(item, "text") || readString(item, "content");
+  const voiceItem = isRecord(item.voice_item) ? item.voice_item : null;
+  return readString(voiceItem, "text") || readString(textItem, "text") || readString(item, "text") || readString(item, "content");
 }
 
 function inferWeixinAttachmentKind(item: Record<string, unknown>): BotInboundAttachment["kind"] {
+  if (isRecord(item.voice_item)) return "audio";
+  if (isRecord(item.video_item)) return "video";
   if (isRecord(item.image_item)) {
     return "image";
   }
@@ -220,7 +224,9 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
   if (readWeixinTextItem(item)) {
     return null;
   }
-  const media = isRecord(item.image_item)
+  const media = isRecord(item.voice_item)
+    ? item.voice_item
+    : isRecord(item.image_item)
     ? item.image_item
     : isRecord(item.file_item)
       ? item.file_item
@@ -244,13 +250,16 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
     // 微信图片消息的 image_item 只返回 media 字段，没有 file_id/md5；这里将 media 作为后续下载和去重的资源标识。
     readNumberOrString(mediaSource, "media") ||
     readNumberOrString(mediaSource, "md5");
+  const query = readString(mediaSource, "encrypt_query_param") || readString(mediaSource, "encryptQueryParam");
+  // 修复：iLink 可只提供不透明下载参数；不能因缺少 full_url 丢弃有效附件。
+  const cdnUrl = query ? `https://novac2c.cdn.weixin.qq.com/c2c/download?encrypted_query_param=${encodeURIComponent(query)}` : "";
   const downloadUrl =
+    readString(mediaSource, "full_url") ||
+    readString(mediaSource, "fullUrl") ||
     readString(mediaSource, "url") ||
     readString(mediaSource, "download_url") ||
     readString(mediaSource, "downloadUrl") ||
-    // 微信 image_item.media 内的 full_url 是实际图片下载地址，旧逻辑只读 url/download_url 会把纯图片消息丢掉。
-    readString(mediaSource, "full_url") ||
-    readString(mediaSource, "fullUrl");
+    cdnUrl;
   const dataBase64 =
     readString(mediaSource, "data_base64") ||
     readString(mediaSource, "dataBase64") ||
@@ -275,11 +284,13 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
         : kind === "video"
           ? "video/mp4"
           : "application/octet-stream");
+  const rawLength = readNumberOrString(mediaSource, "len");
+  const plainLength = /^\d+$/u.test(rawLength) && Number.isSafeInteger(Number(rawLength)) ? Number(rawLength) : null;
   const sizeBytes =
     readNumber(mediaSource, "size") ??
     readNumber(mediaSource, "sizeBytes") ??
     readNumber(mediaSource, "file_size") ??
-    readNumber(mediaSource, "len") ??
+    plainLength ??
     // image_item 没有通用 size 字段，mid_size 是实际图片资源大小，thumb_size 只用于缩略图预览。
     readNumber(mediaSource, "mid_size");
   const aesKey =
@@ -300,6 +311,10 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
 }
 
 function inferMimeTypeFromFilename(filename: string): string {
+  if (/\.pdf$/iu.test(filename)) return "application/pdf";
+  if (/\.docx$/iu.test(filename)) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (/\.xlsx$/iu.test(filename)) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (/\.pptx$/iu.test(filename)) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
   if (/\.svg$/iu.test(filename)) {
     return "image/svg+xml";
   }
@@ -665,11 +680,13 @@ export async function getWeixinUpdates(params: {
 }
 
 export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAdapter {
-  const typingOperations = new Map<string, Promise<void>>();
+  const typingOperations = new Map<string, { status: 1 | 2; operation: Promise<void> }>();
   function setTyping(bot: BotConfig, target: BotTypingTarget, status: 1 | 2): Promise<void> {
     const key = JSON.stringify([bot.id, target.providerUserId]);
     // 修复：开始/结束请求必须串行，避免迟到的开始请求覆盖取消状态。
-    const operation = (typingOperations.get(key) ?? Promise.resolve()).catch(() => undefined).then(async () => {
+    const pending = typingOperations.get(key);
+    if (pending?.status === status) return pending.operation;
+    const operation = (pending?.operation ?? Promise.resolve()).catch(() => undefined).then(async () => {
       const config = (await requestWeixinJson(bot, deps, "/getconfig", {
         ilink_user_id: target.providerUserId,
         ...(target.providerContextToken ? { context_token: target.providerContextToken } : {}),
@@ -681,9 +698,9 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
         status,
       });
     });
-    typingOperations.set(key, operation);
+    typingOperations.set(key, { status, operation });
     return operation.finally(() => {
-      if (typingOperations.get(key) === operation) typingOperations.delete(key);
+      if (typingOperations.get(key)?.operation === operation) typingOperations.delete(key);
     });
   }
   return {
@@ -735,16 +752,12 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
 
     async downloadAttachment(_bot, attachment) {
       const aesKey = attachment.providerMetadata?.weixinAesKey;
-      if (!attachment.downloadUrl || !aesKey) {
-        return null;
-      }
-      const response = await fetch(attachment.downloadUrl);
-      if (!response.ok) {
-        throw new Error(`Weixin attachment download failed: HTTP ${response.status}`);
-      }
+      if (!attachment.downloadUrl) return null;
+      // 修复：缺少密钥不能退回通用下载路径，否则会把密文作为 PDF 交给模型。
+      if (!aesKey) throw new Error("Weixin attachment AES key is missing.");
       return {
         attachment,
-        data: decryptWeixinCdnMedia(new Uint8Array(await response.arrayBuffer()), aesKey),
+        data: decryptWeixinCdnMedia(await downloadWeixinCiphertext(attachment.downloadUrl), aesKey),
       };
     },
 
