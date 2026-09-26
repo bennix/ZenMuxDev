@@ -18,14 +18,14 @@ index; detailed behavior belongs to each feature spec.
 | Reported screenshot failures and no-change edits | edit-no-change.md; commit 564e60f | Recheck associated runtime case; no image-only assumptions |
 | Skills installed in AI chat appear in Settings | conversation-skill-install.md; commit 7351007 | Verify create/install/refresh end-to-end |
 | All submitted inputs and attachments → vector RAG + cited wiki | Incomplete local-text prototype | Durable queue, attachment extraction, settings, deletion, wiki and retrieval |
-| Robust /goal, acceptance, persistence, budgets, compaction and cache | Existing runtime target owner | Audit verifier race, blocked status migration and complete regression suite |
+| Robust /goal, acceptance, persistence, budgets, compaction and cache | Existing runtime target owner; stale verifier CAS regression passed (0b0c47b) | Blocked status migration and complete regression suite |
 | mu auxiliary goal tooling | Reference recorded | Inspect interface/license and implement useful integration |
-| Read-only Office preview and full page/sheet navigation | DOCX navigation changes pending | Real multi-page DOCX/PPTX/XLSX fixtures |
-| Permanent OfficeCLI full command surface + composer templates | Bundled launcher and templates pending | Bundle, release/runtime verification and UI execution |
+| Read-only Office preview and full page/sheet navigation | DOCX navigation implemented; real 20-page DOCX browser test passed | PPTX/XLSX fixtures and packaged app acceptance |
+| Permanent OfficeCLI full command surface + composer templates | Pinned 1.0.152 launcher and composer templates implemented (afcb35f); command tests passed | Packaged runtime and UI execution |
 | Horizon UI, sources, scoring, discussions, dedup, background, bilingual digests | Reference research only | Integration and acceptance for each advertised source/channel |
 | Weixin B Settings pairing + ping/pong | User confirmed pong; PR #1 ready | Done for B scope |
-| Weixin C allowlist, typing, configured AI text replies | Current source implementation/testing | Isolated PR, packaged app, live authorized AI response |
-| Weixin D images/files and inbound voice transcription | Existing partial provider media code | Protocol fixtures, upload/download, multimodal live acceptance; separate PR |
+| Weixin C allowlist, typing, configured AI text replies | Source and settings browser tests passed; draft PR #2 | Packaged app and live authorized AI/typing response |
+| Weixin D images/files and inbound voice transcription | Inbound CDN/AES/PDF metadata and voice transcription fixes tested (a1a1d3b) | Outbound upload/images/files; live multimodal acceptance; separate PR |
 | Configurable cloud Jev typesafe/jev-1.13 | Shared constants and Studio references | Settings and decision-routing audit |
 | Local Laya: agent-jev or CLM active backend | Reference research only | Runtime contracts, platform support and integration |
 | Separate optional weights for both local backends | Scope clarified, no downloads | Version/progress/size/delete; coexist on disk, no default dual loading |
@@ -39,3 +39,18 @@ an echo test. Reuse existing Agent, browser, Bot and goal owners. Keep unrelated
 changes. Goal schema migration awaits the previously requested user confirmation;
 continue non-schema work while it is pending. Downloading model weights and enabling
 external digest delivery have not happened. Do not imply otherwise.
+
+## Latest Weixin document incident
+
+The supplied PDF has 24 pages and matches cached inbound bytes exactly. The live
+Agent read pages 1–20, drifted into web research, then ended with
+`model_request_cancelled`; who cancelled is unknown. Commit a1a1d3b exposes total
+PDF pages, constrains attachment-only summary scope, notifies cancellation, and
+keeps typing through preparation and response delivery. Fourteen protocol/PDF tests
+passed. This is not yet proof of live summary delivery or Weixin typing display.
+
+Both root and CLI typechecks passed. Root lint retains four errors (two oversized
+existing source files and two generated release-artifacts files). Architecture has
+zero violations. The clean integration build excludes the unfinished knowledge
+prototype. Commit a82f9e6 additionally repairs macOS ASAR metadata in the source
+packaging hook; two regression tests passed. Packaged/live acceptance is pending.
