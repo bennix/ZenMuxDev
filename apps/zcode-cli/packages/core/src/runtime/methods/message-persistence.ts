@@ -1,3 +1,4 @@
+import { captureKnowledgeInput } from "../helpers/knowledge.js";
 import type { RuntimeInputPresentation } from "@zcode/contracts";
 import { createModelId, createModelProviderId } from "@zcode/contracts";
 import { SessionEventType, createPartId, traceContextToLogContext } from "../deps.js";
@@ -171,6 +172,7 @@ export async function persistUserPrompt(
       ),
       traceContext,
     );
+    await captureKnowledgeInput(this, { sessionId: this.sessionId, messageId: messageID, text: input, createdAt: created }, traceContext);
     return;
   }
 
@@ -178,6 +180,7 @@ export async function persistUserPrompt(
   for (const part of parts) {
     await this.persistPart(part, traceContext);
   }
+  await captureKnowledgeInput(this, { sessionId: this.sessionId, messageId: messageID, text: input, createdAt: created }, traceContext);
 }
 
 export async function persistSyntheticUserNotice(

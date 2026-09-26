@@ -1,3 +1,4 @@
+import type { KnowledgePort } from "@zcode/contracts";
 import { DEFAULT_ZCODE_MODEL_CONTEXT_BUDGET_STRATEGY, resolveExecutionState } from "@zcode/shared";
 import type { BackgroundBashOutputResult } from "@zcode/shared";
 import {
@@ -179,6 +180,7 @@ export class AgentRuntime {
   private branchGeneration = 0;
   private artifactStore?: ToolArtifactStorePort;
   private executionPort?: ExecutionPort;
+  private knowledgePort?: KnowledgePort;
   private fileSystemPort?: FileSystemPort;
   private imageProcessorPort?: ImageProcessorPort;
   private pdfDocumentPort?: PdfDocumentPort;
@@ -285,6 +287,7 @@ export class AgentRuntime {
     this.runtimeTaskRegistry.setActiveBranchGeneration?.(this.branchGeneration);
     this.artifactStore = deps.artifactStore;
     this.executionPort = deps.executionPort;
+    this.knowledgePort = deps.knowledgePort;
     this.fileSystemPort = deps.fileSystemPort;
     this.imageProcessorPort = deps.imageProcessorPort;
     this.pdfDocumentPort = deps.pdfDocumentPort;

@@ -1,3 +1,4 @@
+import { createKnowledgeAdapter } from "@zcode/adapters";
 import { isAbsolute, join, resolve } from "node:path";
 import {
   createInMemorySessionEventStore,
@@ -724,6 +725,14 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
       currentSelection: () => getRuntime().getSessionModelSelection(),
     });
     runtime = new AgentRuntime(sessionId, runtimeConfig, {
+      ...(runtimeConfig.memory?.enabled && runtimeConfig.memory.use !== false ? {
+        knowledgePort: createKnowledgeAdapter({
+          root: join(cliStorageRoot, "knowledge"),
+          workspacePath: workingDirectory,
+          workspaceIdentity: runtimeConfig.memory.workspaceIdentity,
+          http: httpClientPort,
+        }),
+      } : {}),
       agentTelemetry: modelTelemetry.agentExecution,
       // 主代理的模型请求过治理器的 observer：立即放行，但让治理器看见它的 429 / 成功。
       modelRequestAdmission: workflowConcurrencyGovernor.observer(),

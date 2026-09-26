@@ -1,3 +1,4 @@
+import type { KnowledgePort } from "@zcode/contracts";
 import { PermissionService, ToolScheduler } from "./deps.js";
 import type {
   Logger,
@@ -107,6 +108,7 @@ export interface AgentRuntimeInternal
   branchGeneration: number;
   artifactStore?: ToolArtifactStorePort;
   executionPort?: ExecutionPort;
+  knowledgePort?: KnowledgePort;
   fileSystemPort?: FileSystemPort;
   imageProcessorPort?: ImageProcessorPort;
   pdfDocumentPort?: PdfDocumentPort;

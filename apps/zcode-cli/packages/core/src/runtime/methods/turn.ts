@@ -1,3 +1,4 @@
+import { retrieveKnowledgeContext } from "../helpers/knowledge.js";
 import { beginLocalTurnPreparation, type LocalTtftDetail } from "@zcode/contracts";
 import { runtimeInputMetadata } from "../../agent/runtime-input-presentation.js";
 import {
@@ -423,6 +424,7 @@ export async function executeTurnCommand(
         );
         injectReferencedSessionContextReminderIntoMessageHistory.call(this, input, options);
         injectDateChangeReminderIntoMessageHistory.call(this);
+        await retrieveKnowledgeContext(this, input, turnTraceContext, turnAbortSignal);
         const resolvedAttachments = await resolveTurnAttachments(attachments, {
           abortSignal: turnAbortSignal,
           artifactStore: this.artifactStore,
