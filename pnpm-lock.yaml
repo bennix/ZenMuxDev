@@ -772,6 +772,9 @@ importers:
       istanbul-lib-instrument:
         specifier: ^6.0.3
         version: 6.0.3
+      plist:
+        specifier: 3.1.0
+        version: 3.1.0
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2

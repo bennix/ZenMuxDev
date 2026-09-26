@@ -15,6 +15,7 @@ import {
   restoreTargetNodePtyPrebuild,
 } from "./scripts/node-pty-package-assets.mjs";
 import { cleanupPackagedSourcemaps } from "./scripts/packaged-sourcemap-cleanup.mjs";
+import { refreshMacAsarIntegrity } from "./scripts/macos-asar-integrity.mjs";
 import { getTargetPlatform } from "./scripts/target-platform.mjs";
 import {
   resolveDesktopArtifactSuffix,
@@ -555,6 +556,9 @@ export default {
     );
     await runTimedAsync("afterPack:stripPackagedSourcemapReferences", () =>
       stripPackagedSourcemapReferences(context),
+    );
+    await runTimedAsync("afterPack:refreshMacAsarIntegrity", () =>
+      refreshMacAsarIntegrity(context),
     );
     runTimedSync("afterPack:assertPackagedNativeResourcePolicy", () =>
       assertPackagedNativeResourcePolicy(context),
