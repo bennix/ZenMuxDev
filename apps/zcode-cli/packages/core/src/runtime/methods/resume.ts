@@ -1,3 +1,4 @@
+import {restoreImageBatchMemory} from "../helpers/image-batch-memory.js";
 import { restorePermissionGrantMarker } from "../helpers/permission-grant-resume.js";
 import { executionStateSchema, resolveExecutionState } from "@zcode/shared";
 import { SESSION_ENTRY_EXECUTION_STATE } from "@zcode/contracts";
@@ -232,6 +233,8 @@ export async function resumeFromStore(
   });
   await this.discardPersistedPendingSteerInputs(traceContext);
   const recoveredSteerInputCount = 0;
+  // 修复：重启只恢复已落盘的批次，将未完成调用标为中断；等待用户输入，不自动再调用模型。
+  await restoreImageBatchMemory(this.sessionStore,this.sessionId);
   const resumedTodos = await this.readSessionTodosForContext(traceContext);
   const resumedTarget = await this.readSessionTargetForContext(traceContext);
   this.injectTargetStateIntoMessageHistory(resumedTarget);

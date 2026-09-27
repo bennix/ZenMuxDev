@@ -19,3 +19,10 @@ test("small requests are unchanged; failure and cancellation stop further work",
  await assert.rejects(projectImageBatches(input(21),async()=>{calls++;return "x";},controller.signal));
  assert.equal(calls,1);
 });
+test("explicit continuation keeps the original image task; new instructions replace it",async()=>{
+ const {resolveImageBatchTaskText}=await import("../src/runtime/helpers/image-batches.js");
+ const messages:any[]=[{role:"user",content:"比较照片里的标志"},{role:"assistant",content:"已完成第一批"},{role:"user",content:"继续"}];
+ assert.equal(resolveImageBatchTaskText(messages),"比较照片里的标志");
+ messages.push({role:"user",content:"改成分析颜色"});
+ assert.equal(resolveImageBatchTaskText(messages),"改成分析颜色");
+});

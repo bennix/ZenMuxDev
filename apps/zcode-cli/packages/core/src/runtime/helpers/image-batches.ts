@@ -16,8 +16,7 @@ export async function projectImageBatches(
   });
  });
  if(images.length<=IMAGE_BATCH_SIZE) return messages;
- const taskContent=messages[findLatestRealUserMessageIndex(messages)]?.content;
- const taskText=typeof taskContent==="string"?taskContent:Array.isArray(taskContent)?taskContent.filter(block=>block.type==="text").map(block=>block.text).join("\n"):"";
+ const taskText=resolveImageBatchTaskText(messages);
  const summaries=new Map<string,string>();
  const total=Math.ceil(images.length/IMAGE_BATCH_SIZE);
  for(let offset=0;offset<images.length;offset+=IMAGE_BATCH_SIZE){
@@ -47,4 +46,19 @@ export async function projectImageBatches(
    return summary===undefined?block:{type:"text" as const,text:`[图片 ${messageIndex+1}.${index+1} 分批分析；非原图，精确视觉细节需重新读取]\n${summary}`};
   })};
  });
+}
+
+
+// 明确的继续输入沿用上一条实质任务；新的任务描述会改变缓存指纹。
+export function resolveImageBatchTaskText(messages:ModelInputMessage[]):string {
+ let end=messages.length;
+ while(end>0){
+  const index=findLatestRealUserMessageIndex(messages.slice(0,end));
+  if(index<0)return "";
+  const content=messages[index]?.content;
+  const text=typeof content==="string"?content:Array.isArray(content)?content.filter(block=>block.type==="text").map(block=>block.text).join("\n"):"";
+  if(!/^(?:继续|继续处理|继续完成|从断点继续|从中断处继续|continue|resume)[。.!！\s]*$/iu.test(text.trim()))return text;
+  end=index;
+ }
+ return "";
 }

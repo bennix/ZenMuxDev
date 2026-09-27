@@ -1,3 +1,4 @@
+import {rememberedImageBatch} from "../helpers/image-batch-memory.js";
 import {projectImageBatches} from "../helpers/image-batches.js";
 import {auxiliaryModelOptions} from "../../model/auxiliary-model-options.js";
 import {recordModelUsageFact} from "./usage-observability.js";
@@ -13,6 +14,7 @@ import {isOutputTokenLimitFinishReason} from "./turn-output-token-continuation.j
 export async function prepareImageBatchMessages(this:AgentRuntimeInternal,messages:ModelInputMessage[],options:RunModelTextRequestOptions):Promise<ModelInputMessage[]> {
  const model=options.model;
   return await projectImageBatches(messages, async (content,batch,total) => {
+    const run=async()=>{
     const progress=createModelStreamingEventQueue({events:options.events,runtime:this,traceContext:options.traceContext});
     progress.enqueue({assistantMessageId:options.assistantMessageId,kind:"text_delta",delta:`正在分析图片：第 ${batch}/${total} 批（每批最多 10 张）。\n`,done:false});
     await progress.drain();
@@ -36,5 +38,17 @@ export async function prepareImageBatchMessages(this:AgentRuntimeInternal,messag
       await recordModelUsageFact(this,{events,model:batchModel,networkEventStartIndex:0,querySource:"image_batch",error,startedAt,status:"error",traceContext});
       throw error;
     }
+    };
+    if(!this.sessionPersisted||!this.sessionStore)return run();
+    return rememberedImageBatch({
+      store:this.sessionStore,sessionId:this.sessionId,batch,total,
+      fingerprintInput:{version:1,provider:model.providerId,model:model.modelId,options:auxiliaryModelOptions(model),content},
+      run,
+      onRestored:async()=>{
+        const progress=createModelStreamingEventQueue({events:options.events,runtime:this,traceContext:options.traceContext});
+        progress.enqueue({assistantMessageId:options.assistantMessageId,kind:"text_delta",delta:`已恢复第 ${batch}/${total} 批图片的分析结果，无需重复处理。\n`,done:false});
+        await progress.drain();
+      },
+    });
   },options.abortSignal);
 }
