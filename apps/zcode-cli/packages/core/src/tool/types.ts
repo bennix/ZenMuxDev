@@ -165,6 +165,7 @@ export interface ToolExecutionContext {
   /** 工作流 actor 升级阻塞问题并等待主代理作答的端口；仅在 workflow actor 会话注入。 */
   workflowEscalatePort?: WorkflowEscalatePort;
   artifactStore?: ToolArtifactStorePort;
+  weixinFilePort?: import("@zcode/shared").WeixinFilePort;
   automationPort?: AutomationPort;
   offPeakPort?: OffPeakPort;
   sessionStore?: SessionStorePort;

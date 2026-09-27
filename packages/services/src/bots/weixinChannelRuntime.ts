@@ -24,6 +24,7 @@ interface WeixinChannelRuntimeDeps {
   readConfig(): Promise<BotsConfigFile>;
   readWeixinGetUpdatesBuf(botId: string): Promise<string | undefined>;
   writeWeixinGetUpdatesBuf(botId: string, buf: string): Promise<void>;
+  rememberWeixinRecipient?(botId: string, userId: string, token: string): Promise<void>;
   processProviderCallback(provider: "weixin", payload: unknown): Promise<BotProviderCallbackResult>;
 }
 
@@ -142,6 +143,7 @@ export function createWeixinChannelRuntime(deps: WeixinChannelRuntimeDeps) {
             }
             if (!isWeixinActorAllowed(bot, inbound.actor)) continue;
             if (bot.weixinEchoMode) {
+              if (inbound.actor.providerContextToken) await deps.rememberWeixinRecipient?.(bot.id, inbound.actor.providerUserId, inbound.actor.providerContextToken);
               await replyWeixinEcho(bot, inbound, provider);
               continue;
             }

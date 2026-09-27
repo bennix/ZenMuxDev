@@ -781,6 +781,7 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
       dynamicWorkflowRunPort,
       dynamicWorkflowSnippetPort,
       modelCatalogPort,
+      weixinFilePort: options.weixinFilePort,
       automationPort: options.automationPort,
       offPeakPort: options.offPeakPort,
       appVersion,

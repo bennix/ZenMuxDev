@@ -104,6 +104,7 @@ export interface ToolExecutorOptions {
   /** actor 的升级端口；存在即为该会话注册 escalate。 */
   workflowEscalatePort?: WorkflowEscalatePort;
   artifactStore?: ToolArtifactStorePort;
+  weixinFilePort?: import("@zcode/shared").WeixinFilePort;
   automationPort?: AutomationPort;
   offPeakPort?: OffPeakPort;
   sessionStore?: SessionStorePort;
@@ -210,6 +211,7 @@ export interface ToolExecutorDeps {
   /** actor 的升级端口；存在即为该会话注册 escalate。 */
   workflowEscalatePort?: WorkflowEscalatePort;
   artifactStore?: ToolArtifactStorePort;
+  weixinFilePort?: import("@zcode/shared").WeixinFilePort;
   automationPort?: AutomationPort;
   offPeakPort?: OffPeakPort;
   sessionStore?: SessionStorePort;

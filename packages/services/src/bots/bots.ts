@@ -130,6 +130,7 @@ export type BotFeishuRegistrationPollResult =
     };
 
 export interface IBotsService {
+  deliverWeixinFile(params: import("@zcode/shared").WeixinFileScope & import("@zcode/shared").WeixinFileRequest): Promise<import("@zcode/shared").WeixinFileResult>;
   /**
    * 将 App 全局交互偏好同步给 Bot 已持有的远端 runtime；不得为此建立新的远端连接。
    */

@@ -311,3 +311,5 @@ export { redactFeedbackText } from "./feedbackPrivacy.js";
 
 export * from "./studio-media-catalog.js";
 export * from "./studio-image.js";
+
+export * from "./weixin-file-delivery.js";

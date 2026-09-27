@@ -3641,6 +3641,7 @@ export const zcodeProtocolMethods = {
   pluginsResetConfig: "plugins/resetConfig",
   pluginsValidate: "plugins/validate",
   pluginsDescribe: "plugins/describe",
+  weixinFile: "weixin/file",
   automationCreate: "automation/create",
   automationUpdate: "automation/update",
   automationCheckTaskBinding: "automation/checkTaskBinding",
@@ -3718,3 +3719,5 @@ export * from "../localTtft.js";
 
 // 桌面本地 TTFT 的严格事实合同；检查点不能替代实际内容帧。
 export { localTtftFactsSchema } from "../localTtft.js";
+
+export { weixinFileRequestSchema, weixinFileResultSchema } from "../weixin-file-delivery.js";

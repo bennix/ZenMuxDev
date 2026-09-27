@@ -200,6 +200,7 @@ export type BotContextState = BotState;
 export interface BotsStateFile {
   version: 3;
   weixinCursors?: Record<string, string>;
+  weixinRecipients?: Record<string, { botId: string; userId: string; contextToken: string; updatedAt: number }>;
   bots: Record<string, BotState>;
 }
 
@@ -499,6 +500,7 @@ export const botsStateFileSchema = z
   .object({
     version: z.literal(3),
     weixinCursors: z.record(z.string(), z.string()).optional(),
+    weixinRecipients: z.record(z.string(), z.object({ botId: z.string(), userId: z.string(), contextToken: z.string(), updatedAt: z.number() }).strict()).optional(),
     bots: z.record(
       z.string(),
       z.object({

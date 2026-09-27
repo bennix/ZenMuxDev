@@ -53,6 +53,7 @@ export interface BotProviderAdapter {
   resolveName?(bot: BotConfig): Promise<string | null>;
   syncCommands?(bot: BotConfig): Promise<void>;
   send(bot: BotConfig, message: BotOutboundMessage): Promise<void>;
+  sendFile?(bot: BotConfig, message: BotOutboundMessage, file: Uint8Array, filename: string): Promise<void>;
   sendImage?(bot: BotConfig, message: BotOutboundMessage, image: Uint8Array): Promise<void>;
   sendTyping?(bot: BotConfig, target: BotTypingTarget): Promise<void>;
   startTyping?(bot: BotConfig, target: BotTypingTarget): Promise<void>;

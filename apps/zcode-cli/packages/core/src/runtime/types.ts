@@ -367,6 +367,7 @@ export interface AgentRuntimeDeps {
   modelCatalogPort?: ModelCatalogPort;
   runtimeTaskRegistry?: RuntimeTaskRegistry;
   artifactStore?: ToolArtifactStorePort;
+  weixinFilePort?: import("@zcode/shared").WeixinFilePort;
   automationPort?: AutomationPort;
   offPeakPort?: OffPeakPort;
   contextSourcePort?: ContextSourcePort;

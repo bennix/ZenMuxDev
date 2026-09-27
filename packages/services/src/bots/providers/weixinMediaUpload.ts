@@ -3,11 +3,12 @@ import { Buffer } from "node:buffer";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-export async function uploadWeixinImage(
+async function uploadWeixinMedia(
   data: Uint8Array,
   toUserId: string,
   request: (path: string, body: unknown) => Promise<unknown>,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: typeof fetch,
+  mediaType: 1 | 3,
 ) {
   if (!data.length || data.length > MAX_IMAGE_BYTES)
     throw new Error("微信图片大小须在 0–20MB 之间");
@@ -18,7 +19,7 @@ export async function uploadWeixinImage(
   const raw = await imageNetworkStage("微信上传授权", () =>
     request("/getuploadurl", {
       filekey,
-      media_type: 1,
+      media_type: mediaType,
       to_user_id: toUserId,
       rawsize: data.length,
       rawfilemd5: createHash("md5").update(data).digest("hex"),
@@ -52,18 +53,38 @@ export async function uploadWeixinImage(
         throw new Error(`微信图片上传失败 (${response.status})`);
       // iLink 出站 aes_key 是 hex 字符串的 Base64；不能直接把密文或图片 URL 当消息发送。
       return {
-        type: 2,
-        image_item: {
-          media: {
-            encrypt_query_param: param,
-            aes_key: Buffer.from(key.toString("hex")).toString("base64"),
-            encrypt_type: 1,
-          },
-          mid_size: encrypted.length,
+        media: {
+          encrypt_query_param: param,
+          aes_key: Buffer.from(key.toString("hex")).toString("base64"),
+          encrypt_type: 1,
         },
+        encryptedSize: encrypted.length,
       };
     });
   } finally {
     clearTimeout(timer);
   }
+}
+
+export async function uploadWeixinImage(
+  data: Uint8Array,
+  toUserId: string,
+  request: (path: string, body: unknown) => Promise<unknown>,
+  fetchImpl: typeof fetch = fetch,
+) {
+  const result = await uploadWeixinMedia(data, toUserId, request, fetchImpl, 1);
+  return { type: 2, image_item: { media: result.media, mid_size: result.encryptedSize } };
+}
+export async function uploadWeixinFile(
+  data: Uint8Array,
+  filename: string,
+  toUserId: string,
+  request: (path: string, body: unknown) => Promise<unknown>,
+  fetchImpl: typeof fetch = fetch,
+) {
+  const result = await uploadWeixinMedia(data, toUserId, request, fetchImpl, 3);
+  return {
+    type: 4,
+    file_item: { media: result.media, file_name: filename, len: String(data.length) },
+  };
 }

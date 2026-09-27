@@ -1,3 +1,4 @@
+import { WeixinFileMenuItem } from "@/components/WeixinFileMenuItem.js";
 /* eslint-disable max-lines -- 文件树行集中维护拖拽、打开方式、Git 状态与上下文菜单交互。 */
 import type { EditorInfo, OpenInEditorRemoteTarget } from "@zcode/shared";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
@@ -352,6 +353,7 @@ export function WorkspaceFileTreeRowView({
       <ContextMenu>
         <ContextMenuTrigger asChild>{rowElement}</ContextMenuTrigger>
         <ContextMenuContent className="w-52">
+          <WeixinFileMenuItem path={row.path} workspacePath={workspacePath} workspaceIdentity={workspaceIdentity} disabled={isDirectory || isDeletedFile || isRemoteWorkspaceFileTree} />
           <ContextMenuItem disabled={!canOpenPrimary} onSelect={handleOpenPrimary}>
             {/* 修复：第一项之前复用了默认外部应用文案，Finder/Explorer 置顶后会显示成“在 Finder 中打开”。
                 这里改为复用行主动作：文件打开预览，目录走当前行的展开/收起逻辑。 */}

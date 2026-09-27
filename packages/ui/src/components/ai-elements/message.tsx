@@ -1,3 +1,4 @@
+import { WeixinFileMenuItem } from "@/components/WeixinFileMenuItem.js";
 /*
  * Derived from vercel/ai-elements (packages/elements/src/message.tsx).
  * Copyright 2023 Vercel, Inc. Licensed under Apache-2.0.
@@ -1549,6 +1550,7 @@ function MessageFileLink({ className, fileIconSrc, fileLink, onOpen }: MessageFi
         </MessageFileLinkButton>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
+        <WeixinFileMenuItem path={fileLink.path} workspacePath={fileLink.workspacePath} workspaceIdentity={fileLink.workspaceIdentity} disabled={fileLink.pathKind === "directory" || openInEditorContext.isRemoteWorkspace} />
         <ContextMenuItem onSelect={onOpen}>
           {intl.formatMessage({ id: "common.open" })}
         </ContextMenuItem>

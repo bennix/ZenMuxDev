@@ -79,11 +79,25 @@ export class BotsRepo {
     await withFileLock(path, async () => {
       const current = await readOptionalJson(path);
       // 业务上下文的旧快照不能倒退传输游标；游标只由专门的原子更新入口持有。
-      if (current !== undefined)
-        parsed.weixinCursors = botsStateFileSchema.parse(current).weixinCursors;
+      if (current !== undefined) {
+        const latest = botsStateFileSchema.parse(current);
+        parsed.weixinCursors = latest.weixinCursors;
+        parsed.weixinRecipients = latest.weixinRecipients;
+      }
       await writeJson(path, parsed);
     });
     return parsed;
+  }
+
+  async rememberWeixinRecipient(botId: string, userId: string, contextToken: string): Promise<void> {
+    await this.readState();
+    const path = join(getAppConfigDir(), BOTS_STATE_FILE);
+    await withFileLock(path, async () => {
+      const state = botsStateFileSchema.parse(await readOptionalJson(path));
+      const id = JSON.stringify([botId, userId]);
+      state.weixinRecipients = { ...state.weixinRecipients, [id]: { botId, userId, contextToken, updatedAt: Date.now() } };
+      await writeJson(path, state);
+    });
   }
 
   async updateWeixinCursor(botId: string, cursor: string | null): Promise<void> {

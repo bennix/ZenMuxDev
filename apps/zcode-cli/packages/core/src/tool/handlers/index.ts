@@ -1,3 +1,4 @@
+import { sendWeixinFileToolEntry } from "./send-weixin-file.js";
 // ============================================================
 // Built-in Tool Handlers
 // ============================================================
@@ -75,6 +76,7 @@ import { createToolRuleNameSet } from "../tool-visibility.js";
 // 统一隐藏 Glob/Grep，并通过 Bash find/grep 接管搜索。
 
 export const builtInTools: ToolEntry[] = [
+  sendWeixinFileToolEntry,
   readToolEntry,
   writeToolEntry,
   editToolEntry,
@@ -173,6 +175,7 @@ interface RegisterBuiltInToolsOptions {
   /** actor 的升级通道；门与 includeSubmitResult 同款（注入了 WorkflowEscalatePort 才注册）。 */
   includeEscalate?: boolean;
   includeWorkflow?: boolean;
+  includeWeixinFile?: boolean;
   includeAutomation?: boolean;
   /** Off-Peak 会话内创建工具面；由 host 的 offPeakToolEnabled flag（灰度/远程门）驱动。 */
   includeOffPeak?: boolean;
@@ -240,6 +243,7 @@ export function registerBuiltInTools(
     if (entry.metadata.name === "Workflow" && options.includeWorkflow !== true) {
       continue;
     }
+    if (entry.metadata.name === "SendWeixinFile" && !options.includeWeixinFile) continue;
     if (
       (entry.metadata.name === "CronCreate" ||
         entry.metadata.name === "CronList" ||

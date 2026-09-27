@@ -1,3 +1,4 @@
+import { deliverWeixinFile } from "./weixinFileDelivery.js";
 import { generateWeixinImage, resolveWeixinImageRequest, recentWeixinPhotos } from "./weixinImageGeneration.js";
 import { DEFAULT_STUDIO_IMAGE_MODEL } from "@zcode/shared";
 import { isWeixinActorAllowed } from "./weixinAccess.js";
@@ -803,6 +804,7 @@ export function createBotsService(
     readConfig: () => repo.readConfig(),
     readWeixinGetUpdatesBuf,
     writeWeixinGetUpdatesBuf,
+    rememberWeixinRecipient: (botId, userId, token) => repo.rememberWeixinRecipient(botId, userId, token),
     processProviderCallback,
   });
   const feishuRuntime = createFeishuChannelRuntime({
@@ -5288,6 +5290,7 @@ export function createBotsService(
   }
 
   service = {
+    deliverWeixinFile: (params) => deliverWeixinFile(repo, providers.weixin, params),
     async syncAppRuntimePreferences(preferences) {
       await deps.remoteWorkspaceService?.syncAppRuntimePreferences?.(preferences);
     },
@@ -5529,6 +5532,13 @@ export function createBotsService(
     watchAutomationRun,
     async handleInboundMessage(message: BotInboundMessage) {
       return enqueueInboundProcessing(message.actor, async () => {
+        const actor = message.actor;
+        if (actor.provider === "weixin" && actor.providerContextToken) {
+          const bot = findBot(await repo.readConfig(), actor.botId);
+          if (bot && isWeixinActorAllowed(bot, actor)) {
+            await repo.rememberWeixinRecipient(bot.id, actor.providerUserId, actor.providerContextToken);
+          }
+        }
         if (message.elicitationResponse) {
           return handleStructuredElicitationResponse(message, message.elicitationResponse);
         }

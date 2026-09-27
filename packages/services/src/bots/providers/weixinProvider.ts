@@ -1,5 +1,5 @@
 import { imageNetworkStage } from "../imageNetwork.js";
-import { uploadWeixinImage } from "./weixinMediaUpload.js";
+import { uploadWeixinImage, uploadWeixinFile } from "./weixinMediaUpload.js";
 import { downloadWeixinCiphertext } from "./weixinMediaDownload.js";
 import {
   WEIXIN_BASE_INFO,
@@ -774,6 +774,29 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
         deps.fetchImpl,
       );
       await imageNetworkStage("微信图片消息发送", () =>
+        requestWeixinJson(bot, deps, "/sendmessage", {
+          msg: {
+            from_user_id: "",
+            to_user_id: message.providerUserId,
+            client_id: buildWeixinClientId(),
+            message_type: 2,
+            message_state: 2,
+            context_token: message.providerContextToken,
+            item_list: [item],
+          },
+        }),
+      );
+    },
+    async sendFile(bot, message, image, filename) {
+      if (!message.providerContextToken) throw new Error("Weixin reply requires context_token");
+      const item = await uploadWeixinFile(
+        image,
+        filename,
+        message.providerUserId,
+        (path, body) => requestWeixinJson(bot, deps, path, body),
+        deps.fetchImpl,
+      );
+      await imageNetworkStage("微信文件消息发送", () =>
         requestWeixinJson(bot, deps, "/sendmessage", {
           msg: {
             from_user_id: "",

@@ -1,3 +1,4 @@
+import { weixinFileResultSchema } from "@zcode/shared";
 /* eslint-disable max-lines -- ZCode Protocol 的 session/workspace 方法共享同一个 server context 与 snapshot helpers，迁移期先集中维护。 */
 import { observeSessionDebug } from "./session-debug.js";
 import {
@@ -3375,6 +3376,7 @@ async function createRecord(
     // core 遇到 permission / AskUserQuestion 只能走默认拒绝，UI 永远收不到阻塞请求。
     // 这里把阻塞交互转换成 server-to-client JSON-RPC request，由 app 通过 response 释放 runtime。
     permissionBroker: createProtocolInteractionBroker(context),
+    weixinFilePort: request => context.requestClient(zcodeProtocolMethods.weixinFile, request, weixinFileResultSchema),
     automationPort: createProtocolAutomationPort(context, () => ownSessionRecord),
     // 只接入 Host 已开放的工具面；缺省不注入。复用现行异步工厂，
     // 不恢复旧 deferred ModelAdapter/Registry overlay，也不改变 Session Selection。

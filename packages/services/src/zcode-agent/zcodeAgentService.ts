@@ -1,3 +1,4 @@
+import { weixinFileRequestSchema, type WeixinFileRequest, type WeixinFileResult, type WeixinFileScope } from "@zcode/shared";
 import { requestPluginReferenceCatalog } from "#src/zcode-agent/pluginReferenceCatalogRequest.js";
 import {
   localTtftFactsSchema,
@@ -864,6 +865,7 @@ interface CreateZCodeAgentServiceOptions extends Omit<
 > {
   /** 仅供 MCP 状态探测进程使用，不能把空闲回收传给 chat。 */
   mcpStatusIdleTimeoutMs?: number;
+  deliverWeixinFile?: (params: WeixinFileRequest & WeixinFileScope) => Promise<WeixinFileResult>;
   accountProviderConfigSource?: ProviderSource<AccountProviderConfigSnapshot>;
   accountRequestAuthService?: IAccountRequestAuthService;
   /** Desktop Host 请求 Main 登记 Agent 已授权的精确本地视频路径。 */
@@ -2485,6 +2487,18 @@ export function createZCodeAgentService(
                 elapsedMs: 0,
               });
             });
+          return;
+        }
+
+        if (request.method === zcodeProtocolMethods.weixinFile) {
+          const parsed = weixinFileRequestSchema.safeParse(request.params);
+          if (!parsed.success || !options?.deliverWeixinFile) {
+            void client.respondError(request.id, { code: -32602, message: "微信文件发送不可用或参数无效" });
+            return;
+          }
+          void options.deliverWeixinFile({ ...parsed.data, workspacePath: workspace.workspacePath, workspaceIdentity: workspace.workspaceIdentity })
+            .then(result => client.respond(request.id, result))
+            .catch((error: unknown) => client.respondError(request.id, { code: -32000, message: error instanceof Error ? error.message : "微信发送失败" }));
           return;
         }
 
