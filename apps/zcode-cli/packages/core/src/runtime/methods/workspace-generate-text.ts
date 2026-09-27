@@ -27,6 +27,7 @@ const CONNECTIVITY_PROBE_MAX_OUTPUT_TOKENS = 1;
 const CONNECTIVITY_PROBE_SYSTEM = "You are ZCode connectivity probe.";
 const CONNECTIVITY_PROBE_USER = "hi";
 const GIT_COMMIT_MESSAGE_QUERY_SOURCE = "git_commit_message";
+const WEIXIN_INTENT_QUERY_SOURCE = "weixin-intent";
 
 export interface WorkspaceGenerateTextInput {
   selection: ModelSelection;
@@ -145,11 +146,12 @@ async function generateWorkspaceTextImpl(
   const requestedSelection = input.selection;
   const querySource = input.querySource.trim() || "workspace_generate_text";
   const baseModel = createRuntimeModel(this, { selection: requestedSelection });
+  // 修复：微信意图请求没有显式预算，未绑定时适配器将 undefined 判为范围错误。
+  // 在能力所有者处复用辅助预算并按模型上限收敛，不修改持久化会话选项。
+  const auxiliaryRequest =
+    querySource === GIT_COMMIT_MESSAGE_QUERY_SOURCE || querySource === WEIXIN_INTENT_QUERY_SOURCE;
   // 辅助请求需要的是最低公开档位，不是扫描 off/nothink 等名称后强制关闭。
-  const model =
-    querySource === GIT_COMMIT_MESSAGE_QUERY_SOURCE
-      ? baseModel.bind(auxiliaryModelOptions(baseModel))
-      : baseModel;
+  const model = auxiliaryRequest ? baseModel.bind(auxiliaryModelOptions(baseModel)) : baseModel;
   const baseTraceContext = options?.traceContext ?? this.rootTraceContext;
   const modelTraceContext = createChildTraceContext(baseTraceContext, {
     attributes: {
@@ -184,7 +186,7 @@ async function generateWorkspaceTextImpl(
   // Git Commit 调用方曾传入固定 256，Core 又按 querySource 丢弃，形成虚假接口。
   // 通用生成入口只处理调用方真实提供的预算；Git 辅助调用不再由上游伪造固定上限。
   const requestMaxOutputTokens =
-    querySource === GIT_COMMIT_MESSAGE_QUERY_SOURCE ? undefined : input.maxOutputTokens;
+    auxiliaryRequest ? undefined : input.maxOutputTokens;
 
   const modelRequest = {
     abortSignal,
