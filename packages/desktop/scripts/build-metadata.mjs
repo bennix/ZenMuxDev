@@ -85,6 +85,7 @@ export function collectBuildMetadata() {
 
   return {
     appVersion: normalizeVersion(rootPackageJson.version),
+    githubUpdateRepository: readJson(resolve(desktopDir, "update-source.json")).repository,
     buildCommitId: resolveCommitId(),
     buildTime: new Date().toISOString(),
     electronBuilderVersion: resolveInstalledPackageVersion(

@@ -765,7 +765,12 @@ export default {
     installerHeaderIcon: "build/icon_installer.ico",
   },
   detectUpdateChannel: false,
-  publish: {
+  publish: buildMetadata.githubUpdateRepository ? {
+    provider: "github",
+    owner: buildMetadata.githubUpdateRepository.split("/")[0],
+    repo: buildMetadata.githubUpdateRepository.split("/")[1],
+    releaseType: "release",
+  } : {
     provider: "generic",
     // 当前 OSS/CDN 对多 Range 请求返回 206，但 Content-Type 仍是 application/x-msdownload，
     // electron-updater 会因缺少 multipart/byteranges 直接回退整包下载。关闭 multiple range 后仍走差分，

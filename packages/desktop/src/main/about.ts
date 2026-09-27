@@ -1,3 +1,5 @@
+import { checkForUpdateMenuClick, getAutoUpdaterState, onAutoUpdaterStateChanged, onManualUpdateCheckResult } from "./autoUpdater.js";
+import { aboutUpdatePresentation } from "./aboutUpdatePresentation.js";
 import type { BrowserWindow, MessageBoxReturnValue } from "electron";
 import { existsSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -53,11 +55,11 @@ interface AboutSnapshotOptions {
   };
 }
 
-const ABOUT_APPLICATION_NAME = "ZCode Desktop App";
+const ABOUT_APPLICATION_NAME = "ZenCode";
 // 自定义 About 内容本体是 256x280；原生窗口如果同尺寸会让内容贴满透明窗口边界。
 // 这里给 BrowserWindow 额外留出背景呼吸空间，避免正式 About 看起来比 demo 更局促。
 const ABOUT_WINDOW_WIDTH = 256;
-const ABOUT_WINDOW_HEIGHT = 312;
+const ABOUT_WINDOW_HEIGHT = 400;
 const ABOUT_MESSAGES: Record<
   Locale,
   {
@@ -69,14 +71,14 @@ const ABOUT_MESSAGES: Record<
   }
 > = {
   "zh-CN": {
-    aboutTitle: "关于 ZCode",
+    aboutTitle: "关于 ZenCode",
     versionLabel: "版本",
     okButtonLabel: "确定",
     optimizedForAppleSilicon: "已针对 Apple Silicon 优化。",
     copyright: (year) => `版权所有 © ${year} ZCode。`,
   },
   "en-US": {
-    aboutTitle: "About ZCode",
+    aboutTitle: "About ZenCode",
     versionLabel: "version",
     okButtonLabel: "OK",
     optimizedForAppleSilicon: "Optimized for Apple Silicon.",
@@ -253,6 +255,44 @@ export async function showAboutDialog(
       sandbox: true,
     },
   });
+  const checkingLabel = locale === "zh-CN" ? "正在检查更新…" : "Checking for updates…";
+  const checkLabel = locale === "zh-CN" ? "检查更新" : "Check for updates";
+  const renderUpdate = (text: string, button: string, disabled = false) => {
+    if (aboutWindow.isDestroyed()) return;
+    void aboutWindow.webContents.executeJavaScript(`(() => {
+      const status = document.getElementById('update-status');
+      const action = document.getElementById('check-update');
+      if (status) status.textContent = ${JSON.stringify(text)};
+      if (action) { action.textContent = ${JSON.stringify(button)}; action.disabled = ${JSON.stringify(disabled)}; }
+    })()`).catch(() => { /* 窗口关闭与异步检查完成可并发，关闭后不再更新视图。 */ });
+  };
+  const disposeResult = onManualUpdateCheckResult((id, result) => {
+    if (aboutWindow.isDestroyed() || id !== aboutWindow.webContents.id) return;
+    const view = aboutUpdatePresentation(result, locale);
+    renderUpdate(view.text, view.button);
+  });
+  const disposeState = onAutoUpdaterStateChanged(state => {
+    if (state.kind === "checking") renderUpdate(checkingLabel, checkLabel, true);
+    if (state.kind === "download-progress") renderUpdate(`${locale === "zh-CN" ? "正在下载" : "Downloading"} ${state.version ?? ""} · ${state.progress}`, checkLabel, true);
+    if (state.kind === "update-downloaded") {
+      const view = aboutUpdatePresentation({kind:"ready",version:state.version}, locale);
+      renderUpdate(view.text, view.button);
+    }
+  });
+  aboutWindow.once("closed", () => { disposeResult(); disposeState(); });
+  const check = () => { renderUpdate(checkingLabel, checkLabel, true); checkForUpdateMenuClick(aboutWindow, true); };
+  aboutWindow.webContents.on("will-navigate", (event, url) => {
+    event.preventDefault();
+    if (url !== "zencode-about://check-update") return;
+    const state = getAutoUpdaterState();
+    if (state.kind === "update-downloaded") { checkForUpdateMenuClick(aboutWindow); return; }
+    if (state.kind === "update-available" && parentWindow && !parentWindow.isDestroyed()) {
+      checkForUpdateMenuClick(parentWindow); aboutWindow.close(); return;
+    }
+    check();
+  });
+  aboutWindow.webContents.setWindowOpenHandler(() => ({action:"deny"}));
+  aboutWindow.webContents.once("did-finish-load", check);
   aboutWindow.setMenuBarVisibility(false);
   aboutWindow.once("ready-to-show", () => {
     aboutWindow.show();
@@ -266,6 +306,8 @@ export async function showAboutDialog(
         optimizationLine: formatAboutOptimizationLine(snapshot, locale),
         versionLabel: aboutMessages.versionLabel,
         okButtonLabel: aboutMessages.okButtonLabel,
+        checkUpdateLabel: checkLabel,
+        checkingLabel,
         iconDataUrl,
       }),
     )}`,

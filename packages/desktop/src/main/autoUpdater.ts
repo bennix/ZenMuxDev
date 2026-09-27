@@ -1,3 +1,4 @@
+import { readGitHubUpdateRepository } from "./githubUpdateSource.js";
 /* eslint-disable max-lines -- autoUpdater 需要集中维护 Electron 事件、菜单状态与 IPC 交互，过度拆分会让更新状态流更难追踪 */
 import type { ISettingService } from "@zcode/services";
 import {
@@ -60,6 +61,8 @@ let autoUpdaterSettingService: SettingServiceLike | undefined;
 // （占位 feed、autoDownload 默认值）。任何漏改成按身份判断的入口若仍调用手动检查，
 // 都会对占位 feed 发真实请求。这里记住“本 flavor 已禁用”，让手动检查在模块内部 fail-closed。
 let autoUpdaterDisabledForProductFlavor = false;
+let githubUpdateSourceMissing = false;
+let githubUpdateSourceActive = false;
 
 type SettingServiceLike = Pick<ISettingService, "get" | "update">;
 
@@ -736,6 +739,7 @@ async function syncAutoUpdateCheckChannelFromSettings(
   reason: string,
 ): Promise<void> {
   const nextChannel = await resolveUpdateReleaseChannel(settingService);
+  if (githubUpdateSourceActive) autoUpdater.allowPrerelease = nextChannel === "preview";
   if (activeAutoUpdateCheckId !== checkId) {
     return;
   }
@@ -900,6 +904,17 @@ async function clearPendingPostUpdateReleaseNotes(
   logger.info(`[auto-update] cleared post-update release notes (${reason}) version=${version}`);
 }
 
+const manualUpdateResultListeners = new Set<(windowId: number, result: UpdateCheckResultPayload) => void>();
+export function onManualUpdateCheckResult(listener: (windowId: number, result: UpdateCheckResultPayload) => void) {
+  manualUpdateResultListeners.add(listener);
+  return () => { manualUpdateResultListeners.delete(listener); };
+}
+function notifyManualUpdateResult(win: BrowserWindow, payload: UpdateCheckResultPayload) {
+  if (win.isDestroyed()) return;
+  win.webContents.send(PlatformChannels.UpdateCheckResult, payload);
+  for (const listener of manualUpdateResultListeners) listener(win.webContents.id, payload);
+}
+
 function sendManualCheckResult(payload: UpdateCheckResultPayload) {
   const webContentsId = manualCheckWebContentsId;
   if (webContentsId == null) return;
@@ -913,7 +928,7 @@ function sendManualCheckResult(payload: UpdateCheckResultPayload) {
     return;
   }
   logger.info(`[auto-update] manual check result → wc=${webContentsId}: ${payload.kind}`);
-  win.webContents.send(PlatformChannels.UpdateCheckResult, payload);
+  notifyManualUpdateResult(win, payload);
 }
 
 function clearAvailableUpdateState() {
@@ -1354,6 +1369,8 @@ export function refreshAutoUpdaterReleaseChannel(
   reason = "settings receivePreviewUpdates changed",
 ) {
   const nextChannel: ElectronReleaseChannel = receivePreviewUpdates ? "preview" : "stable";
+  if (githubUpdateSourceMissing) return;
+  if (githubUpdateSourceActive) autoUpdater.allowPrerelease = nextChannel === "preview";
 
   if (!canUseAutoUpdaterInCurrentRuntime()) {
     logger.info(`[auto-update] skip ${reason}: not packaged`);
@@ -1504,7 +1521,18 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
   // 这里仅在 Windows 关闭“退出即自动安装”，要求用户显式点更新；其他平台保持原有行为，避免改动既有升级链路。
   autoUpdater.autoInstallOnAppQuit = process.platform !== "win32";
   autoUpdater.logger = logger;
-  applyManifestUpdateProvider(options);
+  const github = await readGitHubUpdateRepository();
+  githubUpdateSourceMissing = !github && !options.updateFeedSource;
+  if (githubUpdateSourceMissing) {
+    logger.warn("[auto-update] GitHub release repository is not configured");
+    setAutoUpdaterMenuState({kind:"idle",enabled:true});
+    return;
+  }
+  githubUpdateSourceActive = Boolean(github);
+  if (github) {
+    autoUpdater.allowPrerelease = (await resolveUpdateReleaseChannel(options.settingService)) === "preview";
+    autoUpdater.setFeedURL({provider:"github",owner:github.owner,repo:github.repo});
+  } else { applyManifestUpdateProvider(options); }
 
   const triggerCheckForUpdates = (reason: string) => {
     if (checkForUpdatesInFlight) {
@@ -1777,6 +1805,10 @@ export function requestForceAutoUpdate(
   logger.info(`[force-update] 自动升级开始 reason=${reason}`);
   onStateChange({ kind: "checking" });
 
+  if (githubUpdateSourceMissing) {
+    onStateChange({kind:"error",message:"ZenCode GitHub Releases repository has not been configured"});
+    return dispose;
+  }
   if (!canUseAutoUpdaterInCurrentRuntime()) {
     const message = "not packaged";
     logger.info(`[force-update] 自动升级跳过：${message}`);
@@ -1834,7 +1866,7 @@ export function requestForceAutoUpdate(
   };
 }
 
-export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null) {
+export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null, checkOnly = false) {
   logger.info("[auto-update] user clicked Check for Updates");
 
   const targetWindow =
@@ -1851,22 +1883,28 @@ export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null) {
 
   if (!canUseAutoUpdaterInCurrentRuntime()) {
     logger.info("[auto-update] skip manual check: not packaged");
-    targetWindow.webContents.send(PlatformChannels.UpdateCheckResult, {
+    notifyManualUpdateResult(targetWindow, {
       kind: "dev-skipped",
     } satisfies UpdateCheckResultPayload);
     return;
   }
 
+  if (githubUpdateSourceMissing) {
+    notifyManualUpdateResult(targetWindow, {kind:"error",message: menuLocale === "zh-CN" ? "尚未配置 ZenCode 的 GitHub Releases 发布仓库" : "ZenCode GitHub Releases repository has not been configured"});
+    return;
+  }
   if (autoUpdaterDisabledForProductFlavor) {
     // 入口本应已按产品身份隐藏；这里是最后一道闸，不让未初始化的 updater 实例向占位 feed 发请求。
     logger.info("[auto-update] skip manual check: updater disabled for this product flavor");
-    targetWindow.webContents.send(PlatformChannels.UpdateCheckResult, {
+    notifyManualUpdateResult(targetWindow, {
       kind: "dev-skipped",
     } satisfies UpdateCheckResultPayload);
     return;
   }
 
   if (menuState.kind === "update-downloaded") {
+    // 修复：About 打开后的只读检查不能触发退出安装。
+    if (checkOnly) { notifyManualUpdateResult(targetWindow, { kind: "ready", version: menuState.version }); return; }
     // 菜单文案已经切到“重启以更新”，如果仍只发 ready toast，
     // 用户点击系统菜单不会安装更新，而顶部按钮会安装，两个入口语义不一致。
     // 这里复用按钮背后的安装逻辑，让菜单点击真正触发重启安装。
@@ -1874,7 +1912,7 @@ export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null) {
     return;
   }
   if (menuState.kind === "download-progress") {
-    targetWindow.webContents.send(PlatformChannels.UpdateCheckResult, {
+    notifyManualUpdateResult(targetWindow, {
       kind: "already-downloading",
       version: downloadingUpdateVersion ?? readyUpdateVersion ?? "",
       progress: menuState.progress,
@@ -1882,7 +1920,7 @@ export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null) {
     return;
   }
   if (menuState.kind === "update-available") {
-    targetWindow.webContents.send(PlatformChannels.UpdateCheckResult, {
+    notifyManualUpdateResult(targetWindow, {
       kind: "available",
       version: menuState.version,
       ...(menuState.channel ? { channel: menuState.channel } : {}),
@@ -1893,7 +1931,7 @@ export function checkForUpdateMenuClick(originWindow?: BrowserWindow | null) {
 
   if (checkForUpdatesInFlight) {
     logger.info("[auto-update] skip manual check: check already in flight");
-    targetWindow.webContents.send(PlatformChannels.UpdateCheckResult, {
+    notifyManualUpdateResult(targetWindow, {
       kind: "error",
       message: "Update check already in progress.",
     } satisfies UpdateCheckResultPayload);

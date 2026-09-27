@@ -5,6 +5,8 @@ interface CustomAboutDialogHtmlInput {
   optimizationLine: string;
   versionLabel: string;
   okButtonLabel: string;
+  checkUpdateLabel?: string;
+  checkingLabel?: string;
   iconDataUrl?: string | null;
 }
 
@@ -60,7 +62,7 @@ export function createCustomAboutDialogHtml(input: CustomAboutDialogHtmlInput): 
       .about-window {
         width: 100%;
         max-width: 256px;
-        height: 280px;
+        height: 380px;
         display: grid;
         place-items: stretch;
         padding: 0;
@@ -117,6 +119,8 @@ export function createCustomAboutDialogHtml(input: CustomAboutDialogHtmlInput): 
       }
 
 
+      .update-status { font: inherit; margin: 8px 0; line-height: 1.4; overflow-wrap: anywhere; max-height: 64px; overflow-y: auto; -webkit-app-region: no-drag; }
+      .ok-button:disabled { opacity: .55; }
       .ok-button {
         width: 100%;
         height: 36px;
@@ -172,14 +176,17 @@ export function createCustomAboutDialogHtml(input: CustomAboutDialogHtmlInput): 
           </div>
         </div>
         <div class="spacer"></div>
+        <p id="update-status" role="status" class="update-status">${escapeHtml(input.checkingLabel ?? "")}</p>
+        <button id="check-update" class="ok-button" style="margin-bottom:8px" type="button">${escapeHtml(input.checkUpdateLabel ?? "Check for updates")}</button>
         <button class="ok-button" type="button" autofocus>${escapeHtml(input.okButtonLabel)}</button>
       </section>
     </main>
     <script>
       const closeWindow = () => window.close();
-      document.querySelector(".ok-button")?.addEventListener("click", closeWindow);
+      document.querySelector("#check-update")?.addEventListener("click", () => { window.location.href = "zencode-about://check-update"; });
+      document.querySelector(".ok-button:last-of-type")?.addEventListener("click", closeWindow);
       window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" || event.key === "Enter") {
+        if (event.key === "Escape") {
           closeWindow();
         }
       });
