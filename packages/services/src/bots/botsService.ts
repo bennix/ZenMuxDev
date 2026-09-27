@@ -277,6 +277,7 @@ function validateBotConfig(config: BotsConfigFile, candidate: BotConfig): void {
 }
 
 interface BotsServiceDeps {
+  fetchImpl?: typeof fetch;
   credentialService: ICredentialService;
   zcodeTaskService: IZCodeTaskService;
   broadcastService?: IBroadcastService;
@@ -744,6 +745,7 @@ export function createBotsService(
       loadCredential: (key) => deps.credentialService.load(key),
     }),
     weixin: createWeixinBotProvider({
+      fetchImpl: deps.fetchImpl,
       loadCredential: (key) => deps.credentialService.load(key),
     }),
     discord: null,
@@ -4912,6 +4914,7 @@ export function createBotsService(
               )
             : [];
           const image = await generateWeixinImage({
+            fetchImpl: deps.fetchImpl,
             apiKey: access.apiKey.trim(),
             model,
             prompt: imageRequest.prompt,

@@ -2451,6 +2451,7 @@ export function createLocalServices(options: {
     .register(
       IBotsService,
       createBotsService({
+        fetchImpl: hostApiNetworkTransport.fetch,
         credentialService,
         zcodeTaskService,
         broadcastService,

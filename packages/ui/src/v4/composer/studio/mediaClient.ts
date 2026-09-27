@@ -1,7 +1,16 @@
 /** 创作面板调用的 ZenMux 生图、改图和生视频。密钥只放在请求头里。 */
 
-import { ZENMUX_APPLICATION_HEADERS, buildStudioImageRequest, extractStudioImage } from "@zcode/shared";
-import { readStudioImageModel, readStudioVideoModel, videoCatalogEntry } from "./studioMediaStore.js";
+import {
+  ZENMUX_APPLICATION_HEADERS,
+  buildStudioImageRequest,
+  requireStudioImage,
+  studioImageHttpError,
+} from "@zcode/shared";
+import {
+  readStudioImageModel,
+  readStudioVideoModel,
+  videoCatalogEntry,
+} from "./studioMediaStore.js";
 
 const VERTEX_URL = "https://zenmux.ai/api/vertex-ai/v1";
 
@@ -16,20 +25,18 @@ async function blobBase64(blob: Blob): Promise<string> {
 }
 
 function listedChoice(options: readonly string[], value: string | undefined): string {
-  return value && options.includes(value) ? value : options[0] ?? "1:1";
+  return value && options.includes(value) ? value : (options[0] ?? "1:1");
 }
 
 /** 把接口拒绝的原因带出来。多张参考图若写成扁平字段，会得到 missing image data。 */
 function imageError(status: number, payload: string): string {
-  let message = "";
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(payload) as { error?: { message?: string } | string; message?: string };
-    message = typeof parsed.error === "string" ? parsed.error : parsed.error?.message ?? parsed.message ?? "";
+    parsed = JSON.parse(payload);
   } catch {
-    message = payload;
+    parsed = {};
   }
-  const detail = message.replace(/\s+/gu, " ").trim().slice(0, 240);
-  return detail ? `生图失败 (${status}) ${detail}` : `生图失败 (${status})`;
+  return studioImageHttpError(status, parsed);
 }
 
 async function generateVertexImage(
@@ -39,13 +46,29 @@ async function generateVertexImage(
   images: readonly Blob[],
   ratio: string | undefined,
 ): Promise<string> {
-  const encoded = await Promise.all(images.map(async image => ({mimeType:image.type || "image/png", data:await blobBase64(image)})));
+  const encoded = await Promise.all(
+    images.map(async (image) => ({
+      mimeType: image.type || "image/png",
+      data: await blobBase64(image),
+    })),
+  );
   const request = buildStudioImageRequest(model, prompt, encoded, ratio);
-  const response = await fetch(request.url, { method:"POST", headers:{...ZENMUX_APPLICATION_HEADERS, Authorization:`Bearer ${apiKey}`, "Content-Type":"application/json"}, body:JSON.stringify(request.body) });
+  const response = await fetch(request.url, {
+    method: "POST",
+    headers: {
+      ...ZENMUX_APPLICATION_HEADERS,
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request.body),
+  });
   const payload = await response.text();
   if (!response.ok) throw new Error(imageError(response.status, payload));
-  const url = extractStudioImage(JSON.parse(payload) as unknown);
-  if (!url) throw new Error("生图没有返回图片");
+  const url = requireStudioImage(
+    JSON.parse(payload) as unknown,
+    model,
+    response.headers.get("x-request-id"),
+  );
   return url;
 }
 
@@ -115,7 +138,11 @@ export async function generateStudioVideo(
   if (image) instance.image = { bytesBase64Encoded: image.base64, mimeType: image.mimeType };
   const submit = await fetch(`${base}:predictLongRunning`, {
     method: "POST",
-    headers: { ...ZENMUX_APPLICATION_HEADERS, Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: {
+      ...ZENMUX_APPLICATION_HEADERS,
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       instances: [instance],
       parameters: { sampleCount: 1, aspectRatio: ratio, durationSeconds: seconds },
@@ -130,7 +157,11 @@ export async function generateStudioVideo(
     if (signal.aborted) throw new Error("已取消");
     const poll = await fetch(`${base}:fetchPredictOperation`, {
       method: "POST",
-      headers: { ...ZENMUX_APPLICATION_HEADERS, Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      headers: {
+        ...ZENMUX_APPLICATION_HEADERS,
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ operationName: operation.name }),
       signal,
     });

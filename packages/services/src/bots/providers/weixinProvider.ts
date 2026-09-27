@@ -1,3 +1,4 @@
+import { imageNetworkStage } from "../imageNetwork.js";
 import { uploadWeixinImage } from "./weixinMediaUpload.js";
 import { downloadWeixinCiphertext } from "./weixinMediaDownload.js";
 import {
@@ -27,6 +28,7 @@ const WEIXIN_CDN_AES_ALGORITHM = "aes-128-ecb";
 const WEIXIN_GET_UPDATES_TIMEOUT_MS = 40_000;
 
 interface WeixinProviderDeps {
+  fetchImpl?: typeof fetch;
   loadCredential(key: string): Promise<string | null>;
 }
 
@@ -143,6 +145,7 @@ async function requestWeixinJson(
       signal,
     },
     timeoutMs,
+    deps.fetchImpl,
   );
   if (!response.ok) {
     throw new Error(`Weixin iLink ${path} failed: HTTP ${response.status}`);
@@ -183,7 +186,12 @@ function readWeixinTextItem(item: unknown): string {
   }
   const textItem = isRecord(item.text_item) ? item.text_item : null;
   const voiceItem = isRecord(item.voice_item) ? item.voice_item : null;
-  return readString(voiceItem, "text") || readString(textItem, "text") || readString(item, "text") || readString(item, "content");
+  return (
+    readString(voiceItem, "text") ||
+    readString(textItem, "text") ||
+    readString(item, "text") ||
+    readString(item, "content")
+  );
 }
 
 function inferWeixinAttachmentKind(item: Record<string, unknown>): BotInboundAttachment["kind"] {
@@ -228,16 +236,16 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
   const media = isRecord(item.voice_item)
     ? item.voice_item
     : isRecord(item.image_item)
-    ? item.image_item
-    : isRecord(item.file_item)
-      ? item.file_item
-      : isRecord(item.video_item)
-        ? item.video_item
-        : isRecord(item.audio_item)
-          ? item.audio_item
-          : isRecord(item.media_item)
-            ? item.media_item
-            : item;
+      ? item.image_item
+      : isRecord(item.file_item)
+        ? item.file_item
+        : isRecord(item.video_item)
+          ? item.video_item
+          : isRecord(item.audio_item)
+            ? item.audio_item
+            : isRecord(item.media_item)
+              ? item.media_item
+              : item;
   const mediaPayload = isRecord(media.media) ? media.media : null;
   const mediaSource = mediaPayload ? { ...media, ...mediaPayload } : media;
   const providerFileId =
@@ -251,9 +259,12 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
     // 微信图片消息的 image_item 只返回 media 字段，没有 file_id/md5；这里将 media 作为后续下载和去重的资源标识。
     readNumberOrString(mediaSource, "media") ||
     readNumberOrString(mediaSource, "md5");
-  const query = readString(mediaSource, "encrypt_query_param") || readString(mediaSource, "encryptQueryParam");
+  const query =
+    readString(mediaSource, "encrypt_query_param") || readString(mediaSource, "encryptQueryParam");
   // 修复：iLink 可只提供不透明下载参数；不能因缺少 full_url 丢弃有效附件。
-  const cdnUrl = query ? `https://novac2c.cdn.weixin.qq.com/c2c/download?encrypted_query_param=${encodeURIComponent(query)}` : "";
+  const cdnUrl = query
+    ? `https://novac2c.cdn.weixin.qq.com/c2c/download?encrypted_query_param=${encodeURIComponent(query)}`
+    : "";
   const downloadUrl =
     readString(mediaSource, "full_url") ||
     readString(mediaSource, "fullUrl") ||
@@ -286,7 +297,8 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
           ? "video/mp4"
           : "application/octet-stream");
   const rawLength = readNumberOrString(mediaSource, "len");
-  const plainLength = /^\d+$/u.test(rawLength) && Number.isSafeInteger(Number(rawLength)) ? Number(rawLength) : null;
+  const plainLength =
+    /^\d+$/u.test(rawLength) && Number.isSafeInteger(Number(rawLength)) ? Number(rawLength) : null;
   const sizeBytes =
     readNumber(mediaSource, "size") ??
     readNumber(mediaSource, "sizeBytes") ??
@@ -313,9 +325,12 @@ function readWeixinAttachmentItem(item: unknown, index: number): BotInboundAttac
 
 function inferMimeTypeFromFilename(filename: string): string {
   if (/\.pdf$/iu.test(filename)) return "application/pdf";
-  if (/\.docx$/iu.test(filename)) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  if (/\.xlsx$/iu.test(filename)) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-  if (/\.pptx$/iu.test(filename)) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  if (/\.docx$/iu.test(filename))
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (/\.xlsx$/iu.test(filename))
+    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  if (/\.pptx$/iu.test(filename))
+    return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
   if (/\.svg$/iu.test(filename)) {
     return "image/svg+xml";
   }
@@ -363,7 +378,7 @@ function readWeixinDirectAttachment(item: unknown, index: number): BotInboundAtt
         Object.entries(item.providerMetadata).filter(
           (entry): entry is [string, string] => typeof entry[1] === "string",
         ),
-    )
+      )
     : null;
   return {
     id,
@@ -419,8 +434,8 @@ function readWeixinAttachments(message: Record<string, unknown>): BotInboundAtta
       : [];
   return [
     ...itemList
-    .map((item, index) => readWeixinAttachmentItem(item, index))
-    .filter((attachment): attachment is BotInboundAttachment => attachment !== null),
+      .map((item, index) => readWeixinAttachmentItem(item, index))
+      .filter((attachment): attachment is BotInboundAttachment => attachment !== null),
     ...directAttachments
       .map((item, index) => readWeixinDirectAttachment(item, index))
       .filter((attachment): attachment is BotInboundAttachment => attachment !== null),
@@ -624,16 +639,16 @@ function summarizeWeixinRawMessage(rawMessage: Record<string, unknown>, index: n
             : null;
   const mediaTypes = firstMedia
     ? Object.entries(firstMedia)
-      .slice(0, 8)
-      .map(([key, value]) => `${key}:${Array.isArray(value) ? "array" : typeof value}`)
-      .join(",")
+        .slice(0, 8)
+        .map(([key, value]) => `${key}:${Array.isArray(value) ? "array" : typeof value}`)
+        .join(",")
     : "none";
   const nestedMedia = firstMedia && isRecord(firstMedia.media) ? firstMedia.media : null;
   const nestedMediaTypes = nestedMedia
     ? Object.entries(nestedMedia)
-      .slice(0, 8)
-      .map(([key, value]) => `${key}:${Array.isArray(value) ? "array" : typeof value}`)
-      .join(",")
+        .slice(0, 8)
+        .map(([key, value]) => `${key}:${Array.isArray(value) ? "array" : typeof value}`)
+        .join(",")
     : "none";
   return [
     `index=${index}`,
@@ -687,18 +702,20 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
     // 修复：开始/结束请求必须串行，避免迟到的开始请求覆盖取消状态。
     const pending = typingOperations.get(key);
     if (pending?.status === status) return pending.operation;
-    const operation = (pending?.operation ?? Promise.resolve()).catch(() => undefined).then(async () => {
-      const config = (await requestWeixinJson(bot, deps, "/getconfig", {
-        ilink_user_id: target.providerUserId,
-        ...(target.providerContextToken ? { context_token: target.providerContextToken } : {}),
-      })) as WeixinTestResponse;
-      if (!config.typing_ticket) return;
-      await requestWeixinJson(bot, deps, "/sendtyping", {
-        ilink_user_id: target.providerUserId,
-        typing_ticket: config.typing_ticket,
-        status,
+    const operation = (pending?.operation ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(async () => {
+        const config = (await requestWeixinJson(bot, deps, "/getconfig", {
+          ilink_user_id: target.providerUserId,
+          ...(target.providerContextToken ? { context_token: target.providerContextToken } : {}),
+        })) as WeixinTestResponse;
+        if (!config.typing_ticket) return;
+        await requestWeixinJson(bot, deps, "/sendtyping", {
+          ilink_user_id: target.providerUserId,
+          typing_ticket: config.typing_ticket,
+          status,
+        });
       });
-    });
     typingOperations.set(key, { status, operation });
     return operation.finally(() => {
       if (typingOperations.get(key)?.operation === operation) typingOperations.delete(key);
@@ -727,32 +744,48 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
       // 之前把 openclaw-weixin 当成本地 gateway 依赖，会导致 ZCode 不能独立完成微信接入。
       if (!message.providerContextToken) throw new Error("Weixin reply requires context_token");
       for (const text of splitWeixinText(buildWeixinText(message))) {
-      await requestWeixinJson(bot, deps, "/sendmessage", {
-        msg: {
+        await requestWeixinJson(bot, deps, "/sendmessage", {
+          msg: {
             from_user_id: "",
-          to_user_id: message.providerUserId,
-          client_id: buildWeixinClientId(),
-          message_type: WEIXIN_MESSAGE_TYPE_BOT,
-          message_state: WEIXIN_MESSAGE_STATE_FINISH,
+            to_user_id: message.providerUserId,
+            client_id: buildWeixinClientId(),
+            message_type: WEIXIN_MESSAGE_TYPE_BOT,
+            message_state: WEIXIN_MESSAGE_STATE_FINISH,
             ...(message.providerContextToken
               ? { context_token: message.providerContextToken }
               : {}),
-          item_list: [
-            {
-              type: 1,
+            item_list: [
+              {
+                type: 1,
                 text_item: { text },
-            },
-          ],
-        },
-      });
+              },
+            ],
+          },
+        });
       }
     },
 
     async sendImage(bot, message, image) {
       if (!message.providerContextToken) throw new Error("Weixin reply requires context_token");
-      const item = await uploadWeixinImage(image, message.providerUserId, (path, body) => requestWeixinJson(bot, deps, path, body));
-      await requestWeixinJson(bot, deps, "/sendmessage", {msg:{from_user_id:"",to_user_id:message.providerUserId,
-        client_id:buildWeixinClientId(),message_type:2,message_state:2,context_token:message.providerContextToken,item_list:[item]}});
+      const item = await uploadWeixinImage(
+        image,
+        message.providerUserId,
+        (path, body) => requestWeixinJson(bot, deps, path, body),
+        deps.fetchImpl,
+      );
+      await imageNetworkStage("微信图片消息发送", () =>
+        requestWeixinJson(bot, deps, "/sendmessage", {
+          msg: {
+            from_user_id: "",
+            to_user_id: message.providerUserId,
+            client_id: buildWeixinClientId(),
+            message_type: 2,
+            message_state: 2,
+            context_token: message.providerContextToken,
+            item_list: [item],
+          },
+        }),
+      );
     },
 
     sendTyping: (bot, target) => setTyping(bot, target, 1),

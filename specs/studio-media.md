@@ -259,3 +259,19 @@ HTML 导出此前仅取 borderTop 并统一输出矩形边框，会把 CSS 三�
 undefined 默认模型。清理后为空时恢复内置目录，默认 ID 始终属于返回的列表。
 自定义非空模型列表及用户有效默认选择保持不变。验证持久化空白列表、空数组、
 重复/空白 ID 和有效自定义默认；修复依据是 sanitize 的数组下标无有效值及类型错误。
+
+## Gemini image response handling
+
+The shared image adapter owns response interpretation for Studio and Weixin.
+A successful HTTP response is not proof that an image was generated. Accept Gemini
+inlineData/inline_data and MIME aliases, including nested candidate parts; preserve
+image MIME types. On missing image, distinguish prompt blocking, safety finish
+reasons, token exhaustion, text-only answers and empty/unrecognized responses.
+Include the selected model and a validated request/response ID where available.
+Never automatically resubmit or switch models after a refusal. Do not log raw
+response bodies, inline images or signed URLs.
+
+Flow: provider response → shared parser → image or explicit diagnostic → Studio/Bot.
+No new persisted state or change to desktop/mobile delivery ownership.
+Acceptance: camel/snake inline data, image plus text, empty candidates, text-only,
+SAFETY/MAX_TOKENS, promptFeedback blocking, and request ID regression fixtures.

@@ -17,6 +17,7 @@ async function runBotProviderRequest<T>(
   init: RequestInit,
   timeoutMs: number,
   consume: (response: Response) => Promise<T>,
+  fetchImpl: typeof fetch = fetch,
 ): Promise<T> {
   const controller = new AbortController();
   const externalSignal = init.signal;
@@ -30,7 +31,7 @@ async function runBotProviderRequest<T>(
     controller.abort(new Error(`Bot provider request timed out after ${timeoutMs}ms.`));
   }, timeoutMs);
   try {
-    const response = await fetch(input, { ...init, signal: controller.signal });
+    const response = await fetchImpl(input, { ...init, signal: controller.signal });
     // 修复原因：收到响应头不代表请求完成。必须在同一个 AbortSignal 和 deadline 下
     // 消费响应体，否则服务端 headers 后停滞仍会永久堵住 Bot actor 队列。
     return await consume(response);
@@ -61,20 +62,28 @@ export async function fetchBotProviderJson<T>(
   input: string | URL | Request,
   init: RequestInit = {},
   timeoutMs = BOT_PROVIDER_REQUEST_TIMEOUT_MS,
+  fetchImpl: typeof fetch = fetch,
 ): Promise<BotProviderJsonResponse<T>> {
-  return runBotProviderRequest(input, init, timeoutMs, async (response) => {
-    const text = await response.text();
-    let payload: T | undefined;
-    if (text) {
-      try {
-        payload = JSON.parse(text) as T;
-      } catch (error) {
-        if (response.ok) {
-          throw error;
+  return runBotProviderRequest(
+    input,
+    init,
+    timeoutMs,
+    async (response) => {
+      const text = await response.text();
+      let payload: T | undefined;
+      if (text) {
+        try {
+          payload = JSON.parse(text) as T;
+        } catch (error) {
+          if (response.ok) {
+            throw error;
+          }
         }
       }
-    }
-    const responseLogId = response.headers.get("x-tt-logid") ?? undefined;
-    return { ok: response.ok, status: response.status, payload, responseLogId };
-  });
+      const responseLogId =
+        response.headers.get("x-request-id") ?? response.headers.get("x-tt-logid") ?? undefined;
+      return { ok: response.ok, status: response.status, payload, responseLogId };
+    },
+    fetchImpl,
+  );
 }

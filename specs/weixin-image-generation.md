@@ -73,3 +73,32 @@ A generic “能生成图片吗” remains capability help, while a concrete sub
 request even with a polite question ending. Add regressions for both. Do not route
 photo-analysis questions to generation. User-visible Bot branding uses ZenCode,
 including Chinese and English help/activation messages; internal identifiers remain.
+
+## Network failure repair
+
+A live screenshot reports only fetch failed, so its exact failing stage is unknown;
+a later unauthenticated HEAD reaches ZenMux. Confirmed source defect: generation and
+CDN fetch bypass the existing Host network transport (proxy/CA/bypass configuration).
+Inject the existing Host-owned fetch into Bot image generation/download and Weixin
+media upload; do not create or dispose a second dispatcher or globally mutate fetch.
+
+Wrap errors by stage: model request, generated-image download, upload authorization,
+CDN upload, image message delivery. Show only stage + safe network code / known status,
+never signed URLs, tokens, image bytes, prompts or raw server bodies. Retain cause for
+internal diagnosis. Retry generation only for failures known to precede connection
+(DNS/connect timeout/refused), at most twice after the original call. Never repeat a
+model call after an ambiguous reset or response failure. CDN retries may reuse the
+same ciphertext/key; image send acknowledgement errors must not auto-resend.
+
+Acceptance: injected transport receives model and download requests, safe connect
+failure retries then succeeds, ambiguous connection reset calls model only once;
+CDN failure is labeled independently; explicit HTTP errors retain status; diagnostics
+exclude URL/credential-shaped content. Existing lifecycle typing release remains.
+
+## Model HTTP rejection diagnostics
+HTTP failure handling must inspect the provider JSON instead of discarding it.
+Expose a classified reason (safety, authentication, quota, size, reference image,
+invalid parameters), HTTP status, safe provider code and request ID. Never echo
+raw request/response text, prompts or credentials. Include reference count so an
+implicitly retained photo is visible when troubleshooting. No automatic HTTP retry
+or model switch. The shared formatter is used by Studio and Weixin.

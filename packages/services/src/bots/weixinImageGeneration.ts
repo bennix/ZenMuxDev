@@ -1,7 +1,9 @@
+import { imageNetworkStage, withImageConnectRetry } from "./imageNetwork.js";
 import { Buffer } from "node:buffer";
 import {
   buildStudioImageRequest,
-  extractStudioImage,
+  requireStudioImage,
+  studioImageHttpError,
   ZENMUX_APPLICATION_HEADERS,
   type StudioReferenceImage,
   type BotContextState,
@@ -62,24 +64,32 @@ export async function generateWeixinImage(input: {
   model: string;
   prompt: string;
   images: StudioReferenceImage[];
+  fetchImpl?: typeof fetch;
 }) {
   const request = buildStudioImageRequest(input.model, input.prompt, input.images);
-  const response = await fetchBotProviderJson<unknown>(
-    request.url,
-    {
-      method: "POST",
-      headers: {
-        ...ZENMUX_APPLICATION_HEADERS,
-        Authorization: `Bearer ${input.apiKey}`,
-        "Content-Type": "application/json",
+  const fetchImpl = withImageConnectRetry(input.fetchImpl ?? fetch);
+  const response = await imageNetworkStage("生图模型调用", () =>
+    fetchBotProviderJson<unknown>(
+      request.url,
+      {
+        method: "POST",
+        headers: {
+          ...ZENMUX_APPLICATION_HEADERS,
+          Authorization: `Bearer ${input.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request.body),
       },
-      body: JSON.stringify(request.body),
-    },
-    180_000,
+      180_000,
+      fetchImpl,
+    ),
   );
-  if (!response.ok) throw new Error(`默认生图模型请求失败 (${response.status})`);
-  const result = extractStudioImage(response.payload);
-  if (!result) throw new Error("默认生图模型没有返回图片");
+  if (!response.ok)
+    throw new Error(
+      studioImageHttpError(response.status, response.payload, response.responseLogId) +
+        `；模型：${input.model}；参考图：${input.images.length} 张`,
+    );
+  const result = requireStudioImage(response.payload, input.model, response.responseLogId);
   const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=\s]+)$/u.exec(result);
   if (match) {
     const bytes = Buffer.from(match[2]!, "base64");
@@ -91,30 +101,32 @@ export async function generateWeixinImage(input: {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const response = await fetch(result, { signal: controller.signal });
-    if (!response.ok || !response.body) throw new Error("无法下载生成图片");
-    const mimeType = response.headers.get("content-type")?.split(";")[0] ?? "";
-    if (!["image/png", "image/jpeg", "image/webp"].includes(mimeType))
-      throw new Error("生图返回了不支持的图片格式");
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    try {
-      while (true) {
-        const chunk = await reader.read();
-        if (chunk.done) break;
-        size += chunk.value.length;
-        if (size > 20 * 1024 * 1024) {
-          await reader.cancel();
-          throw new Error("生成图片超过 20MB");
+    return await imageNetworkStage("生成图片下载", async () => {
+      const response = await fetchImpl(result, { signal: controller.signal });
+      if (!response.ok || !response.body) throw new Error("无法下载生成图片");
+      const mimeType = response.headers.get("content-type")?.split(";")[0] ?? "";
+      if (!["image/png", "image/jpeg", "image/webp"].includes(mimeType))
+        throw new Error("生图返回了不支持的图片格式");
+      const reader = response.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let size = 0;
+      try {
+        while (true) {
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          size += chunk.value.length;
+          if (size > 20 * 1024 * 1024) {
+            await reader.cancel();
+            throw new Error("生成图片超过 20MB");
+          }
+          chunks.push(chunk.value);
         }
-        chunks.push(chunk.value);
+      } finally {
+        reader.releaseLock();
       }
-    } finally {
-      reader.releaseLock();
-    }
-    if (!size) throw new Error("生成图片为空");
-    return { data: Buffer.concat(chunks), mimeType };
+      if (!size) throw new Error("生成图片为空");
+      return { data: Buffer.concat(chunks), mimeType };
+    });
   } finally {
     clearTimeout(timeout);
   }
