@@ -125,7 +125,6 @@ import { ConversationDraftEmptyState } from "@/v4/ConversationDraftEmptyState.js
 import { ConversationDraftSuggestedPromptsContainer } from "@/v4/ConversationDraftSuggestedPromptsContainer.js";
 import { ConversationHeader, type PaneWorkspaceBadge } from "@/v4/ConversationHeader.js";
 import { ConversationQueuePanel } from "@/v4/ConversationQueuePanel.js";
-import { projectPendingGuideQueue } from "@/v4/pendingGuideProjection.js";
 import { ConversationQuotaBanner } from "@/v4/ConversationQuotaBanner.js";
 import { PendingCommandRecoveryBanner } from "@/v4/PendingCommandRecoveryBanner.js";
 import { WorkspaceHookPendingBanner } from "@/v4/WorkspaceHookPendingBanner.js";
@@ -3223,6 +3222,16 @@ export function SessionPane({
     [clearQueueEditOperation, dispatchCommand, intl, sessionId, workspaceKey],
   );
 
+  const handleGuideQueueItem = useCallback(async (queueItemId: string) => {
+    const current = snapshotRef.current;
+    const item = current?.queue.items.find(value => value.queueItemId === queueItemId);
+    if (!sessionId || !current || !item) return;
+    try {
+      const ack = await dispatchCommand("editQueueItem", { queueItemId, newText: item.text, delivery: "guide" }, sessionId, current.revision);
+      if (ack.status !== "accepted" && ack.status !== "duplicate") throw new Error(ack.reasonCode ?? ack.status);
+    } catch (error) { toast(intl.formatMessage({id:"chat.queue.editRestoreFailed"})); logger.warn("[v4-pane] 引导提交失败", {error}); }
+  }, [dispatchCommand, intl, sessionId]);
+
   const handleSendQueuedNow = useCallback(
     (queueItemId: string) => {
       const current = snapshotRef.current;
@@ -4434,7 +4443,6 @@ export function SessionPane({
       onDropTargetControllerChange={handleDropTargetControllerChange}
     />
   );
-  const pendingGuideProjection = snapshot ? projectPendingGuideQueue(snapshot.queue) : null;
   const conversationBottomDockContent = readOnly ? null : shareActive && sessionId ? (
     shareInSelectionStage ? (
       <ConversationShareSelectionDock
@@ -4527,13 +4535,14 @@ export function SessionPane({
       {sessionId && snapshot ? (
         <ConversationQueuePanel
           key="conversation-queue"
-          queue={pendingGuideProjection?.visibleQueue ?? snapshot.queue}
+          queue={snapshot.queue}
           onDeleteItem={handleDeleteQueueItem}
           onEditItem={handleEditQueueItem}
           pendingEditQueueItemId={
             queueEditActiveForCurrentComposer ? queueEditOperation.queueItemId : null
           }
           onSendNow={handleSendQueuedNow}
+          onGuide={snapshot.inputRouting.mode === "enqueue" || snapshot.inputRouting.mode === "guide" ? handleGuideQueueItem : undefined}
           onMoveItem={handleReorderQueueItem}
           onResume={handleResumeQueue}
         />
@@ -4737,7 +4746,7 @@ export function SessionPane({
               scrollToQueryActionRef={timelineScrollToQueryRef}
               selectionPanelLayoutContainerRef={conversationLayoutContainerRef}
               rows={timelineSnapshot?.rows.window ?? []}
-              pendingGuides={timelineSnapshot ? pendingGuideProjection?.pendingGuides : []}
+              pendingGuides={[]}
               apiRetry={timelineSnapshot?.control.apiRetry ?? null}
               totalCount={timelineSnapshot?.rows.totalCount ?? 0}
               sessionKey={sessionId ?? "draft"}

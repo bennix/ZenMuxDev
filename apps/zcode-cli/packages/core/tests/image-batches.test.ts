@@ -35,3 +35,12 @@ test("a new query after stop never restarts historical image analysis",async()=>
  assert.equal((result[0]!.content as any[]).filter(b=>b.type==="image").length,0);
  assert.equal((messages[0]!.content as any[]).filter(b=>b.type==="image").length,51);
 });
+test("continuation with guidance retains original images and task while preserving guidance",async()=>{
+ const {resolveImageBatchTaskText}=await import("../src/runtime/helpers/image-batches.js");
+ const messages=input(21);messages.push({role:"user",content:"继续执行，先处理剩余图片，最后输出 PDF"});
+ const sizes:number[]=[];
+ const result=await projectImageBatches(messages,async(content)=>{sizes.push(content.filter(b=>b.type==="image").length);return "facts";});
+ assert.deepEqual(sizes,[10,10,1]);
+ assert.equal(resolveImageBatchTaskText(messages),"比较全部图片");
+ assert.equal(result.at(-1)?.content,"继续执行，先处理剩余图片，最后输出 PDF");
+});

@@ -101,7 +101,8 @@ async function editQueueItem(
     throw new V4QueueItemNotEditableError(payload.queueItemId);
   }
   // core reducer 同 id 原地更新（保位）；未命中 = noop + warn（同 delete 的竞态语义）。
-  const edited = await record.app.editQueueItem(payload.queueItemId, payload.newText);
+  const edited = await record.app.editQueueItem(payload.queueItemId, payload.newText, { delivery: payload.delivery });
+  if (!edited && payload.delivery === "guide") throw new V4QueueItemNotEditableError(payload.queueItemId);
   if (!edited) {
     host.logger?.warn?.("v4 editQueueItem missed", {
       queueItemId: payload.queueItemId,

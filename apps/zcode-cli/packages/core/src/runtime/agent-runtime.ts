@@ -451,6 +451,7 @@ export interface AgentRuntime {
   editPendingInputById(options: {
     pendingInputId: string;
     newText: string;
+    delivery?: "guide";
     traceContext?: TraceContext;
   }): Promise<boolean>;
   /** v4 queue 重排：移动 pendingInputId 到 beforePendingInputId 之前（null=队尾）。 */

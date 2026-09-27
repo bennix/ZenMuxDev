@@ -1,3 +1,4 @@
+import { parseTaskContinuation } from "@zcode/shared";
 import {findLatestRealUserMessageIndex} from "./conversation.js";
 import type {ModelInputMessage,ModelMessageContentBlock} from "../deps.js";
 import {officialCuaImageRefIndexesForUnavailableMedia,officialCuaRasterUnavailableBlock} from "./official-cua-media.js";
@@ -73,7 +74,7 @@ export function resolveImageBatchTaskIndex(messages:ModelInputMessage[]):number 
   if(index<0)return 0;
   const content=messages[index]?.content;
   const text=typeof content==="string"?content:Array.isArray(content)?content.filter(block=>block.type==="text").map(block=>block.text).join("\n"):"";
-  if(!/^(?:继续|继续处理|继续完成|从断点继续|从中断处继续|continue|resume)[。.!！\s]*$/iu.test(text.trim()))return index;
+  if(!parseTaskContinuation(text))return index;
   end=index;
  }
  return 0;

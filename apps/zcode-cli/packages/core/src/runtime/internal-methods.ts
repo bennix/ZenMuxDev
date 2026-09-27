@@ -210,6 +210,7 @@ export interface AgentRuntimeCoreMethods {
   editPendingInputById(options: {
     pendingInputId: string;
     newText: string;
+    delivery?: "guide";
     traceContext: TraceContext;
   }): Promise<boolean>;
   reorderPendingInput(options: {

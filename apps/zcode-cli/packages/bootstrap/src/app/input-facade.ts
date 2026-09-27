@@ -334,6 +334,7 @@ export function createInputFacade(deps: CreateInputFacadeDeps): InputFacade {
       return deps.runtime.editPendingInputById({
         pendingInputId,
         newText,
+        delivery: options?.delivery,
         traceContext: options?.traceContext ?? deps.traceContext,
       });
     },

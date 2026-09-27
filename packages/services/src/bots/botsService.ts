@@ -1,3 +1,4 @@
+import { parseTaskContinuation, parseTaskGuidance } from "@zcode/shared";
 import { deliverWeixinFile } from "./weixinFileDelivery.js";
 import { generateWeixinImage, resolveWeixinImageRequest, recentWeixinPhotos } from "./weixinImageGeneration.js";
 import { DEFAULT_STUDIO_IMAGE_MODEL } from "@zcode/shared";
@@ -4780,7 +4781,7 @@ export function createBotsService(
           traceId,
           content,
           // 新输入默认替换停止后遗留的引导；只有明确继续才保留 held 队列。
-          heldQueueDisposition: /^(?:继续|继续处理|继续完成|从断点继续|continue|resume)[。.!！\s]*$/iu.test(content.trim())
+          heldQueueDisposition: parseTaskContinuation(content)
             ? "keepQueueAndSend" : "clearQueueAndSend",
           attachments: attachments.length > 0 ? attachments : undefined,
           botDeliveryTarget,
@@ -4829,6 +4830,8 @@ export function createBotsService(
         auth.context = await writeDraftContext(auth.context);
       }
     }
+    const continuation = parseTaskContinuation(message.text);
+    const guidance = parseTaskGuidance(message.text);
     const elicitationReply = await handlePendingElicitationText(auth, message.actor, message.text);
     if (elicitationReply) {
       return elicitationReply;
@@ -4839,10 +4842,14 @@ export function createBotsService(
       (await isContextActiveTaskRunning(auth.context))
     ) {
       if (message.attachments?.length) return [createOutbound(message.actor,"任务运行中可发送文字引导；带附件的新任务请在停止后发送。")];
+      if (continuation && !continuation.guidance) return [createOutbound(message.actor, auth.locale === "en-US" ? "The task is already running." : "任务正在执行，无需重复继续。")];
+      if (guidance && !guidance.guidance) return [createOutbound(message.actor, "用法：/guide 后面填写调整要求")];
       const service=await resolveZCodeTaskServiceForContext(auth.context);
-      await service.guideTask({taskId:auth.context.activeTaskId,traceId:generateTraceId(auth.context.activeTaskId),content:message.text});
+      await service.guideTask({taskId:auth.context.activeTaskId,traceId:generateTraceId(auth.context.activeTaskId),content:guidance?.guidance ?? continuation?.guidance ?? message.text});
       return [createOutbound(message.actor,auth.locale==="en-US"?"Guidance accepted; it will apply at the next safe boundary.":"已收到引导，将在下一个安全处理点应用。")];
     }
+    if (guidance) return [createOutbound(message.actor, auth.locale === "en-US" ? "The task is not running. Send /continue followed by your guidance to resume it." : "任务当前未运行。请发送“继续执行，调整要求”来恢复并应用引导。")];
+    if (continuation && !auth.context.activeTaskId) return [createOutbound(message.actor, auth.locale === "en-US" ? "There is no bound task to continue. Select a task first." : "当前没有可继续的任务，请先选择任务。")];
     let preparedMessage: PreparedBotMessageContent;
     try {
       preparedMessage = await prepareBotMessageContent(auth.bot, message, auth.locale);
@@ -4856,7 +4863,8 @@ export function createBotsService(
         ),
       ];
     }
-    if (message.actor.provider === "weixin") {
+    // 修复：继续指令必须回到原 session，不能经意图分类重新创建图片或文件任务。
+    if (message.actor.provider === "weixin" && !continuation) {
       const incomingPhotos = preparedMessage.zcodeAttachments.filter(
         (item) => item.kind === "image" && item.localPath,
       );
@@ -5115,7 +5123,7 @@ export function createBotsService(
       resolveAutomationBotDeliveryTarget(message.actor),
       effectiveSelection,
     );
-    return [];
+    return continuation ? [createOutbound(message.actor, auth.locale === "en-US" ? "Continuation submitted with your guidance, if any." : "已提交继续执行，将沿用原任务，并应用本次附加的引导。")] : [];
   }
 
   async function handleTaskList(message: BotInboundMessage): Promise<BotOutboundMessage[]> {

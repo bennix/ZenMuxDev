@@ -845,11 +845,31 @@ export async function editPendingInputById(
   options: {
     pendingInputId: string;
     newText: string;
+    delivery?: "guide";
     traceContext: TraceContext;
   },
 ): Promise<boolean> {
   const activeTurn = this.activeTurn;
   const pendingInput = activeTurn?.pendingInputs.find((item) => item.id === options.pendingInputId);
+  // 修复：引导只能原位提升当前纯文字项，不能删除后重发或抢占正在执行的任务。
+  if (options.delivery === "guide") {
+    if (!activeTurn || !activeTurn.steerable || !pendingInput || pendingInput.attachments?.length ||
+      (pendingInput.commandKind && pendingInput.commandKind !== "sendText") ||
+      this.pendingInputReservations.has(pendingInput.id)) return false;
+    this.pendingInputReservations.set(pendingInput.id, `guide:${pendingInput.id}`);
+    try {
+      const intent = pendingInput.intent ? { ...pendingInput.intent, requestedDelivery: "guide" as const, admittedDelivery: "guide" as const, fallbackReasonCode: undefined } : undefined;
+      await this.sessionStore?.updateSessionInputs?.({ sessionID: this.sessionId, updates: [{ id: pendingInput.id, text: options.newText, delivery: "guide", ...(intent ? { intent } : {}) }] });
+      // 模型可能在持久化期间结束；迟到的点击不能复活已结束 turn。
+      if (this.activeTurn !== activeTurn) {
+        await this.sessionStore?.updateSessionInputs?.({ sessionID: this.sessionId, updates: [{ id: pendingInput.id, delivery: pendingInput.delivery ?? "queue", ...(pendingInput.intent ? {intent: pendingInput.intent} : {}) }] });
+        return false;
+      }
+      pendingInput.delivery = "guide";
+      pendingInput.intent = intent;
+      return await this.editPendingInputById({ ...options, delivery: undefined });
+    } finally { this.pendingInputReservations.delete(pendingInput.id); }
+  }
   if (!activeTurn || !pendingInput) {
     // held 回落：held 项只在事件日志/投影，经投影定位后
     // 重发同 id TurnSteerQueued（v4 reducer 原地更新，保位）。

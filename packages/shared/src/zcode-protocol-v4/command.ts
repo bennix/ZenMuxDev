@@ -164,7 +164,7 @@ export const commandPayloadSchemas = {
     feedback: z.enum(["like", "dislike"]).nullable(),
   }),
   sendQueuedNow: z.object({ queueItemId: z.string() }),
-  editQueueItem: z.object({ queueItemId: z.string(), newText: z.string() }),
+  editQueueItem: z.object({ queueItemId: z.string(), newText: z.string(), delivery: z.literal("guide").optional() }),
   // beforeQueueItemId = null → 移到队尾。
   reorderQueueItem: z.object({
     queueItemId: z.string(),

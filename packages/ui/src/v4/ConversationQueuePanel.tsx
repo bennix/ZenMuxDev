@@ -1,4 +1,10 @@
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.js";
+import {
   closestCenter,
   DndContext,
   PointerSensor,
@@ -14,19 +20,24 @@ import {
   TID_V4_QUEUE,
   TID_V4_QUEUE_ITEM,
   TID_V4_QUEUE_ITEM_DELETE,
-  TID_V4_QUEUE_ITEM_EDIT,
-  TID_V4_QUEUE_ITEM_SEND_NOW,
   TID_V4_QUEUE_PAUSED_BANNER,
   TID_V4_QUEUE_RESUME,
   testId,
 } from "@zcode/shared";
 import type { QueueState } from "@zcode/shared/zcode-protocol-v4";
-import { ArrowUpFromLine, GripVertical, PencilIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  CornerDownRight,
+  MoreHorizontal,
+  GripVertical,
+  PencilIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { ControlHintTooltip } from "@/ControlHintTooltip.js";
 import { Button } from "@/components/ui/button.js";
 import { cn } from "@/components/lib/utils.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
-import { runUserAction, runUserActionAsync } from "@/lib/userActionTelemetry.js";
+import { runUserActionAsync } from "@/lib/userActionTelemetry.js";
 
 interface ConversationQueuePanelProps {
   queue: QueueState;
@@ -38,6 +49,7 @@ interface ConversationQueuePanelProps {
   pendingEditQueueItemId?: string | null;
   /** 立即发送队列项（sendQueuedNow command，stop 当前 + 消费该项）。 */
   onSendNow?: (queueItemId: string) => void;
+  onGuide?: (queueItemId: string) => Promise<void>;
   /** 拖拽排序项（reorderQueueItem，移动到锚点前；null=队尾）。 */
   onMoveItem?: (queueItemId: string, beforeQueueItemId: string | null) => void;
   /** 暂停队列恢复：CLI setAutoDrain(true)，idle 立即消费、busy 仅武装。 */
@@ -118,6 +130,7 @@ interface QueueRowProps {
   onEditItem?: (queueItemId: string) => Promise<void> | void;
   editPending: boolean;
   onSendNow?: (queueItemId: string) => void;
+  onGuide?: (queueItemId: string) => Promise<void>;
 }
 
 const QueueRow = memo(function QueueRow({
@@ -128,10 +141,14 @@ const QueueRow = memo(function QueueRow({
   onDeleteItem,
   onEditItem,
   onSendNow,
+  onGuide,
   editPending,
 }: QueueRowProps) {
+  const [guiding, setGuiding] = useState(false);
+  const { locale } = useZCodeIntl();
+  const isGuide = item.delivery.admitted === "guide";
   const dispatchLocked = item.dispatch.state !== "queued";
-  const rowLocked = dispatchLocked || editPending;
+  const rowLocked = dispatchLocked || editPending || guiding;
   const isCompact = item.kind === "compact";
   const {
     attributes,
@@ -174,7 +191,7 @@ const QueueRow = memo(function QueueRow({
       data-dispatch-state={item.dispatch.state}
       data-edit-pending={editPending ? "true" : "false"}
       className={cn(
-        "relative flex items-center gap-2 rounded-xl px-1.5 py-1 pr-1 transition-colors hover:bg-hover/30",
+        "relative flex items-center gap-2 rounded-2xl border border-border/60 bg-background px-3 py-2 transition-colors hover:bg-hover/30",
         isDragging ? "bg-hover/40 shadow-sm" : null,
         editPending ? "opacity-60" : null,
       )}
@@ -206,47 +223,24 @@ const QueueRow = memo(function QueueRow({
       >
         <span className="truncate">{isCompact ? "/compact" : item.text}</span>
       </span>
-      {onSendNow ? (
+      {isGuide ? (
+        <span className="shrink-0 text-ui-caption text-foreground-subtle" role="status">
+          {locale === "zh-CN" ? "等待应用" : "Pending"}
+        </span>
+      ) : onGuide && item.kind === "sendText" && !item.attachments?.length ? (
         <Button
-          type="button"
-          variant="secondary"
-          size="default"
-          data-icon="inline-start"
-          data-testid={testId(TID_V4_QUEUE_ITEM_SEND_NOW, item.queueItemId)}
-          data-queue-item-id={item.queueItemId}
+          variant="ghost"
+          size="sm"
           disabled={rowLocked}
-          onClick={() =>
-            runUserAction({
-              input: {
-                featureId: "conversation.queue.item",
-                action: "send_now",
-                trigger: "button",
-              },
-              operation: () => onSendNow(item.queueItemId),
-              completed: { resultSource: "optimistic_projection" },
-              failureStage: "queue_send_now",
-            })
-          }
+          data-testid={`guide-queue-${item.queueItemId}`}
+          onClick={() => {
+            setGuiding(true);
+            void onGuide(item.queueItemId).finally(() => setGuiding(false));
+          }}
         >
-          <ArrowUpFromLine className="size-3.5" />
-          {intl.formatMessage({ id: isCompact ? "chat.queue.runNow" : "chat.queue.sendNow" })}
+          <CornerDownRight className="size-4" />
+          {locale === "zh-CN" ? "引导" : "Steer"}
         </Button>
-      ) : null}
-      {onEditItem && !isCompact ? (
-        <ControlHintTooltip title={intl.formatMessage({ id: "chat.queue.edit" })}>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-md"
-            data-testid={testId(TID_V4_QUEUE_ITEM_EDIT, item.queueItemId)}
-            data-queue-item-id={item.queueItemId}
-            aria-label={intl.formatMessage({ id: "chat.queue.edit" })}
-            disabled={rowLocked}
-            onClick={() => void onEditItem(item.queueItemId)}
-          >
-            <PencilIcon className="size-4" />
-          </Button>
-        </ControlHintTooltip>
       ) : null}
       {onDeleteItem ? (
         <ControlHintTooltip title={intl.formatMessage({ id: "chat.queue.remove" })}>
@@ -264,6 +258,32 @@ const QueueRow = memo(function QueueRow({
           </Button>
         </ControlHintTooltip>
       ) : null}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-md"
+            disabled={rowLocked}
+            aria-label={locale === "zh-CN" ? "更多操作" : "More actions"}
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {onEditItem && !isCompact ? (
+            <DropdownMenuItem onSelect={() => void onEditItem(item.queueItemId)}>
+              <PencilIcon className="size-4" />
+              {intl.formatMessage({ id: "chat.queue.edit" })}
+            </DropdownMenuItem>
+          ) : null}
+          {onSendNow && !isGuide ? (
+            <DropdownMenuItem onSelect={() => onSendNow(item.queueItemId)}>
+              <ArrowUpFromLine className="size-4" />
+              {intl.formatMessage({ id: isCompact ? "chat.queue.runNow" : "chat.queue.sendNow" })}
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </li>
   );
 });
@@ -278,6 +298,7 @@ function ConversationQueuePanelImpl({
   onEditItem,
   pendingEditQueueItemId = null,
   onSendNow,
+  onGuide,
   onMoveItem,
   onResume,
 }: ConversationQueuePanelProps) {
@@ -379,6 +400,7 @@ function ConversationQueuePanelImpl({
                 onDeleteItem={onDeleteItem}
                 onEditItem={onEditItem}
                 onSendNow={onSendNow}
+                onGuide={onGuide}
                 editPending={pendingEditQueueItemId === item.queueItemId}
               />
             ))}

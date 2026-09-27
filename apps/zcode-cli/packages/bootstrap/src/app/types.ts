@@ -692,7 +692,7 @@ export interface ZCodeApp {
   editQueueItem(
     pendingInputId: string,
     newText: string,
-    options?: { traceContext?: TraceContext },
+    options?: { traceContext?: TraceContext; delivery?: "guide" },
   ): Promise<boolean>;
   /** v4 queue 重排：移动 pendingInputId 到 beforePendingInputId 之前（null=队尾）。 */
   reorderQueueItem(
