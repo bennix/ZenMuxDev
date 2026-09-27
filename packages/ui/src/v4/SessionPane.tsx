@@ -96,6 +96,7 @@ import {
   createComposerSubmissionConfig,
   type ComposerSubmissionConfig,
 } from "@/v4/composer/composerSubmissionConfig.js";
+import { currentScopedLease } from "@/v4/scopedSessionLease.js";
 import { useDraftSessionPrewarm } from "@/v4/composer/useDraftSessionPrewarm.js";
 import { projectSessionConfigToTaskConfigOptions } from "@/v4/composer/sessionConfigTaskCache.js";
 import { useDraftRuntimeRebuildGate } from "@/v4/composer/useDraftRuntimeRebuildGate.js";
@@ -589,7 +590,12 @@ export function SessionPane({
       sessionId,
     );
   }, [conversationTelemetry, conversationTelemetryForegroundEnabled, sessionId, telemetryVisible]);
-  const [lease, setLease] = useState<SessionLease | null>(null);
+  const [leaseBinding, setLeaseBinding] = useState<{
+    lease: SessionLease;
+    owner: typeof layer;
+    sessionId: string | null;
+  } | null>(null);
+  const lease = currentScopedLease(leaseBinding, layer, sessionId);
   const state = useConversationProjection(lease);
   const snapshot = state.snapshot;
   const newlyCreatedSessionIdRef = useRef<string | null>(null);
@@ -2381,7 +2387,7 @@ export function SessionPane({
 
   useEffect(() => {
     if (!effectiveSessionId) {
-      setLease(null);
+      setLeaseBinding(null);
       return;
     }
     const nextLease = layer.acquire(effectiveSessionId);
@@ -2390,12 +2396,12 @@ export function SessionPane({
     const offOnlineModelTransition = nextLease.store.onOnlineModelTransition((transition) => {
       onlineModelTransitionHandlerRef.current(effectiveSessionId, nextLease.store, transition);
     });
-    setLease(nextLease);
+    setLeaseBinding({ lease: nextLease, owner: layer, sessionId });
     return () => {
       offOnlineModelTransition();
       nextLease.release();
     };
-  }, [layer, effectiveSessionId]);
+  }, [layer, effectiveSessionId, sessionId]);
 
   useEffect(() => {
     if (!sessionId || !lease || snapshot?.sessionId !== sessionId) return;
