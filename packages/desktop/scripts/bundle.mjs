@@ -710,6 +710,10 @@ async function main() {
     "electron-builder.config.js",
     osBuilderFlagMap[os],
     archBuilderFlagMap[arch],
+    // CI 环境会因为配置了 GitHub publish 而在打包结束时自动上传。
+    // 发行由后续的 Release 步骤负责，这里只生成安装包，避免缺少 GH_TOKEN 时整次构建失败。
+    "--publish",
+    "never",
   ];
 
   console.log(`[bundle] target=${os}/${arch}`);
