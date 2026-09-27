@@ -191,6 +191,7 @@ export interface BotState {
   telegramOffset?: number;
   weixinGetUpdatesBuf?: string;
   weixinActivatedAt?: number;
+  pendingWeixinArtifact?: {path:string;kind:"pdf"|"chart";status:"pending"|"sending"|"sent"|"failed"};
   recentWeixinPhotos?: { userId: string; savedAt: number; images: { localPath: string; mimeType: string }[] };
   updatedAt: number;
 }
@@ -527,6 +528,7 @@ export const botsStateFileSchema = z
         telegramOffset: z.number().optional(),
         weixinGetUpdatesBuf: z.string().optional(),
         weixinActivatedAt: z.number().optional(),
+        pendingWeixinArtifact: z.object({path:z.string(),kind:z.enum(["pdf","chart"]),status:z.enum(["pending","sending","sent","failed"])}).optional(),
         recentWeixinPhotos: z.object({userId:z.string(),savedAt:z.number(), images:z.array(z.object({localPath:z.string(),mimeType:z.string()})).max(4)}).optional(),
         updatedAt: z.number(),
       }),

@@ -1,5 +1,7 @@
 import { parseTaskContinuation, parseTaskGuidance } from "@zcode/shared";
 import { deliverWeixinFile } from "./weixinFileDelivery.js";
+import {parseWeixinIntent, weixinIntentPrompt} from "./weixinIntent.js";
+import {prepareWeixinArtifact, readWeixinArtifact, weixinArtifactInstruction} from "./weixinArtifact.js";
 import { generateWeixinImage, resolveWeixinImageRequest, recentWeixinPhotos } from "./weixinImageGeneration.js";
 import { DEFAULT_STUDIO_IMAGE_MODEL } from "@zcode/shared";
 import { isWeixinActorAllowed } from "./weixinAccess.js";
@@ -279,6 +281,7 @@ function validateBotConfig(config: BotsConfigFile, candidate: BotConfig): void {
 }
 
 interface BotsServiceDeps {
+  generateIntentText?: (params: {workspacePath:string;workspaceIdentity?:string;selection:ModelSelection;prompt:string})=>Promise<{text:string}>;
   fetchImpl?: typeof fetch;
   credentialService: ICredentialService;
   zcodeTaskService: IZCodeTaskService;
@@ -911,6 +914,14 @@ export function createBotsService(
       draftOptions: await buildInitializedDraftOptions(workspace),
       updatedAt: Date.now(),
     };
+  }
+
+  async function updateWeixinArtifactStatus(actor: BotActor, bot: BotConfig, taskId:string, path:string, status:"sending"|"sent"|"failed"):Promise<boolean> {
+    const current=await readContext(actor,bot);
+    if(current?.activeTaskId!==taskId || current.pendingWeixinArtifact?.path!==path) return false;
+    // 修复：回传可能跨越用户切换任务，不能把终态闭包里的旧上下文写回覆盖新任务。
+    await writeContext({...current,pendingWeixinArtifact:{...current.pendingWeixinArtifact,status}});
+    return true;
   }
 
   async function writeContext(context: BotContextState): Promise<void> {
@@ -4126,6 +4137,30 @@ export function createBotsService(
           await sendOutbound(bot, createOutbound(actor, msg(await readMessageLocale(), "taskInterrupted")));
           return;
         }
+        if (bot.provider === "weixin") {
+          const current = await readContext(actor,bot);
+          const artifact = current?.activeTaskId === event.taskId ? current.pendingWeixinArtifact : undefined;
+          if (current && artifact?.status === "pending") {
+            try {
+              const data = await readWeixinArtifact(current.workspacePath,artifact.path,artifact.kind);
+              if (!await updateWeixinArtifactStatus(actor,bot,event.taskId,artifact.path,"sending")) return;
+              const adapter=providers.weixin;
+              if (artifact.kind==="pdf") {
+                if(!adapter?.sendFile) throw new Error("微信文件发送未配置");
+                await adapter.sendFile(bot,createOutbound(actor,""),data,"ZenCode.pdf");
+              } else {
+                if(!adapter?.sendImage) throw new Error("微信图片发送未配置");
+                await adapter.sendImage(bot,createOutbound(actor,""),data);
+              }
+              await updateWeixinArtifactStatus(actor,bot,event.taskId,artifact.path,"sent");
+              sentAnyAssistantReply=true;
+            }catch(error){
+              await updateWeixinArtifactStatus(actor,bot,event.taskId,artifact.path,"failed");
+              await sendOutbound(bot,createOutbound(actor,"文件生成或回传失败："+(error instanceof Error?error.message:"未知错误")));
+              sentAnyAssistantReply=true;
+            }
+          }
+        }
         const mode = getMode();
         const locale = await readMessageLocale();
         const completedSnapshot = await zcodeTaskService
@@ -4885,7 +4920,43 @@ export function createBotsService(
       if (!message.text.trim() && incomingPhotos.length) {
         return [createOutbound(message.actor, msg(auth.locale, "imagePhotoReceived"))];
       }
-      const imageRequest = resolveWeixinImageRequest(message.text, recentPhotos.length > 0);
+      let imageRequest = /^\/image(?:\s|$)/iu.test(message.text.trim())
+        ? resolveWeixinImageRequest(message.text, recentPhotos.length > 0) : null;
+      let intentReference = /^\/image(?:\s|$)/iu.test(message.text.trim()) && recentPhotos.length > 0;
+      if (imageRequest && auth.context.pendingWeixinArtifact) {
+        auth.context={...auth.context,pendingWeixinArtifact:undefined};
+        await writeContext(auth.context);
+      }
+      if (!imageRequest && message.text.trim() && deps.generateIntentText && !auth.context.workspaceIdentity) {
+        try {
+          const taskService = await resolveZCodeTaskServiceForContext(auth.context);
+          const original = auth.context.activeTaskId
+            ? await taskService.getTaskModelSelection({taskId:auth.context.activeTaskId})
+            : auth.context.draftOptions?.modelSelection;
+          const view = await readModelSelectionView(auth.context, original ?? undefined);
+          const selection = original ? view?.effectiveSelection : view?.preferredSelection;
+          if (!selection || view?.selectionIssue) throw new Error("微信主模型不可用，请检查模型设置");
+          const result = await deps.generateIntentText({
+            workspacePath:auth.context.workspacePath, selection,
+            prompt:weixinIntentPrompt(message.text,recentPhotos.length>0),
+          });
+          const intent = parseWeixinIntent(result.text);
+          intentReference = intent.useReference;
+          if (intent.kind === "photo") imageRequest={kind:"generate",prompt:intent.prompt};
+          if (intent.kind === "pdf" || intent.kind === "chart") {
+            const artifact=await prepareWeixinArtifact(auth.context.workspacePath,intent.kind);
+            auth.context={...auth.context,pendingWeixinArtifact:artifact};
+            await writeContext(auth.context);
+            preparedMessage.content+=weixinArtifactInstruction(artifact.path,artifact.kind);
+            await sendOutbound(auth.bot,createOutbound(message.actor,intent.kind==="pdf"?"正在生成 PDF，完成后将发送文件。":"正在绘制可视化图形，完成后将发送图片。"));
+          } else if (auth.context.pendingWeixinArtifact) {
+            auth.context={...auth.context,pendingWeixinArtifact:undefined};
+            await writeContext(auth.context);
+          }
+        } catch(error) {
+          return [createOutbound(message.actor,"微信意图处理失败："+(error instanceof Error?error.message:"未知错误"))];
+        }
+      }
       if (imageRequest?.kind === "help")
         return [createOutbound(message.actor, msg(auth.locale, "imageHelp"))];
       if (imageRequest?.kind === "generate") {
@@ -4917,10 +4988,7 @@ export function createBotsService(
             auth.bot,
             createOutbound(message.actor, msg(auth.locale, "imageGenerating", { model })),
           );
-          const useReferences =
-            incomingPhotos.length > 0 ||
-            /^\/image(?:\s|$)/iu.test(message.text.trim()) ||
-            /(?:这张|照片|改图|修改|编辑|重绘|背景|水彩|参考|把|将)/u.test(imageRequest.prompt);
+          const useReferences = incomingPhotos.length > 0 || intentReference;
           const images = useReferences
             ? await Promise.all(
                 recentPhotos.map(async (photo) => ({

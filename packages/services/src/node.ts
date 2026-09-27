@@ -2452,6 +2452,7 @@ export function createLocalServices(options: {
     .register(
       IBotsService,
       createBotsService({
+        generateIntentText: (params) => zcodeAgentService.generateWorkspaceText({...params,querySource:"weixin-intent"}),
         fetchImpl: hostApiNetworkTransport.fetch,
         credentialService,
         zcodeTaskService,
