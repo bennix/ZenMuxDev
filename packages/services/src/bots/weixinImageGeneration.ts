@@ -30,12 +30,16 @@ export function resolveWeixinImageRequest(
   hasPhoto: boolean,
 ): { kind: "help" | "generate"; prompt: string } | null {
   const value = text.trim();
+  // 修复：礼貌问句包含具体对象时也是生图请求；只有泛问能力才返回帮助。
+  const request = value.replace(/^(?:你)?(?:能不能|能否|能够|可以|支持|会|能)\s*(?:帮我\s*)?/u, "");
+  const instruction = request.replace(/[吗么]?[？?。！!]*$/u, "").trim();
   if (
-    /^(?:你)?(?:能否|能不能|能够|可以|支持|会)(?:\s*帮我)?\s*(?:生成|制作|画|生图|改图).{0,15}(?:图|画|照片)?.*[吗么？?]$/u.test(
-      value,
+    /^(?:生图|改图|(?:生成|制作|画)\s*(?:一张|一幅)?\s*(?:图像|图片|照片|图|画))$/u.test(
+      instruction,
     )
-  )
+  ) {
     return { kind: "help", prompt: "" };
+  }
   if (/^\/image(?:\s|$)/iu.test(value))
     return {
       kind: value.replace(/^\/image\s*/iu, "") ? "generate" : "help",
@@ -43,11 +47,13 @@ export function resolveWeixinImageRequest(
     };
   const direct =
     /^(?:请|帮我|请帮我|给我|麻烦)?\s*(?:生成|画|绘制|制作)(?:一张|一个|一幅|张|幅)?[^\n]{0,35}(?:图|画|照片|海报|头像|壁纸)/u.test(
-      value,
+      instruction,
     );
   const edit =
     hasPhoto &&
-    /^(?:请|帮我|请帮我)?\s*(?:把|将|修改|编辑|美化|重绘|换背景|去背景|改成|变成)/u.test(value);
+    /^(?:请|帮我|请帮我)?\s*(?:把|将|修改|编辑|美化|重绘|换背景|去背景|改成|变成)/u.test(
+      instruction,
+    );
   return direct || edit ? { kind: "generate", prompt: value } : null;
 }
 

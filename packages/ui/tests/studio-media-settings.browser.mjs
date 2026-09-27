@@ -44,14 +44,32 @@ try {
       ),
     );
   });
-  await page.getByRole("button", { name: "○ google/gemini-2.5-flash-image", exact: true }).click();
-  await page
-    .getByRole("button", { name: "● google/gemini-2.5-flash-image", exact: true })
-    .waitFor();
+  await page.getByRole("radio", { name: "google/gemini-2.5-flash-image", exact: true }).click();
+  assert.equal(
+    await page
+      .getByRole("radio", { name: "google/gemini-2.5-flash-image", exact: true })
+      .isChecked(),
+    true,
+  );
+  assert.equal(
+    await page.getByRole("radio", { name: "openai/gpt-image-2", exact: true }).isChecked(),
+    false,
+  );
+  await page.getByText("当前默认：google/gemini-2.5-flash-image", { exact: true }).waitFor();
   assert.equal(
     await page.evaluate(() => window.savedMedia.defaultImageId),
     "google/gemini-2.5-flash-image",
   );
+  // 原生单选控件必须支持键盘；选中状态和顶部当前默认保持一致。
+  await page.getByRole("radio", { name: "google/gemini-2.5-flash-image", exact: true }).focus();
+  await page.keyboard.press("ArrowUp");
+  await page.getByText("当前默认：openai/gpt-image-2", { exact: true }).waitFor();
+  assert.equal(
+    await page.getByRole("radio", { name: "openai/gpt-image-2", exact: true }).isChecked(),
+    true,
+  );
+  await page.getByRole("radio", { name: "google/gemini-2.5-flash-image", exact: true }).check();
+  await page.getByText("当前默认：google/gemini-2.5-flash-image", { exact: true }).waitFor();
   const request = await page.evaluate(async () => {
     const { buildStudioImageRequest } = await import("/packages/shared/src/studio-image.ts");
     return buildStudioImageRequest(window.savedMedia.defaultImageId, "watercolor", [

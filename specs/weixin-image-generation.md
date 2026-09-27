@@ -59,3 +59,17 @@ sequenceDiagram
 2026-09-27 validation: protocol/settings/model tests and real browser default-model
 selection passed; Desktop production compilation passed. No paid model call or live
 Weixin image delivery was performed in these tests. Live acceptance remains pending.
+
+## Follow-up: visible selection and natural-language requests
+
+Live check: model-name click does persist the new default, but the dot-only indicator
+is ambiguous and disappears when its row scrolls out of view. Replace it with native
+radio controls, selected-row styling and a persistent current-default label. Clicking
+label or keyboard selection saves through the same Host Settings owner. Keep saving
+and error states; no second persisted selection.
+
+The exact user phrase “能生成 一只哈士奇的照片吗” must route to image generation.
+A generic “能生成图片吗” remains capability help, while a concrete subject is a
+request even with a polite question ending. Add regressions for both. Do not route
+photo-analysis questions to generation. User-visible Bot branding uses ZenCode,
+including Chinese and English help/activation messages; internal identifiers remain.

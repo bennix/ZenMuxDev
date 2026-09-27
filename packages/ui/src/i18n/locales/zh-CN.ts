@@ -4644,6 +4644,7 @@ const zhCN: Record<string, string> = {
   "settings.studioMedia.followWriter": "留空跟随成稿模型",
   "settings.studioMedia.repairHelp":
     "填写 ZenMux 支持的文本模型 ID。用于自动和手动修复 HTML 与版式；设置自动保存，下次任务生效。",
+  "settings.studioMedia.currentDefault": "当前默认：{model}",
   "settings.studioMedia.imageTitle": "生图模型",
   "settings.studioMedia.videoTitle": "视频模型",
   "settings.studioMedia.modelId": "模型 ID，可从目录里选",

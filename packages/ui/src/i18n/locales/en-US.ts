@@ -4949,6 +4949,7 @@ const enUS: Record<string, string> = {
   "settings.studioMedia.followWriter": "Use the drafting model",
   "settings.studioMedia.repairHelp":
     "Enter a ZenMux text model ID for automatic and manual HTML/layout repairs. Saved automatically; applies to the next task.",
+  "settings.studioMedia.currentDefault": "Current default: {model}",
   "settings.studioMedia.imageTitle": "Image models",
   "settings.studioMedia.videoTitle": "Video models",
   "settings.studioMedia.modelId": "Model id, or pick from the catalog",

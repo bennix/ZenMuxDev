@@ -61,3 +61,32 @@ test("reference photos are scoped to the sender and expire", () => {
   assert.equal(recentWeixinPhotos(state, "other", 2000).length, 0);
   assert.equal(recentWeixinPhotos(state, "owner", 1801000).length, 0);
 });
+
+test("polite requests with a concrete subject generate; generic capability questions do not", () => {
+  for (const text of [
+    "能生成 一只哈士奇的照片吗",
+    "可以生成一张哈士奇照片吗？",
+    "能不能帮我生成一张猫的图片？",
+  ]) {
+    assert.equal(resolveWeixinImageRequest(text, false)?.kind, "generate", text);
+  }
+  for (const text of ["能生成图片吗", "能够生成图像吗？", "可以生图吗？"]) {
+    assert.equal(resolveWeixinImageRequest(text, false)?.kind, "help", text);
+  }
+  assert.equal(resolveWeixinImageRequest("能分析这张照片吗？", true), null);
+});
+
+test("/image preserves the prompt and Bot help uses ZenCode branding", async () => {
+  const { parseBotCommand } = await import("../src/bots/commandParser.js");
+  const { formatBotMessage } = await import("../src/bots/messages.js");
+  const text = "/image 一只哈士奇的真实照片";
+  assert.deepEqual(parseBotCommand(text), { type: "message", text });
+  assert.deepEqual(resolveWeixinImageRequest(text, false), {
+    kind: "generate",
+    prompt: "一只哈士奇的真实照片",
+  });
+  for (const locale of ["zh-CN", "en-US"] as const) {
+    assert.match(formatBotMessage(locale, "helpTitle"), /ZenCode/);
+    assert.doesNotMatch(formatBotMessage(locale, "helpTitle"), /ZCode/);
+  }
+});

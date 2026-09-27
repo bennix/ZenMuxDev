@@ -4,9 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { IMAGE_CATALOG, VIDEO_CATALOG } from "./studioMediaCatalog.js";
-import {
-  type StudioMediaLibrary,
-} from "./studioMediaStore.js";
+import { type StudioMediaLibrary } from "./studioMediaStore.js";
 
 export function StudioMediaSettings() {
   const { intl } = useZCodeIntl();
@@ -17,11 +15,20 @@ export function StudioMediaSettings() {
   const [saveError, setSaveError] = useState("");
   const update = (next: StudioMediaLibrary) => {
     setSaving(true);
-    void save(next).then(() => setSaveError(""), error => setSaveError(String(error))).finally(() => setSaving(false));
+    void save(next)
+      .then(
+        () => setSaveError(""),
+        (error) => setSaveError(String(error)),
+      )
+      .finally(() => setSaving(false));
   };
   return (
     <fieldset disabled={loading || saving} className="mt-4 space-y-4">
-      {Boolean(saveError || error) && <p role="alert" className="text-ui-caption text-destructive">{saveError || String(error)}</p>}
+      {Boolean(saveError || error) && (
+        <p role="alert" className="text-ui-caption text-destructive">
+          {saveError || String(error)}
+        </p>
+      )}
       <section className="rounded-xl border border-border bg-card p-4">
         <label htmlFor="studio-repair-model" className="mb-3 block text-ui-base font-medium">
           {intl.formatMessage({ id: "settings.studioMedia.repairModel" })}
@@ -86,7 +93,10 @@ function ModelList({
   };
   return (
     <section className="rounded-xl border border-border bg-card p-4">
-      <h3 className="mb-3 text-ui-base font-medium">{title}</h3>
+      <h3 className="mb-2 text-ui-base font-medium">{title}</h3>
+      <p role="status" className="mb-3 break-all text-ui-caption text-muted-foreground">
+        {intl.formatMessage({ id: "settings.studioMedia.currentDefault" }, { model: defaultId })}
+      </p>
       <div className="mb-3 flex gap-2">
         <input
           value={draft}
@@ -114,16 +124,19 @@ function ModelList({
         {ids.map((id) => (
           <div
             key={id}
-            className="flex items-center gap-2 rounded-lg border border-border px-2 py-2"
+            className={`flex items-center gap-2 rounded-lg border px-2 py-2 ${defaultId === id ? "border-primary bg-primary/10" : "border-border"}`}
           >
-            <button
-              type="button"
-              className="min-w-0 flex-1 truncate text-left font-mono text-ui-caption"
-              onClick={() => onChange(ids, id)}
-            >
-              {defaultId === id ? "● " : "○ "}
-              {id}
-            </button>
+            <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 py-1 font-mono text-ui-caption">
+              <input
+                type="radio"
+                name={`${listId}-default`}
+                value={id}
+                checked={defaultId === id}
+                onChange={() => onChange(ids, id)}
+                className="h-4 w-4 shrink-0 accent-primary"
+              />
+              <span className="truncate">{id}</span>
+            </label>
             <Button
               type="button"
               variant="ghost"
