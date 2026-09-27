@@ -1,3 +1,4 @@
+import { prepareImageBatchMessages } from "./image-batch-request.js";
 import { beginLocalTurnPreparation } from "@zcode/contracts";
 import { runWithModelInvocationContext, traceContextToLogContext } from "../deps.js";
 import type { ModelReasoningContentBlock, ModelToolCall, ModelUsage, ToolCallId } from "../deps.js";
@@ -59,7 +60,8 @@ export async function runModelTextRequest(
     message: "Model request media capability projection",
     model: `${model.providerId}/${model.modelId}`,
   });
-  const mediaProjection = projectMessagesForMediaBudget(capabilityProjection.messages, {
+  const batchedMessages = await prepareImageBatchMessages.call(this, capabilityProjection.messages, options);
+  const mediaProjection = projectMessagesForMediaBudget(batchedMessages, {
     latestRealUserMessageIndex: options.latestRealUserMessageIndex,
   });
   logMediaBudgetProjection(this.logger, options.traceContext, mediaProjection, {
