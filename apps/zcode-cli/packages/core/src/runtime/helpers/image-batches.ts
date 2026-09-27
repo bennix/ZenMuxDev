@@ -16,6 +16,22 @@ export async function projectImageBatches(
   });
  });
  if(images.length<=IMAGE_BATCH_SIZE) return messages;
+ const scopeIndex=resolveImageBatchTaskIndex(messages);
+ const historical=images.filter(image=>image.messageIndex<scopeIndex);
+ const active=images.filter(image=>image.messageIndex>=scopeIndex);
+ // 修复：新查询不能因为历史里有大量图片而自动重启已停止的分析。
+ const scoped=historical.length?messages.map((message,messageIndex)=>{
+  if(messageIndex>=scopeIndex||!Array.isArray(message.content))return message;
+  const omitted=new Set<number>();
+  message.content.forEach((block,index)=>{if(block.type==="image")omitted.add(index);});
+  const refs=officialCuaImageRefIndexesForUnavailableMedia(message.content,omitted);
+  return {...message,content:message.content.map((block,index)=>refs.has(index)?officialCuaRasterUnavailableBlock():block.type==="image"?{type:"text" as const,text:"[历史图片：本轮未重新分析。需要视觉细节时请读取原文件；不要自动续跑旧任务。]"}:block)};
+ }):messages;
+ if(historical.length) {
+  if(active.length<=IMAGE_BATCH_SIZE)return scoped;
+  // 递归只处理仍保留的本轮图片；消息位置不变，检查点编号仍稳定。
+  return projectImageBatches(scoped,analyze,signal);
+ }
  const taskText=resolveImageBatchTaskText(messages);
  const summaries=new Map<string,string>();
  const total=Math.ceil(images.length/IMAGE_BATCH_SIZE);
@@ -50,15 +66,21 @@ export async function projectImageBatches(
 
 
 // 明确的继续输入沿用上一条实质任务；新的任务描述会改变缓存指纹。
-export function resolveImageBatchTaskText(messages:ModelInputMessage[]):string {
+export function resolveImageBatchTaskIndex(messages:ModelInputMessage[]):number {
  let end=messages.length;
  while(end>0){
   const index=findLatestRealUserMessageIndex(messages.slice(0,end));
-  if(index<0)return "";
+  if(index<0)return 0;
   const content=messages[index]?.content;
   const text=typeof content==="string"?content:Array.isArray(content)?content.filter(block=>block.type==="text").map(block=>block.text).join("\n"):"";
-  if(!/^(?:继续|继续处理|继续完成|从断点继续|从中断处继续|continue|resume)[。.!！\s]*$/iu.test(text.trim()))return text;
+  if(!/^(?:继续|继续处理|继续完成|从断点继续|从中断处继续|continue|resume)[。.!！\s]*$/iu.test(text.trim()))return index;
   end=index;
  }
- return "";
+ return 0;
+}
+
+
+export function resolveImageBatchTaskText(messages:ModelInputMessage[]):string {
+ const content=messages[resolveImageBatchTaskIndex(messages)]?.content;
+ return typeof content==="string"?content:Array.isArray(content)?content.filter(block=>block.type==="text").map(block=>block.text).join("\n"):"";
 }

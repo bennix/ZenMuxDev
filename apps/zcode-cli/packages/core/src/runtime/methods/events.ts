@@ -351,6 +351,7 @@ async function persistDurableSessionEvent(
         pendingInputId: payload.pendingInputId,
         status: "failed",
       });
+      if(payload.delivery==="guide")throw error;
     }
     return;
   }

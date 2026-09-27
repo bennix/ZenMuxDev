@@ -234,7 +234,7 @@ export interface AgentRuntimeCoreMethods {
     previousMode: CollaborationMode;
     traceContext: TraceContext;
   }): Promise<void>;
-  discardPersistedPendingSteerInputs(traceContext: TraceContext): Promise<number>;
+  restorePersistedPendingInputs(traceContext: TraceContext): Promise<number>;
   /** held 项按 id 丢弃（held 回落）：active turn 结束后经投影定位补 TurnSteerDiscarded。 */
   discardHeldPendingInputById(
     pendingInputId: string,

@@ -124,7 +124,7 @@ export async function loadPersistentCommandFacts(
       ...(discardedOnRestart
         ? {
             // 旧 query 丢掉了 session_input.delivery，renderer 只能把所有
-            // restart discard 当成可重发丢失；queue/guide 实际只属于旧 runtime。
+            // restart discard 当成可重发丢失；文字 guide 会以原 id 恢复为 held，不能重复准入。
             result: { type: "inputDisposition" as const, delivery: record.delivery },
           }
         : {}),

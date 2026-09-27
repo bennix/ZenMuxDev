@@ -4777,6 +4777,9 @@ export function createBotsService(
           taskId,
           traceId,
           content,
+          // 新输入默认替换停止后遗留的引导；只有明确继续才保留 held 队列。
+          heldQueueDisposition: /^(?:继续|继续处理|继续完成|从断点继续|continue|resume)[。.!！\s]*$/iu.test(content.trim())
+            ? "keepQueueAndSend" : "clearQueueAndSend",
           attachments: attachments.length > 0 ? attachments : undefined,
           botDeliveryTarget,
           modelSelection,
@@ -4833,7 +4836,10 @@ export function createBotsService(
       auth.context.activeTaskId &&
       (await isContextActiveTaskRunning(auth.context))
     ) {
-      return [createOutbound(message.actor, msg(auth.locale, "taskRunning"))];
+      if (message.attachments?.length) return [createOutbound(message.actor,"任务运行中可发送文字引导；带附件的新任务请在停止后发送。")];
+      const service=await resolveZCodeTaskServiceForContext(auth.context);
+      await service.guideTask({taskId:auth.context.activeTaskId,traceId:generateTraceId(auth.context.activeTaskId),content:message.text});
+      return [createOutbound(message.actor,auth.locale==="en-US"?"Guidance accepted; it will apply at the next safe boundary.":"已收到引导，将在下一个安全处理点应用。")];
     }
     let preparedMessage: PreparedBotMessageContent;
     try {

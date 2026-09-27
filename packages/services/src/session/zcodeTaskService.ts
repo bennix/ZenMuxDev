@@ -239,6 +239,8 @@ export interface IZCodeTaskService {
     v4Create?: boolean;
   }): Promise<ZCodeTaskCreateResult>;
 
+  guideTask(params: {taskId:string;traceId:TraceId;content:string}):Promise<void>;
+
   /** 发送 prompt 到指定 task */
   sendPrompt(
     params: {
@@ -252,6 +254,7 @@ export interface IZCodeTaskService {
       clientId?: string;
       clientLabel?: string;
       clientMode?: ZCodeTaskClientMode;
+      heldQueueDisposition?: "clearQueueAndSend" | "keepQueueAndSend";
       /** 当前 turn 额外隐藏的工具；与 session/automation 自带的工具隔离规则合并。 */
       toolDenylist?: string[];
       /** Bot 来源 turn 的稳定回推地址；由 BotsService 注入，模型不可控。 */

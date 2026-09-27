@@ -26,3 +26,12 @@ test("explicit continuation keeps the original image task; new instructions repl
  messages.push({role:"user",content:"改成分析颜色"});
  assert.equal(resolveImageBatchTaskText(messages),"改成分析颜色");
 });
+test("a new query after stop never restarts historical image analysis",async()=>{
+ const messages=input(51);
+ messages.push({role:"user",content:"PDF 在哪里？"});
+ let calls=0;
+ const result=await projectImageBatches(messages,async()=>{calls++;return "must not happen";});
+ assert.equal(calls,0);
+ assert.equal((result[0]!.content as any[]).filter(b=>b.type==="image").length,0);
+ assert.equal((messages[0]!.content as any[]).filter(b=>b.type==="image").length,51);
+});

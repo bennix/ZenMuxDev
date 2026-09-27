@@ -380,6 +380,7 @@ export function createZCodeTaskServiceAdapter(
       queryId?: string;
       messageId?: string;
       content: string;
+      heldQueueDisposition?: "clearQueueAndSend" | "keepQueueAndSend";
       attachments?: ZCodePromptAttachment[];
       toolDenylist?: string[];
       botDeliveryTarget?: ZCodeAutomationBotDeliveryTarget;
@@ -451,7 +452,7 @@ export function createZCodeTaskServiceAdapter(
             type: "sendText",
             payload: {
               text: params.content,
-              heldQueueDisposition: "keepQueueAndSend",
+              heldQueueDisposition: params.heldQueueDisposition ?? "keepQueueAndSend",
               ...(params.modelSelection ? { modelSelection: params.modelSelection } : {}),
               ...(params.modelExecution ? { modelExecution: params.modelExecution } : {}),
               ...turnAttributionOf(params),
@@ -1917,6 +1918,20 @@ export function createZCodeTaskServiceAdapter(
       };
     },
 
+    async guideTask(params):Promise<void> {
+      const target=getTaskTarget(params.taskId);
+      // 引导复用 owner 路由和 CommandInbox，不清空当前轮的输出投影或 input id。
+      const ack=await options.zcodeAgentService.sendConversationCommandV4({
+        workspacePath:target.workspacePath,workspaceIdentity:target.workspaceIdentity,
+        ...(target.remoteSessionId?{remoteSessionId:target.remoteSessionId}:{}),
+        envelope:createHostCommandEnvelope({
+          commandId:params.traceId,sessionId:target.taskId,type:"sendText",
+          payload:{text:params.content,requestedDelivery:"guide"},
+        }),
+      });
+      assertV4CommandAckOk("sendText",ack,`guide session=${target.taskId}`);
+    },
+
     async sendPrompt(params): Promise<void> {
       const storedTarget = getTaskTarget(params.taskId);
       const target = {
@@ -1928,6 +1943,7 @@ export function createZCodeTaskServiceAdapter(
         queryId: params.queryId,
         messageId: params.messageId,
         content: params.content,
+        heldQueueDisposition: params.heldQueueDisposition,
         attachments: params.attachments,
         ...turnAttributionOf(params),
         toolDenylist: params.toolDenylist,

@@ -72,7 +72,7 @@ import {
   setFollowupMode,
   setQueueAutoDrain,
 } from "./steering.js";
-import { discardPersistedPendingSteerInputs } from "./steering.js";
+import { restorePersistedPendingInputs } from "./steering.js";
 import { createDefaultSubagentPort } from "./subagent.js";
 import { ensureContextInitialized, getSkillCatalog } from "./context.js";
 import { createContextBuilderFromSnapshot } from "./context.js";
@@ -271,7 +271,7 @@ export function installAgentRuntimeMethods(ctor: AgentRuntimeConstructor): void 
   proto.setFollowupMode = setFollowupMode;
   proto.emitModelSelected = emitModelSelected;
   proto.emitModeChanged = emitModeChanged;
-  proto.discardPersistedPendingSteerInputs = discardPersistedPendingSteerInputs;
+  proto.restorePersistedPendingInputs = restorePersistedPendingInputs;
   proto.discardHeldPendingInputById = discardHeldPendingInputById;
   proto.clearAllPendingInputs = clearAllPendingInputs;
   proto.createDefaultSubagentPort = createDefaultSubagentPort;

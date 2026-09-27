@@ -231,8 +231,7 @@ export async function resumeFromStore(
     session,
     traceContext,
   });
-  await this.discardPersistedPendingSteerInputs(traceContext);
-  const recoveredSteerInputCount = 0;
+  const recoveredSteerInputCount = await this.restorePersistedPendingInputs(traceContext);
   // 修复：重启只恢复已落盘的批次，将未完成调用标为中断；等待用户输入，不自动再调用模型。
   await restoreImageBatchMemory(this.sessionStore,this.sessionId);
   const resumedTodos = await this.readSessionTodosForContext(traceContext);

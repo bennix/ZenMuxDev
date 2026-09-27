@@ -843,7 +843,7 @@ export interface SessionEntryInfo {
 // ── session_input 账本──
 // 输入的 durable 生命周期：admitted（已接受，排队/待注入）→ promoted（已消费成
 // transcript user message，与消息持久化同事务）/ cancelled（用户删除队列项等）/
-// discarded（session_resumed=重启不保留队列；user_cleared=heldQueue 清空发送）/
+// discarded（session_resumed=重启清扫普通队列，文字 guide 恢复为 held；user_cleared=heldQueue 清空发送）/
 // failed（已接受但运行时无法启动；保留终态，重启时禁止再改写成 discarded）。
 // id = input/command id（admission 时即存在）；promoted_message_id 是 nullable 外键——
 // messageId 在 drain 时才生成。startNow 也必须先经过 durable admission：即使 CLI 在 ACK 后、

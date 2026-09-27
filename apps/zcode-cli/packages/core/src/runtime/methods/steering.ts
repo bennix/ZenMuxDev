@@ -1328,21 +1328,26 @@ export async function discardPendingInput(
   });
 }
 
-export async function discardPersistedPendingSteerInputs(
+export async function restorePersistedPendingInputs(
   this: AgentRuntimeInternal,
   traceContext: TraceContext,
 ): Promise<number> {
-  // （重启不保留队列）：先清扫账本残留 admitted——事件日志是
-  // 内存的，崩溃后投影里什么都没有，账本是唯一痕迹（含 background wake：后台
-  // 子进程随 CLI 重启已死，其未消费通知不可恢复）。留痕（discarded/session_resumed）
-  // 不静默，用户/诊断可查「这条输入去哪了」。
+  // 修复：用户文字引导恢复为 held，不自动启动；后台通知和普通队列仍按旧规则清扫。
+  const recovered:TurnSteerInput[]=[];
+  const recoveredIds=new Set<string>();
   try {
     const admitted =
       (await this.sessionStore?.listSessionInputs?.({
         sessionID: this.sessionId,
         status: "admitted",
       })) ?? [];
-    for (const record of admitted) {
+    for (const record of admitted.sort((a,b)=>a.admittedSequence-b.admittedSequence)) {
+      if(record.delivery==="guide"&&record.kind==="sendText"&&record.payload.text.trim()){
+        const intent=record.payload.intent as TurnSteerInput["intent"];
+        recovered.push({input:record.payload.text,pendingInputId:record.id,commandKind:"sendText",delivery:"guide",...(intent?{intent}:{}),traceContext});
+        recoveredIds.add(record.id);
+        continue;
+      }
       await this.sessionStore?.settleSessionInput?.({
         id: record.id,
         sessionID: this.sessionId,
@@ -1358,11 +1363,11 @@ export async function discardPersistedPendingSteerInputs(
       module: "core.runtime",
       status: "failed",
     });
+    throw error;
   }
 
   const projection = await this.rebuildProjection();
-  const pendingInputs = projection.pendingSteerInputs;
-  if (pendingInputs.length === 0) return 0;
+  const pendingInputs = projection.pendingSteerInputs.filter(item=>!recoveredIds.has(item.pendingInputId));
 
   const pendingByTurn = new Map<TurnId, PendingSteerInputInfo[]>();
   for (const pendingInput of pendingInputs) {
@@ -1399,5 +1404,6 @@ export async function discardPersistedPendingSteerInputs(
     });
   }
 
-  return pendingInputs.length;
+  for(const input of recovered)await this.enqueueDeferredInput(input);
+  return recovered.length;
 }
