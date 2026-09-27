@@ -200,7 +200,7 @@ export class AiSdkModelExecution {
     readonly providerConfig: RegistryProviderConfig;
     readonly supportsJsonSchemaOutput: boolean;
   }): AiSdkModelSnapshot {
-    const configuredProvider = toAiSdkProviderConfig(input.providerId, input.providerConfig);
+    const configuredProvider = toAiSdkProviderConfig(input.providerId, input.providerConfig, input.modelId);
     // 重构后模型 SDK 曾只接到用户 Header，漏掉版本和站点归因；在公共绑定边界恢复，
     // 不依赖签名成功，不给各业务重复补头，也不修改 Provider 或已绑定 Model 的配置。
     configuredProvider.headers = mergeModelRequestHeaders(
@@ -352,17 +352,19 @@ interface AiSdkModelSnapshot {
 function toAiSdkProviderConfig(
   providerId: string,
   config: RegistryProviderConfig,
+  modelId: string,
 ): AiSdkProviderConfig {
+  const apiType = config.api.resolveModelApiType(modelId);
   const common = {
     ...(config.access.type !== "zhipu-account" && config.access.apiKey
       ? { apiKey: config.access.apiKey }
       : {}),
     baseURL: config.api.baseUrl,
     ...(config.api.headers ? { headers: { ...config.api.headers } } : {}),
-    providerOptions: { apiFormat: config.api.type },
+    providerOptions: { apiFormat: apiType },
     access: config.access,
   };
-  switch (config.api.type) {
+  switch (apiType) {
     case "anthropic-messages":
       return { kind: "anthropic", ...common };
     case "openai-responses":

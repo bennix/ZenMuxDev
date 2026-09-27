@@ -26,6 +26,7 @@ import {
 } from "./ProviderCardSections.js";
 import { resolveModelProviderDisplayName } from "./constants.js";
 import { useProviderDetailFeedback } from "./ProviderDetailFeedback.js";
+import { ProviderModelApiFormats } from "./ProviderModelApiFormats.js";
 import { useIdleTrigger } from "./useIdleTrigger.js";
 import { useOptimisticReorder } from "./useOptimisticReorder.js";
 
@@ -188,6 +189,9 @@ export function InlineEditableProviderCard({
   const [apiFormat, setApiFormat] = useState<ProviderApiType>(
     provider.config.api?.type ?? "anthropic-messages",
   );
+  const [modelApiTypesValue, setModelApiTypesValue] = useState<string | undefined>(
+    JSON.stringify(provider.config.api?.modelApiTypes ?? {}),
+  );
   const [baseUrlValue, setBaseUrlValue] = useState(provider.config.api?.baseUrl ?? "");
   const [apiKeyValue, setApiKeyValue] = useState(getProviderFormApiKey(provider));
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
@@ -228,6 +232,7 @@ export function InlineEditableProviderCard({
     showFeedback,
   };
   const draftRef = useRef<ProviderDraftValues>({
+    modelApiTypesValue: JSON.stringify(provider.config.api?.modelApiTypes ?? {}),
     nameValue: getProviderFormLabel(provider),
     apiFormat: provider.config.api?.type ?? "anthropic-messages",
     baseUrlValue: provider.config.api?.baseUrl ?? "",
@@ -260,6 +265,11 @@ export function InlineEditableProviderCard({
     };
     syncField("nameValue", resolvedLabel, setNameValue);
     syncField("apiFormat", resolvedApiFormat, setApiFormat);
+    syncField(
+      "modelApiTypesValue",
+      JSON.stringify(provider.config.api?.modelApiTypes ?? {}),
+      setModelApiTypesValue,
+    );
     syncField("baseUrlValue", resolvedBaseUrl, setBaseUrlValue);
     syncField("apiKeyValue", resolvedApiKey, setApiKeyValue);
   }, [provider]);
@@ -584,6 +594,13 @@ export function InlineEditableProviderCard({
     [commitPendingDraft, markDraftDirty],
   );
 
+  const handleModelApiTypesChange = (value: string) => {
+    markDraftDirty("modelApiTypesValue");
+    draftRef.current.modelApiTypesValue = value;
+    setModelApiTypesValue(value);
+    void commitPendingDraft("model-api-format-change").catch(() => undefined);
+  };
+
   const handleApiKeyBlur = useCallback(() => {
     void commitPendingDraft("api-key-blur").catch(() => undefined);
   }, [commitPendingDraft]);
@@ -823,6 +840,14 @@ export function InlineEditableProviderCard({
             onBaseUrlCompositionEnd={handleTechnicalInputCompositionEnd}
           />
         )}
+
+        {!isAccountProvider && !readOnlyEndpoints ? (
+          <ProviderModelApiFormats
+            models={provider.models}
+            value={modelApiTypesValue ?? "{}"}
+            onChange={handleModelApiTypesChange}
+          />
+        ) : null}
 
         {isApiKeyProvider ? (
           <ProviderApiKeySection

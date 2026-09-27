@@ -2780,6 +2780,8 @@ const enUS: Record<string, string> = {
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
   "settings.modelProvider.readOnlyField": "{field} (read only)",
   "settings.modelProvider.endpointPath": "Endpoint path: {format}",
+  "settings.modelProvider.modelApiFormat": "Model API format (use Responses for Grok file inputs)",
+  "settings.modelProvider.modelApiFormat.inherit": "Use provider API format",
   "settings.modelProvider.apiFormat": "API format",
   "settings.modelProvider.apiFormat.chatCompletions": "Chat completions (/v1/chat/completions)",
   "settings.modelProvider.apiFormat.responses": "Responses (/responses)",

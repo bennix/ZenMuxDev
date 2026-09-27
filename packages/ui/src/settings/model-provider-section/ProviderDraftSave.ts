@@ -7,6 +7,7 @@ import {
 export interface ProviderDraftValues {
   nameValue: string;
   apiFormat: ProviderApiType;
+  modelApiTypesValue?: string;
   baseUrlValue: string;
   apiKeyValue: string;
 }
@@ -49,20 +50,35 @@ export function resolvePendingProviderDraftSave({
   const labelChanged = nameConfirmed && label !== getProviderFormLabel(provider);
   const typeChanged =
     !readOnlyEndpoints && draft.apiFormat !== (provider.config.api?.type ?? "anthropic-messages");
+  const modelTypesChanged =
+    !readOnlyEndpoints &&
+    draft.modelApiTypesValue !== undefined &&
+    draft.modelApiTypesValue !== JSON.stringify(provider.config.api?.modelApiTypes ?? {});
   const urlChanged = !readOnlyEndpoints && baseURL !== (provider.config.api?.baseUrl ?? "");
   const keyChanged =
     isApiKeyAccess(provider.config.access) &&
     draft.apiKeyValue !== (provider.config.access.apiKey ?? "");
-  if (!labelChanged && !typeChanged && !urlChanged && !keyChanged) return null;
+  if (!labelChanged && !typeChanged && !urlChanged && !keyChanged && !modelTypesChanged)
+    return null;
 
   // 表单只拥有名称、连接类型、地址和 Key；重建整个 api 会删除隐藏 headers，
   // 保存 Effective 对象又会把继承字段物化。分别在各自基线上只应用修改过的叶子。
   const apiChanges = {
+    ...(modelTypesChanged
+      ? {
+          modelApiTypes: JSON.parse(draft.modelApiTypesValue!) as Record<
+            string,
+            ProviderApiType | null
+          >,
+        }
+      : {}),
     ...(typeChanged || (urlChanged && !provider.config.api?.type) ? { type: draft.apiFormat } : {}),
     ...(urlChanged ? { baseUrl: baseURL || undefined } : {}),
   };
   const api =
-    typeChanged || urlChanged ? { ...provider.config.api, ...apiChanges } : provider.config.api;
+    typeChanged || urlChanged || modelTypesChanged
+      ? { ...provider.config.api, ...apiChanges }
+      : provider.config.api;
   const access =
     keyChanged && isApiKeyAccess(provider.config.access)
       ? { ...provider.config.access, apiKey: draft.apiKeyValue }
@@ -84,7 +100,7 @@ export function resolvePendingProviderDraftSave({
           },
         }
       : {}),
-    ...(typeChanged || urlChanged
+    ...(typeChanged || urlChanged || modelTypesChanged
       ? { api: { ...provider.personalConfig.api, ...apiChanges } }
       : {}),
   };

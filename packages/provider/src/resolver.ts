@@ -60,6 +60,9 @@ export function serializeRegistryProviderConfig(
     api: {
       type: config.api.type,
       baseUrl: config.api.baseUrl,
+      ...(config.api.modelApiTypes === undefined
+        ? {}
+        : { modelApiTypes: config.api.modelApiTypes }),
       ...(config.api.headers == null ? {} : { headers: config.api.headers }),
     },
     ...(config.builtinModelIds == null ? {} : { builtinModelIds: [...config.builtinModelIds] }),
@@ -258,14 +261,14 @@ export class ProviderConfigResolver {
           providerId,
           templateId,
           modelId,
-          apiType: config.api?.type,
+          apiType: config.api?.resolveModelApiType(modelId),
           baseUrl: config.api?.baseUrl,
         });
         const effectiveBuiltinConfig = input.zcodeBuiltinModelRules.resolve({
           providerId,
           templateId,
           modelId,
-          apiType: config.api?.type,
+          apiType: config.api?.resolveModelApiType(modelId),
           baseUrl: config.api?.baseUrl,
         });
         const registryModelResult = createRegistryModelConfig(modelConfig, [

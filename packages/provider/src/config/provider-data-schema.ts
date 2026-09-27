@@ -66,6 +66,11 @@ export const completeProviderApiDataSchema = z
     type: providerApiTypeDataSchema,
     baseUrl: nonBlankRequiredString.pipe(z.string().url()),
     headers: z.record(z.string(), z.string()).readonly().nullable().optional(),
+    modelApiTypes: z
+      .record(z.string(), providerApiTypeDataSchema.nullable())
+      .readonly()
+      .nullable()
+      .optional(),
   })
   .strict();
 export const providerApiDataSchema = z

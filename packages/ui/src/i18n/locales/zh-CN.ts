@@ -2599,6 +2599,8 @@ const zhCN: Record<string, string> = {
   "settings.modelProvider.baseUrlPlaceholder": "https://api.example.com/v1",
   "settings.modelProvider.readOnlyField": "{field}（只读）",
   "settings.modelProvider.endpointPath": "接口路径：{format}",
+  "settings.modelProvider.modelApiFormat": "模型接口协议（Grok 文件输入请使用 Responses）",
+  "settings.modelProvider.modelApiFormat.inherit": "跟随供应商协议",
   "settings.modelProvider.apiFormat": "API 格式",
   "settings.modelProvider.apiFormat.chatCompletions": "Chat Completions (/v1/chat/completions)",
   "settings.modelProvider.apiFormat.responses": "Responses (/responses)",

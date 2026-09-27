@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 33,
+  "revision": 34,
   "config": {
     "providerConfigRules": {
       "templateRules": [
@@ -17,7 +17,8 @@
             },
             "api": {
               "type": "openai-chat-completions",
-              "baseUrl": "https://zenmux.ai/api/v1"
+              "baseUrl": "https://zenmux.ai/api/v1",
+              "modelApiTypes": { "x-ai/grok-4.7": "openai-responses" }
             },
             "builtinModelIds": [
               "openai/gpt-6-astra",

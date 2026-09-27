@@ -132,10 +132,14 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
   readonly type?: ProviderApiConfigInput["type"];
   readonly baseUrl?: ProviderApiConfigInput["baseUrl"];
   readonly headers?: ProviderApiConfigInput["headers"];
+  readonly modelApiTypes?: ProviderApiConfigInput["modelApiTypes"];
 
   constructor(input: ProviderApiConfigInput = {}) {
     super();
     this.type = input.type;
+    this.modelApiTypes = input.modelApiTypes
+      ? Object.freeze({ ...input.modelApiTypes })
+      : input.modelApiTypes;
     this.baseUrl = input.baseUrl;
     this.headers = input.headers ? Object.freeze({ ...input.headers }) : input.headers;
     Object.freeze(this);
@@ -146,7 +150,18 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
       type: this.overlayValue(this.type, next.type),
       baseUrl: this.overlayValue(this.baseUrl, next.baseUrl),
       headers: this.overlayValue(this.headers, next.headers),
+      modelApiTypes:
+        next.modelApiTypes === undefined
+          ? this.modelApiTypes
+          : next.modelApiTypes === null
+            ? null
+            : { ...this.modelApiTypes, ...next.modelApiTypes },
     });
+  }
+
+  resolveModelApiType(modelId: string): ProviderApiConfigInput["type"] {
+    // Grok 文件必须使用 Responses；每模型覆盖避免切换整个聚合供应商而影响其他模型。
+    return this.modelApiTypes?.[modelId] ?? this.type;
   }
 
   validateComplete(path: readonly string[] = []): readonly ConfigValidationIssue[] {
@@ -159,6 +174,7 @@ export class ProviderApiConfig extends ConfigOverlay<ProviderApiConfig> {
       type: this.type,
       baseUrl: this.baseUrl,
       headers: this.headers,
+      modelApiTypes: this.modelApiTypes,
     });
   }
 }
