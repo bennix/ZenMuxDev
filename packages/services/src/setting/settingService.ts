@@ -296,6 +296,16 @@ export function createSettingServiceWithMigrations(): {
       return readSettings();
     },
 
+    async initializeStudioMediaLibrary(library) {
+      await enqueueSettingsWrite(async (shouldCommit, enterCommitPhase) => {
+        const current = await readSettings();
+        // 修复：旧前端模型设置只迁移一次；队列内判断，不能覆盖另一窗口已保存的新默认值。
+        if (current.studioMediaLibrary) return;
+        const merged = appSettingsSchema.parse({...current, studioMediaLibrary:library});
+        await writeSettings(merged, shouldCommit, runSettingsCommit, enterCommitPhase);
+      });
+    },
+
     async update(patch: Partial<AppSettings>, expectedAccountSettings): Promise<void> {
       const runUpdate = async (shouldCommit: () => boolean, enterCommitPhase: () => void) => {
         const validatedPatch = appSettingsPatchSchema.parse(normalizeSettingsPatch(patch));

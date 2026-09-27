@@ -1,3 +1,5 @@
+import { generateWeixinImage, resolveWeixinImageRequest, recentWeixinPhotos } from "./weixinImageGeneration.js";
+import { DEFAULT_STUDIO_IMAGE_MODEL } from "@zcode/shared";
 import { isWeixinActorAllowed } from "./weixinAccess.js";
 /* eslint-disable max-lines -- Bots 服务仍复用原 RPC 文件名，先把鉴权、命令路由、ZCode Agent 桥接收口集中在同一服务内。 */
 import { Buffer } from "node:buffer";
@@ -5,7 +7,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { IDisposable } from "@zcode/rpc";
-import { completeNewModelSelection } from "@zcode/provider";
+import { completeNewModelSelection, isApiKeyAccess } from "@zcode/provider";
 import {
   ALL_BOT_WORKSPACES,
   generateTraceId,
@@ -4736,7 +4738,7 @@ export function createBotsService(
 
   function buildHelpText(
     locale: Locale | undefined,
-    bot: Pick<BotConfig, "allowedCommands">,
+    bot: Pick<BotConfig, "allowedCommands" | "provider">,
   ): string {
     const lines = [msg(locale, "helpTitle")];
     for (const command of BOT_MENU_COMMAND_ORDER) {
@@ -4749,6 +4751,7 @@ export function createBotsService(
       }
       lines.push(msg(locale, helpMessageByCommand[command]));
     }
+    if (bot.provider === "weixin") lines.push(msg(locale, "imageHelp"));
     return lines.join("\n");
   }
 
@@ -4842,6 +4845,108 @@ export function createBotsService(
           }),
         ),
       ];
+    }
+    if (message.actor.provider === "weixin") {
+      const incomingPhotos = preparedMessage.zcodeAttachments.filter(
+        (item) => item.kind === "image" && item.localPath,
+      );
+      if (incomingPhotos.length) {
+        auth.context = {
+          ...auth.context,
+          recentWeixinPhotos: {
+            userId: message.actor.providerUserId,
+            savedAt: Date.now(),
+            images: incomingPhotos
+              .slice(0, 4)
+              .map((item) => ({ localPath: item.localPath!, mimeType: item.mimeType })),
+          },
+        };
+        await writeContext(auth.context);
+      }
+      const recentPhotos = recentWeixinPhotos(auth.context, message.actor.providerUserId);
+      if (!message.text.trim() && incomingPhotos.length) {
+        return [createOutbound(message.actor, msg(auth.locale, "imagePhotoReceived"))];
+      }
+      const imageRequest = resolveWeixinImageRequest(message.text, recentPhotos.length > 0);
+      if (imageRequest?.kind === "help")
+        return [createOutbound(message.actor, msg(auth.locale, "imageHelp"))];
+      if (imageRequest?.kind === "generate") {
+        if (
+          (message.attachments ?? []).filter((item) => item.kind === "image").length >
+          incomingPhotos.length
+        )
+          return [createOutbound(message.actor, msg(auth.locale, "imageReferenceUnavailable"))];
+        if (auth.context.workspaceIdentity)
+          return [createOutbound(message.actor, msg(auth.locale, "imageRemoteUnavailable"))];
+        try {
+          const settings = await deps.settingService?.get();
+          const model = settings?.studioMediaLibrary?.defaultImageId || DEFAULT_STUDIO_IMAGE_MODEL;
+          const view = await readModelSelectionView(auth.context);
+          const provider = view?.providers.find((item) => {
+            try {
+              return (
+                new URL(item.config.api?.baseUrl ?? "").hostname === "zenmux.ai" &&
+                isApiKeyAccess(item.config.access)
+              );
+            } catch {
+              return false;
+            }
+          });
+          const access = provider?.config.access;
+          if (!access || !isApiKeyAccess(access) || !access.apiKey?.trim())
+            throw new Error("请先在系统设置中配置 ZenMux API Key");
+          await sendOutbound(
+            auth.bot,
+            createOutbound(message.actor, msg(auth.locale, "imageGenerating", { model })),
+          );
+          const useReferences =
+            incomingPhotos.length > 0 ||
+            /^\/image(?:\s|$)/iu.test(message.text.trim()) ||
+            /(?:这张|照片|改图|修改|编辑|重绘|背景|水彩|参考|把|将)/u.test(imageRequest.prompt);
+          const images = useReferences
+            ? await Promise.all(
+                recentPhotos.map(async (photo) => ({
+                  mimeType: photo.mimeType,
+                  data: (await readFile(photo.localPath)).toString("base64"),
+                })),
+              )
+            : [];
+          const image = await generateWeixinImage({
+            apiKey: access.apiKey.trim(),
+            model,
+            prompt: imageRequest.prompt,
+            images,
+          });
+          const adapter = providers.weixin;
+          if (!adapter?.sendImage) throw new Error("微信图片发送接口不可用");
+          await adapter.sendImage(auth.bot, createOutbound(message.actor, ""), image.data);
+          return [];
+        } catch (error) {
+          return [
+            createOutbound(
+              message.actor,
+              msg(auth.locale, "imageFailed", {
+                message: error instanceof Error ? error.message : String(error),
+              }),
+            ),
+          ];
+        }
+      }
+      if (
+        !incomingPhotos.length &&
+        recentPhotos.length &&
+        /(?:照片|图片|这张|这幅|图中)/u.test(message.text)
+      ) {
+        for (const photo of recentPhotos) {
+          preparedMessage.zcodeAttachments.push({
+            kind: "image",
+            filename: "reference-photo",
+            mimeType: photo.mimeType,
+            localPath: photo.localPath,
+            dataBase64: (await readFile(photo.localPath)).toString("base64"),
+          });
+        }
+      }
     }
     if (auth.context.mode === "draft" || !auth.context.activeTaskId) {
       const draftOptions =

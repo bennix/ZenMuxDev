@@ -1,11 +1,10 @@
+import { useStudioMediaLibrary } from "@/hooks/useStudioMediaLibrary.js";
 import { useStudioRepairModelStore } from "@/store/studioRepairModelStore.js";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { IMAGE_CATALOG, VIDEO_CATALOG } from "./studioMediaCatalog.js";
 import {
-  readStudioMediaLibrary,
-  saveStudioMediaLibrary,
   type StudioMediaLibrary,
 } from "./studioMediaStore.js";
 
@@ -13,10 +12,16 @@ export function StudioMediaSettings() {
   const { intl } = useZCodeIntl();
   const repairModel = useStudioRepairModelStore((state) => state.modelId);
   const setRepairModel = useStudioRepairModelStore((state) => state.setModelId);
-  const [library, setLibrary] = useState(readStudioMediaLibrary);
-  const update = (next: StudioMediaLibrary) => setLibrary(saveStudioMediaLibrary(next));
+  const { library, save, loading, error } = useStudioMediaLibrary();
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const update = (next: StudioMediaLibrary) => {
+    setSaving(true);
+    void save(next).then(() => setSaveError(""), error => setSaveError(String(error))).finally(() => setSaving(false));
+  };
   return (
-    <div className="mt-4 space-y-4">
+    <fieldset disabled={loading || saving} className="mt-4 space-y-4">
+      {Boolean(saveError || error) && <p role="alert" className="text-ui-caption text-destructive">{saveError || String(error)}</p>}
       <section className="rounded-xl border border-border bg-card p-4">
         <label htmlFor="studio-repair-model" className="mb-3 block text-ui-base font-medium">
           {intl.formatMessage({ id: "settings.studioMedia.repairModel" })}
@@ -49,7 +54,7 @@ export function StudioMediaSettings() {
         defaultId={library.defaultVideoId}
         onChange={(videoIds, defaultVideoId) => update({ ...library, videoIds, defaultVideoId })}
       />
-    </div>
+    </fieldset>
   );
 }
 

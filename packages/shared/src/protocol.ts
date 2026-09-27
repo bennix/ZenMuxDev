@@ -234,7 +234,12 @@ export interface ResourceUsageSnapshot {
   processes: ResourceUsageProcess[];
 }
 
+export interface StudioMediaLibrarySettings {
+  imageIds: string[]; videoIds: string[]; defaultImageId: string; defaultVideoId: string;
+}
+
 export interface AppSettings {
+  studioMediaLibrary?: StudioMediaLibrarySettings;
   /** 当前 App/Host 不再显示提交前体验套餐推荐；不改变任何入口的模型选择。 */
   startPlanRecommendationDismissed?: boolean;
   recentProjects: string[]; // 最近项目列表，最多保留 10 个

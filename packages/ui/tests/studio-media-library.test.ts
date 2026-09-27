@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { saveStudioMediaLibrary } from "../src/v4/composer/studio/studioMediaStore.js";
+import { normalizeStudioMediaLibrary } from "../src/v4/composer/studio/studioMediaStore.js";
 
 test("blank model lists recover valid built-in defaults", () => {
   for (const ids of [[], [" ", ""]]) {
-    const result = saveStudioMediaLibrary({
+    const result = normalizeStudioMediaLibrary({
       imageIds: ids,
       videoIds: ids,
       defaultImageId: "",
@@ -17,7 +17,7 @@ test("blank model lists recover valid built-in defaults", () => {
   }
 });
 test("custom model selection survives list normalization", () => {
-  const result = saveStudioMediaLibrary({
+  const result = normalizeStudioMediaLibrary({
     imageIds: ["custom/image", "custom/image", " "],
     videoIds: ["custom/video"],
     defaultImageId: "custom/image",

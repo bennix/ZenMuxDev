@@ -4,6 +4,7 @@ import { createServiceDescriptor } from "../descriptors.js";
 
 export interface ISettingService {
   get(): Promise<AppSettings>;
+  initializeStudioMediaLibrary(library: NonNullable<AppSettings["studioMediaLibrary"]>): Promise<void>;
   update(
     patch: Partial<AppSettings>,
     expectedAccountSettings?: Pick<

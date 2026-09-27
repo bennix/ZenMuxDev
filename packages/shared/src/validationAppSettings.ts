@@ -417,7 +417,14 @@ function migrateLegacyWorkspaceSession(value: unknown): unknown {
   return migrated;
 }
 
+const studioMediaLibrarySchema = z.object({
+  imageIds:z.array(z.string().trim().min(1)).min(1).max(200),
+  videoIds:z.array(z.string().trim().min(1)).min(1).max(200),
+  defaultImageId:z.string().trim().min(1),defaultVideoId:z.string().trim().min(1),
+}).refine(value=>value.imageIds.includes(value.defaultImageId) && value.videoIds.includes(value.defaultVideoId), "Default model must be in model list");
+
 const appSettingsObjectSchema = z.object({
+  studioMediaLibrary: studioMediaLibrarySchema.optional(),
   recentProjects: z.array(z.string()).default([]),
   locale: localeSchema.default("zh-CN"),
   // 快捷键用户覆盖（语义校验在 ui/src/shortcuts 生效表阶段容错，schema 只管形状）
@@ -491,6 +498,7 @@ export const appSettingsSchema = z.preprocess(
 );
 
 export const appSettingsPatchSchema = z.object({
+  studioMediaLibrary: studioMediaLibrarySchema.optional(),
   recentProjects: z.array(z.string()).optional(),
   locale: localeSchema.optional(),
   shortcutBindings: z.record(z.string(), z.array(z.string())).optional(),

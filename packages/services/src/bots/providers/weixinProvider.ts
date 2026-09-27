@@ -1,3 +1,4 @@
+import { uploadWeixinImage } from "./weixinMediaUpload.js";
 import { downloadWeixinCiphertext } from "./weixinMediaDownload.js";
 import {
   WEIXIN_BASE_INFO,
@@ -745,6 +746,13 @@ export function createWeixinBotProvider(deps: WeixinProviderDeps): BotProviderAd
         },
       });
       }
+    },
+
+    async sendImage(bot, message, image) {
+      if (!message.providerContextToken) throw new Error("Weixin reply requires context_token");
+      const item = await uploadWeixinImage(image, message.providerUserId, (path, body) => requestWeixinJson(bot, deps, path, body));
+      await requestWeixinJson(bot, deps, "/sendmessage", {msg:{from_user_id:"",to_user_id:message.providerUserId,
+        client_id:buildWeixinClientId(),message_type:2,message_state:2,context_token:message.providerContextToken,item_list:[item]}});
     },
 
     sendTyping: (bot, target) => setTyping(bot, target, 1),

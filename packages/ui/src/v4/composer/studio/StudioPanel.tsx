@@ -1,3 +1,4 @@
+import { useStudioMediaLibrary } from "@/hooks/useStudioMediaLibrary.js";
 import { resolveStudioRepairModel } from "@/store/studioRepairModelStore.js";
 import { retainedLayoutWarning } from "./studioSlideLayout.js";
 /* oxlint-disable eslint(max-lines) -- 创作面板同时放讨论、手绘、结果和 PPT。 */
@@ -19,8 +20,8 @@ import {
   generateStudioImage,
   generateStudioVideo,
 } from "./mediaClient.js";
-import { readStudioImageModel, studioImageModelById } from "./studioImageModels.js";
-import { readStudioVideoModel, videoCatalogEntry } from "./studioMediaStore.js";
+import { studioImageModelById } from "./studioImageModels.js";
+import { videoCatalogEntry } from "./studioMediaStore.js";
 import {
   buildEditableDeckPptx,
   describeElements,
@@ -56,7 +57,12 @@ const COUNCIL = [
 function readApiKey(view: ModelSelectionView | null): string {
   for (const provider of view?.providers ?? []) {
     const access = provider.config.access;
-    if (isApiKeyAccess(access) && access.apiKey?.trim()) return access.apiKey.trim();
+    // 修复：生图固定调用 ZenMux，不能误用列表中其他供应商的密钥。
+    const baseUrl = provider.config.api?.baseUrl;
+    if (!baseUrl) continue;
+    try {
+      if (new URL(baseUrl).hostname === "zenmux.ai" && isApiKeyAccess(access) && access.apiKey?.trim()) return access.apiKey.trim();
+    } catch { continue; }
   }
   return "";
 }
@@ -312,7 +318,8 @@ export function StudioPanel({
 }) {
   const { intl } = useZCodeIntl();
   const platform = usePlatform();
-  const apiKey = readApiKey(modelSelectionView);
+  const { library: mediaLibrary, loading: mediaLoading, error: mediaSettingsError } = useStudioMediaLibrary();
+  const apiKey = mediaLoading || mediaSettingsError ? "" : readApiKey(modelSelectionView);
   const sketchRef = useRef<SketchPadHandle>(null);
   const [mode, setMode] = useState<StudioMode>("image");
   const [pptMode, setPptMode] = useState<PptMode>("guided");
@@ -495,6 +502,7 @@ export function StudioPanel({
         const image = images[0] ? await blobToInline(images[0]) : null;
         setVideoUrl(
           await generateStudioVideo(apiKey, instruction, image, controller.signal, {
+            model: mediaLibrary.defaultVideoId,
             ratio: activeVideoRatio,
             seconds: activeVideoSeconds,
           }),
@@ -503,7 +511,7 @@ export function StudioPanel({
         const next = await generateStudioImage(
           apiKey,
           instruction,
-          readStudioImageModel(),
+          mediaLibrary.defaultImageId,
           images,
           activeImageRatio,
         );
@@ -586,7 +594,7 @@ export function StudioPanel({
           collected.marked
             ? `${illustrated}\n${strokeInstruction(keepStrokeColor, references.length === 0)}`
             : illustrated,
-          readStudioImageModel(),
+          mediaLibrary.defaultImageId,
           collected.images,
           activeImageRatio,
         );
@@ -699,7 +707,7 @@ export function StudioPanel({
         spoken,
         "按手绘标记修改画面。除非用户明确要求手绘，否则输出自然照片。",
       );
-      const next = await editStudioImage(apiKey, sketch, `${optimized}\n${rule}`, activeImageRatio);
+      const next = await editStudioImage(apiKey, sketch, `${optimized}\n${rule}`, activeImageRatio, mediaLibrary.defaultImageId);
       setDeckPages((current) => current.map((page) => page.split(previous).join(next)));
       setImageUrl(next);
       setOutputUrl(next);
@@ -907,7 +915,7 @@ export function StudioPanel({
         const picture = await generateStudioImage(
           apiKey,
           finalPrompt(spoken, note),
-          readStudioImageModel(),
+          mediaLibrary.defaultImageId,
           await Promise.all(elementImages.map((item) => blobFromUrl(item.url))),
           activeImageRatio,
         );
@@ -1034,7 +1042,7 @@ export function StudioPanel({
     return { images, marked: Boolean(marked) };
   };
 
-  const imageChoices = studioImageModelById(readStudioImageModel()).ratios;
+  const imageChoices = studioImageModelById(mediaLibrary.defaultImageId).ratios;
   const modelIds = chatModelIds(modelSelectionView);
   const intentId = listedModel(modelSelectionView, intentModelId, INTENT_MODEL_KEY);
   const writerId = listedModel(modelSelectionView, pptModelId, PPT_MODEL_KEY);
@@ -1044,7 +1052,7 @@ export function StudioPanel({
     return labelId ? intl.formatMessage({ id: labelId }) : effort;
   };
   const shownFinal = finalLine(speeches[speeches.length - 1]?.text ?? "");
-  const videoSpec = videoCatalogEntry(readStudioVideoModel());
+  const videoSpec = videoCatalogEntry(mediaLibrary.defaultVideoId);
   const activeImageRatio = imageChoices.includes(imageRatio) ? imageRatio : imageChoices[0];
   const activeVideoRatio = videoSpec.ratios.includes(videoRatio) ? videoRatio : videoSpec.ratios[0];
   const activeVideoSeconds = videoSpec.durations.includes(videoSeconds)
@@ -1104,7 +1112,7 @@ export function StudioPanel({
           effortLabel={effortLabel}
         />
         <span className="text-muted-foreground">
-          {mode === "video" ? videoSpec.name : studioImageModelById(readStudioImageModel()).name}
+          {mode === "video" ? videoSpec.name : studioImageModelById(mediaLibrary.defaultImageId).name}
         </span>
         {mode === "video" ? (
           <>

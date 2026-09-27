@@ -8,6 +8,13 @@ const DEFAULT_BOT_MESSAGE_LOCALE: BotMessageLocale = "zh-CN";
 
 const messages = {
   "zh-CN": {
+    imagePhotoReceived: "照片已收到。发送“把这张照片改成水彩画”或 /image 加修改要求，即可使用系统默认生图模型处理并返回图片；也可以直接提问分析照片。",
+    imageHelp: "支持。使用系统设置中的默认生图模型，可发送 /image 一只在窗边晒太阳的猫；改图请先发照片，再发送 /image 加修改要求，结果会作为图片发回。",
+    imageReferenceUnavailable: "参考照片未能完整下载，请重新发送照片后再尝试改图。",
+    imageRemoteUnavailable: "远程工作区暂未接入微信生图，请切换到本地工作区后重试。",
+    imageGenerating: "正在使用系统默认生图模型 {model} 处理，完成后会发送图片。",
+    imageFailed: "生图或图片回传失败：{message}。可发送 /image 加要求重试。",
+
     botDisabled: "当前 bot 未启用。",
     privateChatOnly: "Bots 暂不支持群聊，请在私聊中使用。",
     bindPrivateOnly: "Bots 只允许在私聊中绑定。",
@@ -124,6 +131,13 @@ const messages = {
     replyChanged: "第三方回复颗粒度已切换为 {mode}。",
   },
   "en-US": {
+    imagePhotoReceived: "Photo received. Send /image followed by your editing instructions to use the system default image model and receive an image. You can also ask a question about the photo.",
+    imageHelp: "Yes. I use the system default image model. Send /image followed by a prompt; to edit a photo, send it first and then /image with your instructions. The result is returned as an image.",
+    imageReferenceUnavailable: "Could not download all reference photos. Please resend them before editing.",
+    imageRemoteUnavailable: "Weixin image generation is currently available in local workspaces. Switch to a local workspace and retry.",
+    imageGenerating: "Generating with the system default image model {model}. The result will be sent as an image.",
+    imageFailed: "Image generation or delivery failed: {message}. Send /image with your instructions to retry.",
+
     botDisabled: "This bot is not enabled.",
     privateChatOnly: "Bots do not support group chats yet. Please use a private chat.",
     bindPrivateOnly: "Bots can only bind in a private chat.",

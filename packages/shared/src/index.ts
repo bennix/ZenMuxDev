@@ -308,3 +308,6 @@ export * from "./clientConfig.js";
 export * from "./pluginStoreOrdering.js";
 export * from "./session-debug.js";
 export { redactFeedbackText } from "./feedbackPrivacy.js";
+
+export * from "./studio-media-catalog.js";
+export * from "./studio-image.js";

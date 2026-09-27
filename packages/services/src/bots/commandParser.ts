@@ -24,6 +24,8 @@ export function parseBotCommand(text: string): BotCommand {
 
   const { name, rest } = parsed;
   switch (name) {
+    case "image":
+      return {type:"message", text};
     case "bind":
       return rest ? { type: "bind", code: rest } : { type: "unknown", name, raw: text };
     case "help":

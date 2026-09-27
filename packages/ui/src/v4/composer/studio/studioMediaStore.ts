@@ -1,4 +1,5 @@
-/** 生图和视频模型名单、缺省模型存在本机。比例和时长在生成时选择。 */
+import { DEFAULT_STUDIO_IMAGE_MODEL as DEFAULT_IMAGE_ID } from "@zcode/shared";
+/** 旧版 localStorage 的一次性迁移与目录查询；当前模型设置由 Host Settings 服务持久化。 */
 
 import {
   CUSTOM_IMAGE_RATIOS,
@@ -12,7 +13,7 @@ import {
 
 const STORAGE_KEY = "zencode.studio.media.v1";
 const LEGACY_IMAGE_KEY = "zencode.studio.imageModel";
-const DEFAULT_IMAGE_ID = "openai/gpt-image-2";
+
 const DEFAULT_VIDEO_ID = "google/veo-3.1-fast-generate-001";
 
 const LEGACY_IMAGE_MODELS: Record<string, string> = {
@@ -51,7 +52,7 @@ export function videoCatalogEntry(id: string): VideoCatalogEntry {
   );
 }
 
-function sanitize(raw: Partial<StudioMediaLibrary> | null): StudioMediaLibrary {
+export function normalizeStudioMediaLibrary(raw: Partial<StudioMediaLibrary> | null): StudioMediaLibrary {
   let imageIds = unique(raw?.imageIds ?? []);
   let videoIds = unique(raw?.videoIds ?? []);
   // 修复：空白 ID 清理后也可能为空；恢复目录才能保证默认模型属于可用列表。
@@ -91,26 +92,15 @@ export function readStudioMediaLibrary(): StudioMediaLibrary {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     const parsed = stored ? (JSON.parse(stored) as Partial<StudioMediaLibrary>) : null;
-    const library = sanitize(parsed);
+    const library = normalizeStudioMediaLibrary(parsed);
     if (!stored) {
       const legacy = LEGACY_IMAGE_MODELS[localStorage.getItem(LEGACY_IMAGE_KEY) ?? ""] ?? localStorage.getItem(LEGACY_IMAGE_KEY);
       if (legacy && library.imageIds.includes(legacy)) library.defaultImageId = legacy;
     }
     return library;
   } catch {
-    return sanitize(null);
+    return normalizeStudioMediaLibrary(null);
   }
-}
-
-function writeStudioMediaLibrary(library: StudioMediaLibrary): StudioMediaLibrary {
-  const next = sanitize(library);
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    localStorage.setItem(LEGACY_IMAGE_KEY, next.defaultImageId);
-  } catch {
-    return next;
-  }
-  return next;
 }
 
 export function readStudioImageModel(): string {
@@ -119,8 +109,4 @@ export function readStudioImageModel(): string {
 
 export function readStudioVideoModel(): string {
   return readStudioMediaLibrary().defaultVideoId;
-}
-
-export function saveStudioMediaLibrary(library: StudioMediaLibrary): StudioMediaLibrary {
-  return writeStudioMediaLibrary(library);
 }

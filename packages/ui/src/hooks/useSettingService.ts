@@ -1,3 +1,4 @@
+import { readStudioMediaLibrary } from "@/v4/composer/studio/studioMediaStore.js";
 /**
  * useSettingService —— 设置服务 hooks
  */
@@ -81,7 +82,11 @@ async function refreshSettingsStore(settingService: ISettingService | undefined)
 
   store.inflightRefresh = (async () => {
     try {
-      const result = await settingService.get();
+      let result = await settingService.get();
+      if (!result.studioMediaLibrary) {
+        await settingService.initializeStudioMediaLibrary(readStudioMediaLibrary());
+        result = await settingService.get();
+      }
       store.snapshot = {
         settings: result,
         loading: false,

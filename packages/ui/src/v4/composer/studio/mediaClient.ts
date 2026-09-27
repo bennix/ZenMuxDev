@@ -1,40 +1,9 @@
 /** 创作面板调用的 ZenMux 生图、改图和生视频。密钥只放在请求头里。 */
 
-import { ZENMUX_APPLICATION_HEADERS } from "@zcode/shared";
-import { imageCatalogEntry, readStudioImageModel, readStudioVideoModel, videoCatalogEntry } from "./studioMediaStore.js";
+import { ZENMUX_APPLICATION_HEADERS, buildStudioImageRequest, extractStudioImage } from "@zcode/shared";
+import { readStudioImageModel, readStudioVideoModel, videoCatalogEntry } from "./studioMediaStore.js";
 
 const VERTEX_URL = "https://zenmux.ai/api/vertex-ai/v1";
-
-function vertexModelUrl(model: string): string {
-  const slash = model.indexOf("/");
-  const provider = slash > 0 ? model.slice(0, slash) : "google";
-  const name = slash > 0 ? model.slice(slash + 1) : model;
-  return `${VERTEX_URL}/publishers/${provider}/models/${name}`;
-}
-
-function imageFromTree(node: unknown, seen = new Set<unknown>()): string | null {
-  if (!node || typeof node !== "object" || seen.has(node)) return null;
-  seen.add(node);
-  const record = node as Record<string, unknown>;
-  const inline = record.inlineData ?? record.inline_data;
-  if (inline && typeof inline === "object") {
-    const data = (inline as { data?: string; mimeType?: string }).data;
-    if (typeof data === "string" && data) {
-      const mime = (inline as { mimeType?: string }).mimeType || "image/png";
-      return `data:${mime};base64,${data}`;
-    }
-  }
-  const b64 = record.bytesBase64Encoded ?? record.b64_json;
-  if (typeof b64 === "string" && b64 && !record.videoBytes) {
-    return `data:image/png;base64,${b64}`;
-  }
-  if (typeof record.url === "string" && /^https?:\/\//.test(record.url)) return record.url;
-  for (const value of Object.values(record)) {
-    const found = imageFromTree(value, seen);
-    if (found) return found;
-  }
-  return null;
-}
 
 async function blobBase64(blob: Blob): Promise<string> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -70,62 +39,12 @@ async function generateVertexImage(
   images: readonly Blob[],
   ratio: string | undefined,
 ): Promise<string> {
-  const selected = imageCatalogEntry(model);
-  const chosen = listedChoice(selected.ratios, ratio);
-  const protocol = selected.protocol;
-  const headers = { ...ZENMUX_APPLICATION_HEADERS, Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
-  const encoded = await Promise.all(
-    images.map(async (image) => ({
-      mimeType: image.type || "image/png",
-      data: await blobBase64(image),
-    })),
-  );
-  const references = encoded.map((image, index) => ({
-    referenceId: index + 1,
-    referenceImage: { bytesBase64Encoded: image.data, mimeType: image.mimeType },
-  }));
-  const response =
-    protocol === "gemini"
-      ? await fetch(`${vertexModelUrl(model)}:generateContent`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  { text: prompt },
-                  ...encoded.map((image) => ({
-                    inlineData: { mimeType: image.mimeType, data: image.data },
-                  })),
-                ],
-              },
-            ],
-            generationConfig: {
-              responseModalities: ["TEXT", "IMAGE"],
-              ...(chosen.includes(":") ? { imageConfig: { aspectRatio: chosen } } : {}),
-            },
-          }),
-        })
-      : await fetch(`${vertexModelUrl(model)}:predict`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            instances: [
-              {
-                prompt,
-                ...(references.length > 0 ? { referenceImages: references } : {}),
-              },
-            ],
-            parameters:
-              selected.ratioKind === "size"
-                ? { sampleCount: 1, imageSize: chosen }
-                : { sampleCount: 1, aspectRatio: chosen },
-          }),
-        });
+  const encoded = await Promise.all(images.map(async image => ({mimeType:image.type || "image/png", data:await blobBase64(image)})));
+  const request = buildStudioImageRequest(model, prompt, encoded, ratio);
+  const response = await fetch(request.url, { method:"POST", headers:{...ZENMUX_APPLICATION_HEADERS, Authorization:`Bearer ${apiKey}`, "Content-Type":"application/json"}, body:JSON.stringify(request.body) });
   const payload = await response.text();
   if (!response.ok) throw new Error(imageError(response.status, payload));
-  const url = imageFromTree(JSON.parse(payload) as unknown);
+  const url = extractStudioImage(JSON.parse(payload) as unknown);
   if (!url) throw new Error("生图没有返回图片");
   return url;
 }
@@ -137,11 +56,8 @@ export async function generateStudioImage(
   image: Blob | readonly Blob[] | null = null,
   ratio?: string,
 ): Promise<string> {
-  const selected = imageCatalogEntry(model);
   const images = image == null ? [] : Array.isArray(image) ? image : [image];
-  if (images.length > 0 && selected.reference === "none") throw new Error("这个生图模型只接受文字，不能带参考图");
-  if (images.length === 0 && selected.reference === "required") throw new Error("这个生图模型需要一张参考图");
-  return generateVertexImage(apiKey, selected.id, prompt, images, ratio);
+  return generateVertexImage(apiKey, model, prompt, images, ratio);
 }
 
 export function editStudioImage(
@@ -149,8 +65,9 @@ export function editStudioImage(
   image: Blob,
   prompt: string,
   ratio?: string,
+  model = readStudioImageModel(),
 ): Promise<string> {
-  return generateStudioImage(apiKey, prompt, readStudioImageModel(), image, ratio);
+  return generateStudioImage(apiKey, prompt, model, image, ratio);
 }
 
 function videoModelPath(model: string): string {
@@ -185,9 +102,9 @@ export async function generateStudioVideo(
   prompt: string,
   image: { base64: string; mimeType: string } | null,
   signal: AbortSignal,
-  options?: { ratio?: string; seconds?: number },
+  options?: { ratio?: string; seconds?: number; model?: string },
 ): Promise<string> {
-  const model = readStudioVideoModel();
+  const model = options?.model ?? readStudioVideoModel();
   const spec = videoCatalogEntry(model);
   const ratio = listedChoice(spec.ratios, options?.ratio);
   const seconds = spec.durations.includes(options?.seconds ?? -1)
