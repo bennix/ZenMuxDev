@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ZenCode 3.14.11 — 桌面编程与创作</title>
-    <meta name="description" content="ZenCode 是基于 ZCode 的桌面端。模型走 ZenMux。3.14.11 增加生图、生视频和可编辑幻灯片。" />
+    <meta name="description" content="ZenCode 是基于 ZCode 的桌面端。模型走 ZenMux。3.14.11 支持生图、生视频、可编辑幻灯片，以及微信出图、PDF 和图表。" />
     <style>
       :root {
         color-scheme: light;
@@ -155,6 +155,7 @@
         </a>
         <nav>
           <a href="#new">这一版</a>
+          <a href="#weixin">微信</a>
           <a href="#work">工作方式</a>
           <a href="#download">下载</a>
           <a href="https://github.com/bennix/ZenMuxDev">源码</a>
@@ -168,15 +169,15 @@
         <h1>把编程、画面和幻灯片放在同一张桌上。</h1>
         <p class="lede">
           ZenCode 是桌面端工作台。代码、文件和对话留在本机；模型请求走 ZenMux。
-          这一版在对话框里加上创作：生图、生视频，以及可以交给其他软件继续改的幻灯片。
+          这一版可以在对话框里生图、生视频、写可编辑幻灯片，也可以在微信里出图、回 PDF 和图表。
         </p>
         <div class="actions">
           <a class="primary" href="#download">下载 3.14.11</a>
           <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">查看源码</a>
         </div>
         <div class="stage">
-          <video controls playsinline preload="metadata" src="ZenCode-Promo-v2-28s.mp4">
-            <a href="ZenCode-Promo-v2-28s.mp4">观看介绍</a>
+          <video controls playsinline preload="metadata" src="ZenCode-Promo.mp4">
+            <a href="ZenCode-Promo.mp4">观看介绍</a>
           </video>
         </div>
       </div>
@@ -184,7 +185,7 @@
       <section id="new">
         <div class="wrap">
           <h2>这一版新做的</h2>
-          <p class="section-note">创作面板仍是生图、生视频和可编辑幻灯片。3.14.11 里微信能按对话判断要聊天、出图、做 PDF 还是图表，并把文件发回去；关于页可以检查 GitHub 上的新版本。</p>
+          <p class="section-note">创作仍在对话框里完成。生成之前可以先讨论，生成之后可以按元素修改，幻灯片保存成标准文件。</p>
           <div class="grid">
             <article>
               <span>01</span>
@@ -215,6 +216,55 @@
               <span>06</span>
               <h3>手绘、参考图和附件</h3>
               <p>图片和文档可以粘贴或拖放，以缩略图列出。手绘默认说明要画什么，结果是自然照片，除非明确要求线稿。已经有照片时，笔迹只改盖住的区域。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="weixin">
+        <div class="wrap">
+          <h2>微信、记忆和更新</h2>
+          <p class="section-note">这些能力和创作面板用同一套模型和本机网络，不另开一套任务。</p>
+          <div class="grid">
+            <article>
+              <span>07</span>
+              <h3>微信里出图和改图</h3>
+              <p>用系统默认生图模型，和创作面板是同一套目录。口语的生图请求也能识别。只有这次明确要求，或消息里带了照片，才会用最近的参考图。</p>
+            </article>
+            <article>
+              <span>08</span>
+              <h3>按对话回 PDF 和图表</h3>
+              <p>先判断是聊天、出图、PDF 还是图表。PDF 和图表走本机任务，写成真实文件后再发回微信。没有写出来的文件不会被说成已经完成。</p>
+            </article>
+            <article>
+              <span>09</span>
+              <h3>工作区文件发到微信</h3>
+              <p>可以把工作区里的文件发到最近绑定的微信会话。远程工作区在没有文件通道时不会悄悄在本机执行。</p>
+            </article>
+            <article>
+              <span>10</span>
+              <h3>未完成的任务可以接着做</h3>
+              <p>紧凑界面可以继续微信任务，也可以改已经排队的输入。一次看很多图时按每十张一批处理，中断后按检查点接着做。</p>
+            </article>
+            <article>
+              <span>11</span>
+              <h3>失败时说明停在哪一步</h3>
+              <p>生图和微信出图走本机已有的网络设置。失败会区分模型拒绝、图片下载和上传，而不是只显示请求失败。</p>
+            </article>
+            <article>
+              <span>12</span>
+              <h3>工作区记得说过的话</h3>
+              <p>记忆开启时，对话原文按工作区保存。本机 Ollama 的嵌入模型可用时，后续回合按内容检索。嵌入不可用时原文仍保留，普通对话继续。</p>
+            </article>
+            <article>
+              <span>13</span>
+              <h3>Office 文档分页预览</h3>
+              <p>Office 文档在应用里按页查看。微信里的 PDF 附件会保留，并在处理过程中给出状态。</p>
+            </article>
+            <article>
+              <span>14</span>
+              <h3>关于页检查新版本</h3>
+              <p>关于页对照 GitHub Release 看有没有更新。对话里安装技能后，设置会立刻刷新。</p>
             </article>
           </div>
         </div>
