@@ -25,6 +25,8 @@ import { offPeakTicketExpiredMessage, resolveOffPeakFailureDecision } from "./of
 import { isRetrySafePreludeStreamEvent } from "./stream-retry-boundary.js";
 import {
   createLinkedAbortController,
+  firstOutputWaitMs,
+  isEffectiveModelOutput,
   isModelStreamIdleTimeoutError,
   readNextWithStreamIdleTimeout,
   resolveModelStreamIdleTimeoutMs,
@@ -311,6 +313,7 @@ export async function* runStreamText(input: {
       result = streamResult;
       streamIterator = streamResult.fullStream[Symbol.asyncIterator]();
 
+      let receivedEffectiveOutput = false;
       while (true) {
         const next = await readNextWithStreamIdleTimeout(streamIterator, {
           abortController: attemptAbortController.controller,
@@ -332,12 +335,14 @@ export async function* runStreamText(input: {
               statusPublishOptions(input, admission),
             );
           },
-          timeoutMs: streamIdleTimeoutMs,
+          timeoutMs: firstOutputWaitMs(startedAt, Date.now(), streamIdleTimeoutMs, receivedEffectiveOutput),
         });
         if (next.done) {
           streamReachedNaturalEnd = true;
           break;
         }
+        // 修复 start-step 等空事件反复续期：仅有效内容解除两分钟首输出限制。
+        receivedEffectiveOutput ||= isEffectiveModelOutput(next.value);
         if (timeToFirstProviderEventMs === undefined) {
           timeToFirstProviderEventMs = Date.now() - startedAt;
           await publishModelTelemetryMilestone(

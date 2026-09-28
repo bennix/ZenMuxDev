@@ -142,6 +142,7 @@ type ZCodeSessionRecordParams = (
 ) & { taskType?: SessionTaskType };
 
 interface SessionStartupPreferences {
+  modelConnectionFallback?: { providerId: string; modelId: string; options?: { reasoningLevel?: string } };
   memoryEnabled: boolean;
   modelContextBudgetStrategy: ZCodeModelContextBudgetStrategy;
   nativeSearchEnhancementsEnabled: boolean;
@@ -3259,6 +3260,7 @@ async function resolveSessionStartupPreferences(
     runtimePreferences.askUserQuestionAutoResolutionEnabled,
   );
   return {
+    modelConnectionFallback: runtimePreferences.modelConnectionFallback,
     memoryEnabled: runtimePreferences.memoryEnabled,
     modelContextBudgetStrategy: DEFAULT_ZCODE_MODEL_CONTEXT_BUDGET_STRATEGY,
     nativeSearchEnhancementsEnabled: runtimePreferences.nativeSearchEnhancementsEnabled,
@@ -3350,6 +3352,7 @@ async function createRecord(
       // 不能只依赖 prompt 文本约束，否则内置工具和动态 MCP 工具仍可能越过调用面。
       toolAllowlist: "toolAllowlist" in params ? params.toolAllowlist : undefined,
       toolDisallowlist: "toolDenylist" in params ? params.toolDenylist : undefined,
+      modelConnectionFallback: startupPreferences.modelConnectionFallback,
       nativeSearchEnhancementsEnabled: startupPreferences.nativeSearchEnhancementsEnabled,
       modelContextBudgetStrategy: startupPreferences.modelContextBudgetStrategy,
       // Memory Settings 是现有 CLI features.memory/use 之外的总开关。只在关闭时

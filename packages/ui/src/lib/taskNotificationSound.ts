@@ -1,6 +1,7 @@
 import taskNotificationPopUrl from "@/assets/notification-sounds/task-notification-pop.mp3";
 import { isTaskNotificationSoundEnabled } from "@/lib/taskNotificationPreferences.js";
 
+let lastPlayedAt = 0;
 let taskNotificationAudio: HTMLAudioElement | null = null;
 
 function getTaskNotificationAudio(): HTMLAudioElement | null {
@@ -29,6 +30,8 @@ export async function playTaskNotificationSound(): Promise<void> {
     return;
   }
 
+  if (Date.now() - lastPlayedAt < 800) return;
+  lastPlayedAt = Date.now();
   try {
     // 同一个 Audio 实例在后台通知里反复复用时，若不先回到起点，
     // 新一轮通知经常会因为还停留在上次播放结束态而直接静默。

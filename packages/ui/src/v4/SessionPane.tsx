@@ -1,3 +1,4 @@
+import { useTaskActivitySound } from "@/hooks/useTaskActivitySound.js";
 import { resolveSelectionSideInheritedModel } from "@/lib/selectionSideInheritedModel.js";
 import { useStartPlanRecommendation } from "@/hooks/useStartPlanRecommendation.js";
 import type { SessionCreateSource } from "@zcode/shared";
@@ -598,6 +599,7 @@ export function SessionPane({
   const lease = currentScopedLease(leaseBinding, layer, sessionId);
   const state = useConversationProjection(lease);
   const snapshot = state.snapshot;
+  useTaskActivitySound(snapshot, workspaceIdentity?.trim() || workspacePath);
   const newlyCreatedSessionIdRef = useRef<string | null>(null);
   const shareDraft = useConversationShareSelectionStore((storeState) =>
     sessionId ? storeState.drafts[sessionId] : undefined,
@@ -2172,6 +2174,7 @@ export function SessionPane({
       workspaceRemoteSessionId: remoteSessionId ?? undefined,
       modelSelectionView,
       logEpoch: snapshot?.logEpoch,
+      liveControl: snapshot?.control,
       theme,
       codePreviewSettings,
       sessionId,
@@ -2230,6 +2233,7 @@ export function SessionPane({
       remoteSessionId,
       modelSelectionView,
       snapshot?.logEpoch,
+      snapshot?.control,
       theme,
       codePreviewSettings,
       sessionId,

@@ -1,5 +1,6 @@
 /* oxlint-disable eslint(max-lines) -- AppSettings schema 聚合历史迁移、默认值和 patch 校验，拆分会削弱设置迁移的单一入口。 */
 import { z } from "zod";
+import { modelSelectionSchema } from "./model-selection.js";
 import type { AppSettings } from "./protocol.js";
 import { REMOTE_ASSET_INSTALL_MODES } from "./remoteAssetInstallMode.js";
 import { isKnownRemoteResourcePackageId } from "./remoteResourcePackages.js";
@@ -459,6 +460,7 @@ const appSettingsObjectSchema = z.object({
   toolGroupingChangesEnabled: z.boolean().default(false),
   zcodeInteractionBehavior: zcodeInteractionBehaviorSchema.default("queue"),
   askUserQuestionAutoResolutionEnabled: z.boolean().default(true),
+  modelConnectionFallback: modelSelectionSchema.nullable().optional(),
   modelIoFullRetentionEnabled: z.boolean().default(false),
   startPlanRecommendationDismissed: z.boolean().default(false),
   providerFamilyConnectionSelections: providerFamilyConnectionSelectionSettingsSchema.default({}),
@@ -528,6 +530,7 @@ export const appSettingsPatchSchema = z.object({
   toolGroupingChangesEnabled: z.boolean().optional(),
   zcodeInteractionBehavior: zcodeInteractionBehaviorSchema.optional(),
   askUserQuestionAutoResolutionEnabled: z.boolean().optional(),
+  modelConnectionFallback: modelSelectionSchema.nullable().optional(),
   modelIoFullRetentionEnabled: z.boolean().optional(),
   startPlanRecommendationDismissed: z.boolean().optional(),
   providerFamilyConnectionSelections: providerFamilyConnectionSelectionSettingsSchema.optional(),

@@ -1,3 +1,4 @@
+import { notifyGuideHandoff } from "./guide-stream-handoff.js";
 import { parseRuntimeInputPresentation } from "@zcode/contracts";
 import {
   unpublishedPermissionGrants,
@@ -171,6 +172,7 @@ export async function steerTurn(
     },
   );
   await this.appendEvent(event, activeTurn.traceContext);
+  if (delivery === "guide") notifyGuideHandoff(activeTurn);
   this.logger?.debug("Turn steer queued", {
     ...traceContextToLogContext(activeTurn.traceContext),
     activeTurnKind: activeTurn.kind,
@@ -880,6 +882,7 @@ export async function editPendingInputById(
       return false;
     }
     this.pendingInputReservations.set(pendingInput.id, `guide:${pendingInput.id}`);
+    let promoted = false;
     try {
       const intent = pendingInput.intent ? { ...pendingInput.intent, requestedDelivery: "guide" as const, admittedDelivery: "guide" as const, fallbackReasonCode: undefined } : undefined;
       await this.sessionStore?.updateSessionInputs?.({ sessionID: this.sessionId, updates: [{ id: pendingInput.id, text: options.newText, delivery: "guide", ...(intent ? { intent } : {}) }] });
@@ -892,9 +895,11 @@ export async function editPendingInputById(
         turnId: activeTurn.turnId, traceId: options.traceContext.traceId });
       pendingInput.delivery = "guide";
       pendingInput.intent = intent;
-      return await this.editPendingInputById({ ...options, delivery: undefined });
+      promoted = await this.editPendingInputById({ ...options, delivery: undefined });
+      return promoted;
     } finally {
       this.pendingInputReservations.delete(pendingInput.id);
+      if (promoted && this.activeTurn === activeTurn) notifyGuideHandoff(activeTurn);
       if (attachedFromQueue && pendingInput.delivery !== "guide") {
         const index = activeTurn.pendingInputs.indexOf(pendingInput);
         if (index >= 0) activeTurn.pendingInputs.splice(index, 1);

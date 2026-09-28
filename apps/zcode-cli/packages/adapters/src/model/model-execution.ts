@@ -20,6 +20,7 @@ import {
 } from "@zcode/contracts";
 import type { RegistryProviderConfig } from "@zcode/provider";
 import { withOpenRouterAttributionHeaders } from "@zcode/shared";
+import { createModelHttpDiagnosticsFetch } from "./http-diagnostics.js";
 import { createAnthropicCompatFetch } from "./anthropic-stream-compat.js";
 import { createOpenAIResponsesJsonCompatFetch } from "./openai-responses-json-compat.js";
 import { createModelOptionMapFetch, type RawRequestBodyCapture } from "./model-option-map-fetch.js";
@@ -265,7 +266,7 @@ export class AiSdkModelExecution {
     const headers = providerConfig.headers;
     const providerTransport = this.resolveProviderTransport(providerId);
     const fetch = createProviderBusinessErrorFetch({
-      fetch: providerTransport,
+      fetch: createModelHttpDiagnosticsFetch(providerTransport, this.logger, providerId),
       providerId,
       providerKind: providerConfig.kind,
     });

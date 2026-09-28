@@ -1,3 +1,4 @@
+import { ConnectionFallbackSettings } from "./settings/ConnectionFallbackSettings.js";
 import { WeixinPairingSettings } from "@/settings/WeixinPairingSettings.js";
 /* oxlint-disable eslint(max-lines) */
 import { ArrowLeft, Rocket, type LucideIcon } from "lucide-react";
@@ -1654,6 +1655,7 @@ export function SettingsPage({
                       <div className="space-y-8">
                         {activeSection === "general" ? (
                           <>
+                            <ConnectionFallbackSettings workspacePath={activeWorkspacePath ?? captionWorkspacePath ?? ""} workspaceIdentity={activeWorkspaceIdentity ?? undefined} />
                             <WeixinPairingSettings
                               workspacePath={activeWorkspacePath ?? captionWorkspacePath ?? ""}
                               workspaceIdentity={activeWorkspaceIdentity ?? undefined}
@@ -1816,6 +1818,12 @@ export function SettingsPage({
                         ) : activeSection === "shortcuts" ? (
                           <ShortcutSettingsSection isDesktop={Boolean(isDesktop)} />
                         ) : activeSection === "modelProvider" ? (
+                          <>
+                            {/* 备用入口与模型配置同页可见，复用通用页的同一设置。 */}
+                            <ConnectionFallbackSettings
+                              workspacePath={activeWorkspacePath ?? captionWorkspacePath ?? ""}
+                              workspaceIdentity={activeWorkspaceIdentity ?? undefined}
+                            />
                           <ServiceProvider services={localHostServices}>
                             {/* 模型配置属于本机全局事实源；激活远端 workspace 时也不能注入远端 Host。 */}
                             <ModelProviderSection
@@ -1830,6 +1838,7 @@ export function SettingsPage({
                               }
                             />
                           </ServiceProvider>
+                          </>
                         ) : activeSection === "memory" ? (
                           <ServiceProvider services={localHostServices}>
                             {/* Memory catalog 始终使用本地 Host，避免远程 workspace 误读本机数据。 */}

@@ -300,7 +300,7 @@ export function ExecuteToolCallBlock(context: ToolCallBlockRenderContext) {
         <div className="space-y-1">
           <div className="flex items-start gap-2 font-sans text-ui-base text-foreground">
             <span className="shrink-0 text-foreground-subtle">$</span>
-            <pre className="min-w-0 flex-1 block max-h-15 overflow-over truncate whitespace-pre-wrap break-words">
+            <pre className="min-w-0 flex-1 block max-h-60 overflow-auto whitespace-pre-wrap break-words">
               {contentParts.executionCommand}
             </pre>
           </div>
@@ -333,8 +333,9 @@ export function ExecuteToolCallBlock(context: ToolCallBlockRenderContext) {
         toolId={toolCall.toolId}
         icon={EXECUTE_TOOL_ICON}
         showIcon={context.showIcon !== false}
-        canToggle={!isOfficeMode && (context.canToggle ?? true)}
-        forceOpen={!isOfficeMode && (context.forceOpen ?? false)}
+        // Office 模式仅简化状态词；隐藏命令并禁用展开会让用户无法核对执行内容。
+        canToggle={context.canToggle ?? true}
+        forceOpen={context.forceOpen ?? false}
         hideSecondaryTextWhenOpen
         kindLabel={
           (isOfficeMode
@@ -356,12 +357,12 @@ export function ExecuteToolCallBlock(context: ToolCallBlockRenderContext) {
               toolCall.kind ??
               intl.formatMessage({ id: "chat.toolCall.execute.execute" }))
         }
-        secondaryText={isOfficeMode ? undefined : secondaryTextNode}
+        secondaryText={secondaryTextNode}
         statusLabel={statusLabel}
         statusTooltip={isOfficeMode ? undefined : failureVisibleText}
         showFailureStatus={toolCall.status === "failed"}
         isRunning={isRunning}
-        title={isOfficeMode ? undefined : toolCall.title}
+        title={toolCall.title}
         renderContent={renderContent}
       />
       {!isOfficeMode ? (

@@ -164,3 +164,17 @@ export async function readNextWithStreamIdleTimeout<T>(
     removeAbortListener?.();
   }
 }
+
+/** 首次有效输出使用固定截止时间，协议心跳不能无限延长等待。 */
+export function firstOutputWaitMs(startedAt: number, now: number, idleTimeoutMs: number, receivedOutput: boolean): number {
+  if (receivedOutput) return idleTimeoutMs;
+  const remaining = Math.max(1, 120_000 - (now - startedAt));
+  return idleTimeoutMs > 0 ? Math.min(remaining, idleTimeoutMs) : remaining;
+}
+
+export function isEffectiveModelOutput(chunk: { type: string; text?: unknown; delta?: unknown }): boolean {
+  if (chunk.type === "tool-call") return true;
+  if (!["text-delta", "reasoning-delta", "tool-input-delta"].includes(chunk.type)) return false;
+  const text = chunk.text ?? chunk.delta;
+  return typeof text === "string" && text.length > 0;
+}

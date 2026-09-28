@@ -34,6 +34,7 @@ export type ConversationFileChangesState = Exclude<
 >;
 
 export interface ConversationRowRenderContext {
+  liveControl?: import("@zcode/shared/zcode-protocol-v4").SessionControl;
   logEpoch?: string;
   workspacePath: string;
   /** 当前 workspace Host 的用户 Home，用于解析 Assistant 输出中的 ~/ 路径。 */

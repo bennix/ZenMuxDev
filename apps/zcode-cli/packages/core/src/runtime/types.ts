@@ -194,6 +194,7 @@ export interface AgentRuntimeConfig {
   bashShellSelection?: ExecutionShellSelection | undefined;
   embeddedSearchBackend?: EmbeddedSearchBackend;
   /** 根 Session runtime 创建时固定；false 只关闭 Bash 的 bfs/ugrep prelude。 */
+  modelConnectionFallback?: ModelSelection;
   nativeSearchEnhancementsEnabled?: boolean;
   memory?: MemoryRuntimeConfig;
   /** 历史恢复允许未绑定；只有完整选择才能创建本轮执行 Model。 */

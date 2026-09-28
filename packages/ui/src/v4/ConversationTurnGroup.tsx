@@ -1,3 +1,4 @@
+import { conversationLiveActivity } from "./conversationLiveActivity.js";
 /* eslint-disable max-lines -- turn group 需要在同一处维护普通 assistant 与后台结果的严格行序，拆分会重复 actions/preview/tail 协议。 */
 import { useIsOfficeMode } from "@/hooks/useInterfaceMode.js";
 import { Fragment, memo, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -565,9 +566,11 @@ function OffPeakTurnCards({
 function AssistantHistoryStatus({
   segment,
   open,
+  control,
 }: {
   segment: ConversationTurnWorkSegment;
   open: boolean;
+  control?: ConversationRowRenderContext["liveControl"];
 }) {
   const { intl, locale } = useZCodeIntl();
   const durationLabel = formatConversationWorkDuration(
@@ -584,8 +587,9 @@ function AssistantHistoryStatus({
           ? intl.formatMessage({ id: "chat.history.workedFor" }, { duration: durationLabel })
           : intl.formatMessage({ id: "chat.history.worked" });
 
+  const activity = conversationLiveActivity(segment.assistantWorkRows, control);
   return (
-    <div className="flex w-full border-b border-[var(--color-border)]/50 pb-2">
+    <div className="flex w-full flex-col gap-1 border-b border-[var(--color-border)]/50 pb-2">
       <CollapsibleTrigger asChild>
         <button
           type="button"
@@ -605,6 +609,15 @@ function AssistantHistoryStatus({
           ) : null}
         </button>
       </CollapsibleTrigger>
+      {segment.workStatus?.state === "running" ? (
+        <div role="status" className="break-words text-ui-caption text-foreground-subtle">
+          <p>{intl.formatMessage({ id: `chat.activity.${activity.phase}` }, { tool: activity.tool, attempt: activity.attempt, reason: intl.formatMessage({ id: activity.retryReasonMessageId }) })}</p>
+          {activity.latestTool ? <p>{intl.formatMessage({ id: "chat.activity.summary" }, {
+            count: activity.completed, tool: activity.latestTool,
+            status: intl.formatMessage({ id: `chat.activity.result.${activity.latestStatus}` }),
+          })}</p> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -754,13 +767,13 @@ function ConversationWorkSegmentFlow({
 
         return (
           <Fragment key={itemKey}>
-            {showHistoryStatus ? <AssistantHistoryStatus segment={segment} open={open} /> : null}
+            {showHistoryStatus ? <AssistantHistoryStatus segment={segment} open={open} control={context.liveControl} /> : null}
             {content}
           </Fragment>
         );
       })}
       {shouldShowHistoryStatus && firstAssistantFlowItemIndex < 0 ? (
-        <AssistantHistoryStatus segment={segment} open={open} />
+        <AssistantHistoryStatus segment={segment} open={open} control={context.liveControl} />
       ) : null}
     </Collapsible>
   );

@@ -1702,6 +1702,7 @@ export type ZCodeModelContextBudgetStrategy = z.infer<typeof zcodeModelContextBu
 
 export const zcodeSessionRuntimePreferencesResultSchema = z
   .object({
+    modelConnectionFallback: modelSelectionSchema.optional(),
     nativeSearchEnhancementsEnabled: z.boolean(),
     memoryEnabled: z.boolean().default(false),
     askUserQuestionAutoResolutionEnabled: z.boolean().default(true),

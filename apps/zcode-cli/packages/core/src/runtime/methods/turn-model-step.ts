@@ -1,4 +1,7 @@
-import { createGuideStreamHandoff } from "./guide-stream-handoff.js";
+import { createConnectionFallbackGuard } from "./model-connection-fallback.js";
+import { createTurnModel } from "./turn-model.js";
+import { rebuildContextPrefix } from "./context-refresh.js";
+import { createGuideStreamHandoff, subscribeGuideHandoff } from "./guide-stream-handoff.js";
 import { beginLocalTurnPreparation } from "@zcode/contracts";
 import {
   CompactTrigger,
@@ -218,7 +221,14 @@ async function runModelBackedTurnStepImpl(
   state.pendingStreamRecoveryRequest = undefined;
   let latestModelRequestId: string | undefined;
   let latestFailedModelRequestId: string | undefined;
+  const fallbackSelection = this.config.modelConnectionFallback;
+  const connectionFallback = createConnectionFallbackGuard(Boolean(fallbackSelection &&
+    (fallbackSelection.providerId !== model.providerId || fallbackSelection.modelId !== model.modelId)));
   const recordModelNetworkStatus = (event: ModelNetworkStatusEvent): void => {
+    if (event.type === "model_request_failed") {
+      if (event.streamOutputCommitted) connectionFallback.markOutput();
+      connectionFallback.failed(event.reason);
+    }
     if (event.type === "model_request_started") {
       latestModelRequestId = event.requestId;
       return;
@@ -230,13 +240,16 @@ async function runModelBackedTurnStepImpl(
 
   const guideHandoff = createGuideStreamHandoff(state.turnAbortSignal, () =>
     Boolean(state.activeTurn && this.hasInlineGuidePendingInput(state.activeTurn)));
+  const unsubscribeGuide = state.activeTurn
+    ? subscribeGuideHandoff(state.activeTurn, guideHandoff.checkpoint)
+    : () => {};
   let result: RuntimeModelTextResult;
   try {
     const baselineMaxOutputTokens = resolveNormalRequestMaxOutputTokens({
       modelMaxOutputTokens: executionMaxOutputTokens,
     });
     result = await this.runModelTextRequest({
-      abortSignal: guideHandoff.signal,
+      abortSignal: AbortSignal.any([guideHandoff.signal, connectionFallback.signal]),
       assistantMessageId,
       events: state.events,
       maxOutputTokens: resolveModelStepMaxOutputTokens({
@@ -254,6 +267,7 @@ async function runModelBackedTurnStepImpl(
       model,
       onStreamSnapshot: (snapshot) => {
         latestStreamSnapshot = snapshot;
+        if (snapshot.text || snapshot.reasoning.length) connectionFallback.markOutput();
         guideHandoff.checkpoint();
       },
       onModelNetworkStatus: recordModelNetworkStatus,
@@ -262,13 +276,14 @@ async function runModelBackedTurnStepImpl(
       onStreamToolCall: (toolCall) => {
         // 已交接的旧流不能再启动迟到的工具调用。
         guideHandoff.signal.throwIfAborted();
+        connectionFallback.markOutput();
         guideHandoff.toolStarted();
         return streamingToolCoordinator.accept(toolCall);
       },
       streamRecovery: streamRecoveryRequest,
       tools: options.tools,
       traceContext: modelTraceContext,
-    }).catch((error: unknown): RuntimeModelTextResult => {
+    }).finally(unsubscribeGuide).catch((error: unknown): RuntimeModelTextResult => {
       // 主动交接不是任务失败，已有输出按正常持久化路径收口后消费 guide。
       if (!guideHandoff.interrupted) throw error;
       this.logger?.info("Guide stream handoff", { event: "guide.streamHandoff",
@@ -278,6 +293,27 @@ async function runModelBackedTurnStepImpl(
     });
     throwIfTurnAborted(state.turnAbortSignal);
   } catch (error) {
+    unsubscribeGuide();
+    if (connectionFallback.signal.aborted && !state.turnAbortSignal.aborted && fallbackSelection) {
+      // 只对未提交输出的连接故障交接；新模型下一轮重新计算能力和 token 预算。
+      await streamingToolCoordinator.abandon("cancelled");
+      const fallbackModel = createTurnModel(this, { selection: fallbackSelection });
+      await this.persistAssistantMessage(assistantMessageId, state.userMessageId, assistantCreatedAt,
+        { completed: Date.now() }, modelTraceContext, model);
+      state.model = fallbackModel;
+      state.turnRequestState.entries = rebuildContextPrefix(this, {
+        model: fallbackModel, turnRequestEntries: state.turnRequestState.entries,
+      });
+      this.logger?.info("Connection fallback model selected", { event: "model.connectionFallback",
+        fromProvider: model.providerId, fromModel: model.modelId,
+        toProvider: fallbackModel.providerId, toModel: fallbackModel.modelId,
+        reasoningLevel: fallbackSelection.options?.reasoningLevel, failures: connectionFallback.failures });
+      await this.emitModelSelected({ model: fallbackModel, modelSelection: fallbackSelection,
+        effectiveReasoningLevel: fallbackModel.options.reasoningLevel,
+        previousModelSelection: { providerId: model.providerId, modelId: model.modelId },
+        supportedThoughtLevels: fallbackModel.optionSpecs.reasoningLevel.values, traceContext: modelTraceContext });
+      return "continue";
+    }
     let finalError = error;
     await recordMainTurnModelUsage(this, state, {
       assistantMessageId,
