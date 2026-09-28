@@ -4596,6 +4596,8 @@ const zhCN: Record<string, string> = {
   "chat.studio.guided": "引导式",
   "chat.studio.direct": "直接对话",
   "chat.studio.pptModel": "成稿模型",
+  "chat.studio.collapseSettings": "收起生成设置",
+  "chat.studio.expandSettings": "展开生成设置",
   "chat.studio.intentModel": "意图模型",
   "chat.studio.pageCount": "总页数",
   "chat.studio.pageCountCustom": "指定",

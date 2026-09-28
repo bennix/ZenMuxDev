@@ -35,6 +35,7 @@ import { generateStudioDeck } from "./studioPptGenerate.js";
 import { applyDeckTheme, deckThemeForStyle } from "./deckTheme.js";
 import { repairStudioSlide } from "./studioSlideLayout.js";
 import { applyDeckGeometry } from "./useSlideGeometry.js";
+import { StudioSettingsDisclosure } from "./StudioSettingsDisclosure.js";
 import { SlideDeckView } from "./SlideDeckView.js";
 import { modelEfforts, reasoningBody, resolveEffort } from "../reasoningEffort.js";
 import { thoughtLevelLabelId } from "@/chat-input-toolbar/thoughtLevelOptions.js";
@@ -61,8 +62,15 @@ function readApiKey(view: ModelSelectionView | null): string {
     const baseUrl = provider.config.api?.baseUrl;
     if (!baseUrl) continue;
     try {
-      if (new URL(baseUrl).hostname === "zenmux.ai" && isApiKeyAccess(access) && access.apiKey?.trim()) return access.apiKey.trim();
-    } catch { continue; }
+      if (
+        new URL(baseUrl).hostname === "zenmux.ai" &&
+        isApiKeyAccess(access) &&
+        access.apiKey?.trim()
+      )
+        return access.apiKey.trim();
+    } catch {
+      continue;
+    }
   }
   return "";
 }
@@ -318,7 +326,11 @@ export function StudioPanel({
 }) {
   const { intl } = useZCodeIntl();
   const platform = usePlatform();
-  const { library: mediaLibrary, loading: mediaLoading, error: mediaSettingsError } = useStudioMediaLibrary();
+  const {
+    library: mediaLibrary,
+    loading: mediaLoading,
+    error: mediaSettingsError,
+  } = useStudioMediaLibrary();
   const apiKey = mediaLoading || mediaSettingsError ? "" : readApiKey(modelSelectionView);
   const sketchRef = useRef<SketchPadHandle>(null);
   const [mode, setMode] = useState<StudioMode>("image");
@@ -657,7 +669,7 @@ export function StudioPanel({
           completedPageCount = pages.length;
           // 每页保持独立文档，避免同名 CSS 和绝对定位把多页叠到同一画布。
           // 后续页完成只追加；已经拖动/缩放过的页面不能被生成器旧快照覆盖。
-          setDeckPages(current => pages.map((page,index) => current[index] ?? page));
+          setDeckPages((current) => pages.map((page, index) => current[index] ?? page));
         },
       });
       if (abortRef.current !== controller || controller.signal.aborted) return;
@@ -673,7 +685,10 @@ export function StudioPanel({
         setError(runError instanceof Error ? runError.message : String(runError));
       }
     } finally {
-      if (abortRef.current === controller) { setBusy(false); setGeneratingDeck(false); }
+      if (abortRef.current === controller) {
+        setBusy(false);
+        setGeneratingDeck(false);
+      }
     }
   };
 
@@ -707,7 +722,13 @@ export function StudioPanel({
         spoken,
         "按手绘标记修改画面。除非用户明确要求手绘，否则输出自然照片。",
       );
-      const next = await editStudioImage(apiKey, sketch, `${optimized}\n${rule}`, activeImageRatio, mediaLibrary.defaultImageId);
+      const next = await editStudioImage(
+        apiKey,
+        sketch,
+        `${optimized}\n${rule}`,
+        activeImageRatio,
+        mediaLibrary.defaultImageId,
+      );
       setDeckPages((current) => current.map((page) => page.split(previous).join(next)));
       setImageUrl(next);
       setOutputUrl(next);
@@ -1080,390 +1101,399 @@ export function StudioPanel({
         void addDeckFiles(files);
       }}
     >
-      <div className="mb-2 flex flex-wrap gap-2">
-        {(["image", "video", "ppt"] as const).map((item) => (
-          <Button
-            key={item}
-            type="button"
-            variant={mode === item ? "secondary" : "ghost"}
-            className="h-7 px-2 text-ui-caption"
-            onClick={() => setMode(item)}
-          >
-            {intl.formatMessage({ id: `chat.studio.${item}` })}
-          </Button>
-        ))}
-      </div>
-      <div className="mb-2 flex flex-wrap items-center gap-2 text-ui-caption">
-        <ModelPick
-          label={intl.formatMessage({ id: "chat.studio.intentModel" })}
-          value={intentId}
-          ids={modelIds}
-          efforts={modelEfforts(modelSelectionView, intentId)}
-          effort={resolveEffort(
-            effortMap[intentId] ?? "",
-            modelEfforts(modelSelectionView, intentId),
-          )}
-          onChange={(next) => {
-            setIntentModelId(next);
-            persistModel(INTENT_MODEL_KEY, next);
-          }}
-          onEffort={(next) => setEffortMap(writeEffort(intentId, next))}
-          effortAria={effortAria}
-          effortLabel={effortLabel}
-        />
-        <span className="text-muted-foreground">
-          {mode === "video" ? videoSpec.name : studioImageModelById(mediaLibrary.defaultImageId).name}
-        </span>
-        {mode === "video" ? (
-          <>
+      <StudioSettingsDisclosure
+        collapseLabel={intl.formatMessage({ id: "chat.studio.collapseSettings" })}
+        expandLabel={intl.formatMessage({ id: "chat.studio.expandSettings" })}
+      >
+        <div className="mb-2 flex flex-wrap gap-2">
+          {(["image", "video", "ppt"] as const).map((item) => (
+            <Button
+              key={item}
+              type="button"
+              variant={mode === item ? "secondary" : "ghost"}
+              className="h-7 px-2 text-ui-caption"
+              onClick={() => setMode(item)}
+            >
+              {intl.formatMessage({ id: `chat.studio.${item}` })}
+            </Button>
+          ))}
+        </div>
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-ui-caption">
+          <ModelPick
+            label={intl.formatMessage({ id: "chat.studio.intentModel" })}
+            value={intentId}
+            ids={modelIds}
+            efforts={modelEfforts(modelSelectionView, intentId)}
+            effort={resolveEffort(
+              effortMap[intentId] ?? "",
+              modelEfforts(modelSelectionView, intentId),
+            )}
+            onChange={(next) => {
+              setIntentModelId(next);
+              persistModel(INTENT_MODEL_KEY, next);
+            }}
+            onEffort={(next) => setEffortMap(writeEffort(intentId, next))}
+            effortAria={effortAria}
+            effortLabel={effortLabel}
+          />
+          <span className="text-muted-foreground">
+            {mode === "video"
+              ? videoSpec.name
+              : studioImageModelById(mediaLibrary.defaultImageId).name}
+          </span>
+          {mode === "video" ? (
+            <>
+              <label className="flex items-center gap-1">
+                {intl.formatMessage({ id: "chat.studio.ratio" })}
+                <select
+                  value={activeVideoRatio}
+                  onChange={(event) => setVideoRatio(event.target.value)}
+                  className="h-7 rounded-lg border border-border bg-background px-2"
+                >
+                  {videoSpec.ratios.map((ratio) => (
+                    <option key={ratio} value={ratio}>
+                      {ratio}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-1">
+                {intl.formatMessage({ id: "chat.studio.duration" })}
+                <select
+                  value={String(activeVideoSeconds)}
+                  onChange={(event) => setVideoSeconds(Number(event.target.value))}
+                  className="h-7 rounded-lg border border-border bg-background px-2"
+                >
+                  {videoSpec.durations.map((seconds) => (
+                    <option key={seconds} value={seconds}>
+                      {seconds}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          ) : (
             <label className="flex items-center gap-1">
               {intl.formatMessage({ id: "chat.studio.ratio" })}
               <select
-                value={activeVideoRatio}
-                onChange={(event) => setVideoRatio(event.target.value)}
+                value={activeImageRatio}
+                onChange={(event) => setImageRatio(event.target.value)}
                 className="h-7 rounded-lg border border-border bg-background px-2"
               >
-                {videoSpec.ratios.map((ratio) => (
+                {imageChoices.map((ratio) => (
                   <option key={ratio} value={ratio}>
                     {ratio}
                   </option>
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-1">
-              {intl.formatMessage({ id: "chat.studio.duration" })}
+          )}
+        </div>
+        {mode === "ppt" ? (
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant={pptMode === "guided" ? "secondary" : "ghost"}
+              className="h-7 px-2 text-ui-caption"
+              onClick={() => setPptMode("guided")}
+            >
+              {intl.formatMessage({ id: "chat.studio.guided" })}
+            </Button>
+            <Button
+              type="button"
+              variant={pptMode === "chat" ? "secondary" : "ghost"}
+              className="h-7 px-2 text-ui-caption"
+              onClick={() => setPptMode("chat")}
+            >
+              {intl.formatMessage({ id: "chat.studio.direct" })}
+            </Button>
+            <label className="flex items-center gap-1 text-ui-caption">
+              {intl.formatMessage({ id: "chat.studio.pageCount" })}
               <select
-                value={String(activeVideoSeconds)}
-                onChange={(event) => setVideoSeconds(Number(event.target.value))}
+                value={pagesChoice}
+                onChange={(event) => setPagesChoice(event.target.value)}
                 className="h-7 rounded-lg border border-border bg-background px-2"
               >
-                {videoSpec.durations.map((seconds) => (
-                  <option key={seconds} value={seconds}>
-                    {seconds}
+                {PPT_PAGE_COUNTS.map((count) => (
+                  <option key={count} value={String(count)}>
+                    {count}
                   </option>
                 ))}
+                <option value="custom">
+                  {intl.formatMessage({ id: "chat.studio.pageCountCustom" })}
+                </option>
               </select>
+              {pagesChoice === "custom" ? (
+                <input
+                  type="number"
+                  min={1}
+                  max={40}
+                  value={customPages}
+                  onChange={(event) => setCustomPages(event.target.value)}
+                  className="h-7 w-16 rounded-lg border border-border bg-background px-2 text-ui-base"
+                />
+              ) : null}
             </label>
-          </>
+            <ModelPick
+              label={intl.formatMessage({ id: "chat.studio.pptModel" })}
+              value={writerId}
+              ids={modelIds}
+              efforts={modelEfforts(modelSelectionView, writerId)}
+              effort={resolveEffort(
+                effortMap[writerId] ?? "",
+                modelEfforts(modelSelectionView, writerId),
+              )}
+              onChange={(next) => {
+                setPptModelId(next);
+                persistModel(PPT_MODEL_KEY, next);
+              }}
+              onEffort={(next) => setEffortMap(writeEffort(writerId, next))}
+              effortAria={effortAria}
+              effortLabel={effortLabel}
+            />
+          </div>
+        ) : null}
+        {mode === "ppt" && pptMode === "guided" ? (
+          <div className="mb-2 flex flex-col gap-2">
+            <input
+              value={topic}
+              onChange={(event) => setTopic(event.target.value)}
+              placeholder={intl.formatMessage({ id: "chat.studio.topic" })}
+              className="h-8 rounded-lg border border-border bg-background px-2 text-ui-base"
+            />
+            <input
+              value={audience}
+              onChange={(event) => setAudience(event.target.value)}
+              placeholder={intl.formatMessage({ id: "chat.studio.audience" })}
+              className="h-8 rounded-lg border border-border bg-background px-2 text-ui-base"
+            />
+            <select
+              value={deckStyle}
+              disabled={busy}
+              onChange={(event) => {
+                const style = event.target.value;
+                setDeckStyle(style);
+                setSelectedIds([]);
+                setDeckPages((pages) =>
+                  pages.map((page) => applyDeckTheme(page, deckThemeForStyle(style))),
+                );
+              }}
+              className="h-8 rounded-lg border border-border bg-background px-2 text-ui-caption"
+            >
+              <option>杂志风</option>
+              <option>瑞士风</option>
+            </select>
+          </div>
         ) : (
-          <label className="flex items-center gap-1">
-            {intl.formatMessage({ id: "chat.studio.ratio" })}
-            <select
-              value={activeImageRatio}
-              onChange={(event) => setImageRatio(event.target.value)}
-              className="h-7 rounded-lg border border-border bg-background px-2"
-            >
-              {imageChoices.map((ratio) => (
-                <option key={ratio} value={ratio}>
-                  {ratio}
-                </option>
-              ))}
-            </select>
-          </label>
+          <textarea
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder={intl.formatMessage({ id: "chat.studio.prompt" })}
+            className="mb-2 min-h-16 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
+          />
         )}
-      </div>
-      {mode === "ppt" ? (
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant={pptMode === "guided" ? "secondary" : "ghost"}
-            className="h-7 px-2 text-ui-caption"
-            onClick={() => setPptMode("guided")}
-          >
-            {intl.formatMessage({ id: "chat.studio.guided" })}
-          </Button>
-          <Button
-            type="button"
-            variant={pptMode === "chat" ? "secondary" : "ghost"}
-            className="h-7 px-2 text-ui-caption"
-            onClick={() => setPptMode("chat")}
-          >
-            {intl.formatMessage({ id: "chat.studio.direct" })}
-          </Button>
-          <label className="flex items-center gap-1 text-ui-caption">
-            {intl.formatMessage({ id: "chat.studio.pageCount" })}
-            <select
-              value={pagesChoice}
-              onChange={(event) => setPagesChoice(event.target.value)}
-              className="h-7 rounded-lg border border-border bg-background px-2"
-            >
-              {PPT_PAGE_COUNTS.map((count) => (
-                <option key={count} value={String(count)}>
-                  {count}
-                </option>
-              ))}
-              <option value="custom">
-                {intl.formatMessage({ id: "chat.studio.pageCountCustom" })}
-              </option>
-            </select>
-            {pagesChoice === "custom" ? (
-              <input
-                type="number"
-                min={1}
-                max={40}
-                value={customPages}
-                onChange={(event) => setCustomPages(event.target.value)}
-                className="h-7 w-16 rounded-lg border border-border bg-background px-2 text-ui-base"
-              />
-            ) : null}
-          </label>
-          <ModelPick
-            label={intl.formatMessage({ id: "chat.studio.pptModel" })}
-            value={writerId}
-            ids={modelIds}
-            efforts={modelEfforts(modelSelectionView, writerId)}
-            effort={resolveEffort(
-              effortMap[writerId] ?? "",
-              modelEfforts(modelSelectionView, writerId),
-            )}
-            onChange={(next) => {
-              setPptModelId(next);
-              persistModel(PPT_MODEL_KEY, next);
-            }}
-            onEffort={(next) => setEffortMap(writeEffort(writerId, next))}
-            effortAria={effortAria}
-            effortLabel={effortLabel}
+        {mode === "ppt" ? (
+          <textarea
+            value={extraNote}
+            onChange={(event) => setExtraNote(event.target.value)}
+            placeholder={intl.formatMessage({ id: "chat.studio.extra" })}
+            className="mb-2 min-h-14 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
           />
-        </div>
-      ) : null}
-      {mode === "ppt" && pptMode === "guided" ? (
-        <div className="mb-2 flex flex-col gap-2">
-          <input
-            value={topic}
-            onChange={(event) => setTopic(event.target.value)}
-            placeholder={intl.formatMessage({ id: "chat.studio.topic" })}
-            className="h-8 rounded-lg border border-border bg-background px-2 text-ui-base"
-          />
-          <input
-            value={audience}
-            onChange={(event) => setAudience(event.target.value)}
-            placeholder={intl.formatMessage({ id: "chat.studio.audience" })}
-            className="h-8 rounded-lg border border-border bg-background px-2 text-ui-base"
-          />
-          <select
-            value={deckStyle}
-            disabled={busy}
-            onChange={(event) => {
-              const style = event.target.value;
-              setDeckStyle(style);
-              setSelectedIds([]);
-              setDeckPages((pages) =>
-                pages.map((page) => applyDeckTheme(page, deckThemeForStyle(style))),
-              );
-            }}
-            className="h-8 rounded-lg border border-border bg-background px-2 text-ui-caption"
-          >
-            <option>杂志风</option>
-            <option>瑞士风</option>
-          </select>
-        </div>
-      ) : (
-        <textarea
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          placeholder={intl.formatMessage({ id: "chat.studio.prompt" })}
-          className="mb-2 min-h-16 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
-        />
-      )}
-      {mode === "ppt" ? (
-        <textarea
-          value={extraNote}
-          onChange={(event) => setExtraNote(event.target.value)}
-          placeholder={intl.formatMessage({ id: "chat.studio.extra" })}
-          className="mb-2 min-h-14 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
-        />
-      ) : null}
-      {library.length > 0 ? (
-        <div className="mb-2">
-          <div className="mb-1 flex items-center gap-2">
-            <p className="text-ui-caption text-muted-foreground">
-              {intl.formatMessage({ id: "chat.studio.library" })}
+        ) : null}
+        {library.length > 0 ? (
+          <div className="mb-2">
+            <div className="mb-1 flex items-center gap-2">
+              <p className="text-ui-caption text-muted-foreground">
+                {intl.formatMessage({ id: "chat.studio.library" })}
+              </p>
+              <label className="flex items-center gap-1 text-ui-caption text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={library.every((item) => pickedPrompts.includes(item.text))}
+                  onChange={(event) =>
+                    setPickedPrompts(event.target.checked ? library.map((item) => item.text) : [])
+                  }
+                />
+                {intl.formatMessage({ id: "chat.studio.librarySelectAll" })}
+              </label>
+              {pickedPrompts.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-7 px-2 text-ui-caption"
+                  onClick={() => {
+                    setLibrary(forgetPrompts(pickedPrompts));
+                    setPickedPrompts([]);
+                  }}
+                >
+                  {intl.formatMessage({ id: "chat.studio.libraryDelete" })}
+                </Button>
+              ) : null}
+            </div>
+            <div className="flex max-h-48 w-full min-w-0 flex-col gap-1 overflow-y-auto">
+              {library.map((item) => {
+                const label = item.text.replace(/\s+/gu, " ").trim();
+                return (
+                  <div key={`${item.kind}-${item.text}`} className="flex min-w-0 items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-2"
+                      checked={pickedPrompts.includes(item.text)}
+                      aria-label={label}
+                      onChange={(event) => {
+                        setPickedPrompts((current) =>
+                          event.target.checked
+                            ? [...current, item.text]
+                            : current.filter((text) => text !== item.text),
+                        );
+                      }}
+                    />
+                    <button
+                      type="button"
+                      title={label}
+                      className="w-full min-w-0 rounded-lg px-2 py-1.5 text-left font-sans text-ui-base leading-6 text-foreground hover:bg-surface"
+                      onClick={() => {
+                        setPrompt(item.text);
+                        setMode(item.kind);
+                        if (item.kind === "ppt") setPptMode("chat");
+                      }}
+                    >
+                      <span className="line-clamp-2 wrap-break-word">{label}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+        {mode !== "ppt" || imageUrl ? (
+          <>
+            <div className="mb-2 flex flex-wrap items-center gap-2 text-ui-caption">
+              <label className="flex items-center gap-1">
+                {intl.formatMessage({ id: "chat.studio.color" })}
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(event) => setColor(event.target.value)}
+                />
+              </label>
+              <label className="flex items-center gap-1">
+                {intl.formatMessage({ id: "chat.studio.width" })}
+                <input
+                  type="range"
+                  min={2}
+                  max={36}
+                  value={stroke}
+                  onChange={(event) => setStroke(Number(event.target.value))}
+                />
+              </label>
+              <Button
+                type="button"
+                variant={erase ? "secondary" : "ghost"}
+                className="h-7 px-2"
+                onClick={() => setErase((value) => !value)}
+              >
+                {intl.formatMessage({ id: "chat.studio.eraser" })}
+              </Button>
+              <label className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={keepStrokeColor}
+                  onChange={(event) => setKeepStrokeColor(event.target.checked)}
+                />
+                {intl.formatMessage({ id: "chat.studio.keepColor" })}
+              </label>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-7 px-2"
+                onClick={() => sketchRef.current?.clear()}
+              >
+                {intl.formatMessage({ id: "chat.studio.clear" })}
+              </Button>
+            </div>
+            <SketchPad
+              ref={sketchRef}
+              backgroundUrl={imageUrl ?? references[0]?.url ?? null}
+              color={color}
+              width={stroke}
+              erase={erase}
+            />
+            <p className="mt-1 text-ui-caption text-muted-foreground">
+              {intl.formatMessage({ id: "chat.studio.panZoom" })}
             </p>
-            <label className="flex items-center gap-1 text-ui-caption text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={library.every((item) => pickedPrompts.includes(item.text))}
-                onChange={(event) =>
-                  setPickedPrompts(event.target.checked ? library.map((item) => item.text) : [])
-                }
-              />
-              {intl.formatMessage({ id: "chat.studio.librarySelectAll" })}
-            </label>
-            {pickedPrompts.length > 0 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-7 px-2 text-ui-caption"
-                onClick={() => {
-                  setLibrary(forgetPrompts(pickedPrompts));
-                  setPickedPrompts([]);
-                }}
-              >
-                {intl.formatMessage({ id: "chat.studio.libraryDelete" })}
-              </Button>
+            {imageUrl && mode === "image" ? (
+              <div className="mt-2 flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 px-3 text-ui-caption"
+                  disabled={busy || !apiKey}
+                  onClick={() => void reviseMarked()}
+                >
+                  {intl.formatMessage({ id: "chat.studio.edit" })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 px-3 text-ui-caption"
+                  onClick={copyImage}
+                >
+                  {intl.formatMessage({ id: "chat.studio.copyImage" })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 px-3 text-ui-caption"
+                  onClick={() => void saveImage()}
+                >
+                  {intl.formatMessage({ id: "chat.studio.saveImage" })}
+                </Button>
+              </div>
             ) : null}
+          </>
+        ) : null}
+        <div className="mt-2">
+          <div className="flex flex-wrap gap-2">
+            {references.map((item) => (
+              <div key={item.id} className="relative size-16">
+                <img src={item.url} alt="" className="size-full rounded-lg object-cover" />
+                <button
+                  type="button"
+                  className="absolute top-0.5 right-0.5 grid size-4 place-items-center rounded-full bg-background/90 text-ui-caption leading-none"
+                  aria-label={intl.formatMessage({ id: "chat.studio.removeReference" })}
+                  onClick={() => removeReference(item.id)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {deckFiles.map((file) => (
+              <div
+                key={file.id}
+                className="relative size-16 overflow-hidden rounded-lg border border-border bg-surface p-1"
+              >
+                <span className="line-clamp-3 break-all text-ui-caption leading-4">
+                  {file.name}
+                </span>
+                <button
+                  type="button"
+                  className="absolute top-0.5 right-0.5 grid size-4 place-items-center rounded-full bg-background/90 text-ui-caption leading-none"
+                  aria-label={intl.formatMessage({ id: "chat.studio.removeAttachment" })}
+                  onClick={() => removeDeckFile(file.id)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
-          <div className="flex max-h-48 w-full min-w-0 flex-col gap-1 overflow-y-auto">
-            {library.map((item) => {
-              const label = item.text.replace(/\s+/gu, " ").trim();
-              return (
-                <div key={`${item.kind}-${item.text}`} className="flex min-w-0 items-start gap-2">
-                  <input
-                    type="checkbox"
-                    className="mt-2"
-                    checked={pickedPrompts.includes(item.text)}
-                    aria-label={label}
-                    onChange={(event) => {
-                      setPickedPrompts((current) =>
-                        event.target.checked
-                          ? [...current, item.text]
-                          : current.filter((text) => text !== item.text),
-                      );
-                    }}
-                  />
-                  <button
-                    type="button"
-                    title={label}
-                    className="w-full min-w-0 rounded-lg px-2 py-1.5 text-left font-sans text-ui-base leading-6 text-foreground hover:bg-surface"
-                    onClick={() => {
-                      setPrompt(item.text);
-                      setMode(item.kind);
-                      if (item.kind === "ppt") setPptMode("chat");
-                    }}
-                  >
-                    <span className="line-clamp-2 wrap-break-word">{label}</span>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-      {mode !== "ppt" || imageUrl ? (
-        <>
-          <div className="mb-2 flex flex-wrap items-center gap-2 text-ui-caption">
-            <label className="flex items-center gap-1">
-              {intl.formatMessage({ id: "chat.studio.color" })}
-              <input
-                type="color"
-                value={color}
-                onChange={(event) => setColor(event.target.value)}
-              />
-            </label>
-            <label className="flex items-center gap-1">
-              {intl.formatMessage({ id: "chat.studio.width" })}
-              <input
-                type="range"
-                min={2}
-                max={36}
-                value={stroke}
-                onChange={(event) => setStroke(Number(event.target.value))}
-              />
-            </label>
-            <Button
-              type="button"
-              variant={erase ? "secondary" : "ghost"}
-              className="h-7 px-2"
-              onClick={() => setErase((value) => !value)}
-            >
-              {intl.formatMessage({ id: "chat.studio.eraser" })}
-            </Button>
-            <label className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={keepStrokeColor}
-                onChange={(event) => setKeepStrokeColor(event.target.checked)}
-              />
-              {intl.formatMessage({ id: "chat.studio.keepColor" })}
-            </label>
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-7 px-2"
-              onClick={() => sketchRef.current?.clear()}
-            >
-              {intl.formatMessage({ id: "chat.studio.clear" })}
-            </Button>
-          </div>
-          <SketchPad
-            ref={sketchRef}
-            backgroundUrl={imageUrl ?? references[0]?.url ?? null}
-            color={color}
-            width={stroke}
-            erase={erase}
-          />
           <p className="mt-1 text-ui-caption text-muted-foreground">
-            {intl.formatMessage({ id: "chat.studio.panZoom" })}
+            {intl.formatMessage({
+              id: mode === "ppt" ? "chat.studio.dropAttachment" : "chat.studio.dropReference",
+            })}
           </p>
-          {imageUrl && mode === "image" ? (
-            <div className="mt-2 flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-8 px-3 text-ui-caption"
-                disabled={busy || !apiKey}
-                onClick={() => void reviseMarked()}
-              >
-                {intl.formatMessage({ id: "chat.studio.edit" })}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-8 px-3 text-ui-caption"
-                onClick={copyImage}
-              >
-                {intl.formatMessage({ id: "chat.studio.copyImage" })}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-8 px-3 text-ui-caption"
-                onClick={() => void saveImage()}
-              >
-                {intl.formatMessage({ id: "chat.studio.saveImage" })}
-              </Button>
-            </div>
-          ) : null}
-        </>
-      ) : null}
-      <div className="mt-2">
-        <div className="flex flex-wrap gap-2">
-          {references.map((item) => (
-            <div key={item.id} className="relative size-16">
-              <img src={item.url} alt="" className="size-full rounded-lg object-cover" />
-              <button
-                type="button"
-                className="absolute top-0.5 right-0.5 grid size-4 place-items-center rounded-full bg-background/90 text-ui-caption leading-none"
-                aria-label={intl.formatMessage({ id: "chat.studio.removeReference" })}
-                onClick={() => removeReference(item.id)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-          {deckFiles.map((file) => (
-            <div
-              key={file.id}
-              className="relative size-16 overflow-hidden rounded-lg border border-border bg-surface p-1"
-            >
-              <span className="line-clamp-3 break-all text-ui-caption leading-4">{file.name}</span>
-              <button
-                type="button"
-                className="absolute top-0.5 right-0.5 grid size-4 place-items-center rounded-full bg-background/90 text-ui-caption leading-none"
-                aria-label={intl.formatMessage({ id: "chat.studio.removeAttachment" })}
-                onClick={() => removeDeckFile(file.id)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
         </div>
-        <p className="mt-1 text-ui-caption text-muted-foreground">
-          {intl.formatMessage({
-            id: mode === "ppt" ? "chat.studio.dropAttachment" : "chat.studio.dropReference",
-          })}
-        </p>
-      </div>
+      </StudioSettingsDisclosure>
       <div className="mt-2 flex flex-col gap-2">
         {speeches.map((speech, index) => (
           <div

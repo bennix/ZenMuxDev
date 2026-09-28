@@ -4901,6 +4901,8 @@ const enUS: Record<string, string> = {
   "chat.studio.guided": "Guided",
   "chat.studio.direct": "Chat",
   "chat.studio.pptModel": "Writer",
+  "chat.studio.collapseSettings": "Hide generation settings",
+  "chat.studio.expandSettings": "Show generation settings",
   "chat.studio.intentModel": "Intent",
   "chat.studio.pageCount": "Pages",
   "chat.studio.pageCountCustom": "Custom",
