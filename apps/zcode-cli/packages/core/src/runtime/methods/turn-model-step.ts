@@ -1,3 +1,4 @@
+import { createGuideStreamHandoff } from "./guide-stream-handoff.js";
 import { beginLocalTurnPreparation } from "@zcode/contracts";
 import {
   CompactTrigger,
@@ -227,13 +228,15 @@ async function runModelBackedTurnStepImpl(
     }
   };
 
+  const guideHandoff = createGuideStreamHandoff(state.turnAbortSignal, () =>
+    Boolean(state.activeTurn && this.hasInlineGuidePendingInput(state.activeTurn)));
   let result: RuntimeModelTextResult;
   try {
     const baselineMaxOutputTokens = resolveNormalRequestMaxOutputTokens({
       modelMaxOutputTokens: executionMaxOutputTokens,
     });
     result = await this.runModelTextRequest({
-      abortSignal: state.turnAbortSignal,
+      abortSignal: guideHandoff.signal,
       assistantMessageId,
       events: state.events,
       maxOutputTokens: resolveModelStepMaxOutputTokens({
@@ -251,14 +254,27 @@ async function runModelBackedTurnStepImpl(
       model,
       onStreamSnapshot: (snapshot) => {
         latestStreamSnapshot = snapshot;
+        guideHandoff.checkpoint();
       },
       onModelNetworkStatus: recordModelNetworkStatus,
       onStreamReasoningDelta: (text) => streamingToolCoordinator.recordReasoningDelta(text),
       onStreamTextDelta: (text) => streamingToolCoordinator.recordTextDelta(text),
-      onStreamToolCall: (toolCall) => streamingToolCoordinator.accept(toolCall),
+      onStreamToolCall: (toolCall) => {
+        // 已交接的旧流不能再启动迟到的工具调用。
+        guideHandoff.signal.throwIfAborted();
+        guideHandoff.toolStarted();
+        return streamingToolCoordinator.accept(toolCall);
+      },
       streamRecovery: streamRecoveryRequest,
       tools: options.tools,
       traceContext: modelTraceContext,
+    }).catch((error: unknown): RuntimeModelTextResult => {
+      // 主动交接不是任务失败，已有输出按正常持久化路径收口后消费 guide。
+      if (!guideHandoff.interrupted) throw error;
+      this.logger?.info("Guide stream handoff", { event: "guide.streamHandoff",
+        sessionId: this.sessionId, turnId: state.activeTurn?.turnId, assistantMessageId });
+      return { text: latestStreamSnapshot.text, reasoning: latestStreamSnapshot.reasoning,
+        toolCalls: [], finishReason: "stop", usage: {} };
     });
     throwIfTurnAborted(state.turnAbortSignal);
   } catch (error) {

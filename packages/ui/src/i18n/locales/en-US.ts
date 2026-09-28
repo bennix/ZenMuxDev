@@ -4676,6 +4676,7 @@ const enUS: Record<string, string> = {
   "chat.queue.edit": "Edit",
   "chat.queue.editDraftConflict":
     "Send or clear the current draft before editing a queued message.",
+  "chat.queue.guideFailed": "Guidance was not submitted. The message remains queued. Please retry.",
   "chat.queue.editRestoreFailed": "Couldn't return the queued message to the composer. Try again.",
   "chat.queue.remove": "Remove queued message",
   "chat.queue.turnSteer.steering": "Steering conversation",

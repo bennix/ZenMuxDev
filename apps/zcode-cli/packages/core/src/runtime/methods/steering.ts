@@ -850,12 +850,35 @@ export async function editPendingInputById(
   },
 ): Promise<boolean> {
   const activeTurn = this.activeTurn;
-  const pendingInput = activeTurn?.pendingInputs.find((item) => item.id === options.pendingInputId);
+  let pendingInput = activeTurn?.pendingInputs.find((item) => item.id === options.pendingInputId);
+  // 普通排队仅写入持久化投影；提升引导前按原 ID 恢复，不能误判为消息不存在。
+  let attachedFromQueue = false;
+  if (options.delivery === "guide" && activeTurn?.steerable && !pendingInput) {
+    const projection = await this.rebuildProjection();
+    const held = projection.pendingSteerInputs.find(item => item.pendingInputId === options.pendingInputId);
+    const record = await this.sessionStore?.getSessionInputById?.(options.pendingInputId);
+    if (held && record?.status === "admitted" && record.kind === "sendText" && (record.payload.attachments === undefined || (Array.isArray(record.payload.attachments) && record.payload.attachments.length === 0)) &&
+      this.activeTurn === activeTurn && activeTurn.steerable &&
+      !this.pendingInputReservations.has(options.pendingInputId)) {
+      pendingInput = { id: held.pendingInputId, input: held.input, queuedAt: held.queuedAt,
+        traceId: held.traceId, turnId: activeTurn.turnId, commandKind: "sendText", delivery: "queue",
+        intent: held.intent, source: held.source, inputPresentation: held.inputPresentation,
+        toolDisallowlist: held.toolDisallowlist };
+      activeTurn.pendingInputs.push(pendingInput);
+      attachedFromQueue = true;
+    }
+  }
   // 修复：引导只能原位提升当前纯文字项，不能删除后重发或抢占正在执行的任务。
   if (options.delivery === "guide") {
-    if (!activeTurn || !activeTurn.steerable || !pendingInput || pendingInput.attachments?.length ||
-      (pendingInput.commandKind && pendingInput.commandKind !== "sendText") ||
-      this.pendingInputReservations.has(pendingInput.id)) return false;
+    const reasonCode = !activeTurn ? "guide.noActiveTurn" : !activeTurn.steerable ? "guide.turnNotSteerable"
+      : !pendingInput ? "guide.itemMissing" : pendingInput.attachments?.length ? "guide.attachmentsUnsupported"
+      : pendingInput.commandKind && pendingInput.commandKind !== "sendText" ? "guide.kindUnsupported"
+      : this.pendingInputReservations.has(pendingInput.id) ? "guide.itemReserved" : undefined;
+    if (reasonCode || !activeTurn || !pendingInput) {
+      this.logger?.warn("Guide promotion rejected", { sessionId: this.sessionId, pendingInputId: options.pendingInputId,
+        traceId: options.traceContext.traceId, reasonCode });
+      return false;
+    }
     this.pendingInputReservations.set(pendingInput.id, `guide:${pendingInput.id}`);
     try {
       const intent = pendingInput.intent ? { ...pendingInput.intent, requestedDelivery: "guide" as const, admittedDelivery: "guide" as const, fallbackReasonCode: undefined } : undefined;
@@ -865,10 +888,18 @@ export async function editPendingInputById(
         await this.sessionStore?.updateSessionInputs?.({ sessionID: this.sessionId, updates: [{ id: pendingInput.id, delivery: pendingInput.delivery ?? "queue", ...(pendingInput.intent ? {intent: pendingInput.intent} : {}) }] });
         return false;
       }
+      this.logger?.info("Guide promotion accepted", { sessionId: this.sessionId, pendingInputId: pendingInput.id,
+        turnId: activeTurn.turnId, traceId: options.traceContext.traceId });
       pendingInput.delivery = "guide";
       pendingInput.intent = intent;
       return await this.editPendingInputById({ ...options, delivery: undefined });
-    } finally { this.pendingInputReservations.delete(pendingInput.id); }
+    } finally {
+      this.pendingInputReservations.delete(pendingInput.id);
+      if (attachedFromQueue && pendingInput.delivery !== "guide") {
+        const index = activeTurn.pendingInputs.indexOf(pendingInput);
+        if (index >= 0) activeTurn.pendingInputs.splice(index, 1);
+      }
+    }
   }
   if (!activeTurn || !pendingInput) {
     // held 回落：held 项只在事件日志/投影，经投影定位后

@@ -3229,13 +3229,33 @@ export function SessionPane({
   );
 
   const handleGuideQueueItem = useCallback(async (queueItemId: string) => {
-    const current = snapshotRef.current;
-    const item = current?.queue.items.find(value => value.queueItemId === queueItemId);
-    if (!sessionId || !current || !item) return;
+    const initial = snapshotRef.current;
+    const original = initial?.queue.items.find(value => value.queueItemId === queueItemId);
+    if (!sessionId || !initial || !original) return;
+    let reasonCode = "guide.unavailable";
     try {
-      const ack = await dispatchCommand("editQueueItem", { queueItemId, newText: item.text, delivery: "guide" }, sessionId, current.revision);
-      if (ack.status !== "accepted" && ack.status !== "duplicate") throw new Error(ack.reasonCode ?? ack.status);
-    } catch (error) { toast(intl.formatMessage({id:"chat.queue.editRestoreFailed"})); logger.warn("[v4-pane] 引导提交失败", {error}); }
+      // 流式输出会推进 revision；只有明确 CAS 拒绝且同一项未变化时才安全重试。
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const current = snapshotRef.current;
+        const item = current?.queue.items.find(value => value.queueItemId === queueItemId);
+        if (composerBindingRef.current.sessionId !== sessionId || !current ||
+          current.logEpoch !== initial.logEpoch || !item || item.text !== original.text ||
+          item.dispatch.state !== "queued") break;
+        const ack = await dispatchCommand("editQueueItem", { queueItemId, newText: item.text, delivery: "guide" }, sessionId, current.revision,
+          undefined, undefined, envelope => logger.lifecycle.info("[guide] submit", {
+            commandId: envelope.commandId, sessionId, queueItemId, revision: current.revision, attempt,
+          }));
+        logger.lifecycle.info("[guide] acknowledgement", { commandId: ack.commandId, sessionId, queueItemId,
+          status: ack.status, reasonCode: ack.reasonCode, revision: ack.revisionAtDecision, attempt });
+        if (ack.status === "accepted" || ack.status === "duplicate") return;
+        reasonCode = ack.reasonCode ?? ack.status;
+        if (reasonCode !== "proto.staleRevision" || snapshotRef.current?.revision === current.revision) break;
+      }
+    } catch {
+      reasonCode = "guide.transportFailure";
+    }
+    logger.lifecycle.warn("[guide] submission failed", { sessionId, queueItemId, reasonCode });
+    toast(`${intl.formatMessage({ id: "chat.queue.guideFailed" })} (${reasonCode})`);
   }, [dispatchCommand, intl, sessionId]);
 
   const handleSendQueuedNow = useCallback(
