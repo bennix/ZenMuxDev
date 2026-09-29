@@ -75,9 +75,12 @@ export function registerCodeWorkbenchIpc(logger: {
         },
       });
       processes.set(key, pending);
-      void pending.catch(() => {
+      void pending.catch((error: unknown) => {
         processes.delete(key);
-        logger.warn("codeWorkbench.startFailed", { windowId });
+        logger.warn("codeWorkbench.startFailed", {
+          windowId,
+          reason: error instanceof Error ? error.message : "IDE startup failed",
+        });
       });
     }
     // 修复：局部变量不能叫 process，否则平台路径读取落入暂时性死区，点击即失败。

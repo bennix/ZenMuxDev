@@ -1,3 +1,5 @@
+import { homedir } from "node:os";
+import { describeWorkbenchExit } from "./diagnostics.js";
 import { randomBytes } from "node:crypto";
 import { createServer, type Server } from "node:http";
 import { spawn } from "node:child_process";
@@ -124,7 +126,7 @@ export async function startWorkbench(options: {
     ],
     {
       cwd: workspace,
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
       env: {
         ...process.env,
         ZENCODE_IDE_BRIDGE_TOKEN: token,
@@ -132,6 +134,12 @@ export async function startWorkbench(options: {
       },
     },
   );
+  // 之前丢弃 stderr，导致真实启动错误无法诊断；只保留有界尾部并在返回前脱敏。
+  let stderr = "";
+  child.stdout?.resume();
+  child.stderr?.on("data", (chunk: Buffer) => {
+    stderr = (stderr + chunk.toString("utf8")).slice(-8192);
+  });
   let stopped = false;
   let launchError: Error | undefined;
   const dispose = () => {
@@ -144,7 +152,9 @@ export async function startWorkbench(options: {
     stopped = true;
     bridge.close();
   });
-  child.on("exit", () => {
+  child.on("close", (code, signal) => {
+    launchError ??= new Error(describeWorkbenchExit(code, signal, stderr,
+      [token, workspace, runtime, options.root, homedir()]));
     stopped = true;
     bridge.close();
   });
