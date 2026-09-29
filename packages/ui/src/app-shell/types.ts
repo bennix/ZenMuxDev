@@ -241,7 +241,7 @@ export interface WorkspaceShellLayoutProps extends Omit<AppProps, "baseFeedbackS
   handleToggleGit: () => void;
   handleOpenGitReview: (sourceId?: GitChangeSourceId) => void;
   handleToggleSidePane: () => void;
-  handleOpenBrowserUrl: (url: string) => void;
+  handleOpenBrowserUrl: (url: string, options?: { purpose?: "code-workbench" }) => void;
   handleOpenCodeViewer: (source: CodeViewerSource) => void;
   handleAutoOpenAssistantPptx: (request: AssistantPreviewCardsAutoOpenRequest) => void;
   handleOpenBackgroundBash: (request: OpenBackgroundBashSideTabRequest) => void;

@@ -1,3 +1,4 @@
+import type { CodeWorkbenchRequest, CodeWorkbenchContext } from "@zcode/shared";
 import {
   databaseStartupControlSchema,
   databaseStartupStateSchema,
@@ -799,6 +800,15 @@ contextBridge.exposeInMainWorld("zcode", {
   /** 用户确认重启安装更新 */
   quitAndInstallUpdate: () => ipcRenderer.invoke(PlatformChannels.QuitAndInstallUpdate),
   /** 获取已安装的编辑器/终端列表（含图标） */
+  acknowledgeCodeWorkbenchContext: async (requestId: string, accepted: boolean) => {
+    ipcRenderer.send(PlatformChannels.CodeWorkbenchContextAck, { requestId, accepted });
+  },
+  openCodeWorkbench: (request: CodeWorkbenchRequest) => ipcRenderer.invoke(PlatformChannels.OpenCodeWorkbench, request),
+  onCodeWorkbenchContext: (callback: (context: CodeWorkbenchContext) => void) => {
+    const listener = (_event: unknown, context: CodeWorkbenchContext) => callback(context);
+    ipcRenderer.on(PlatformChannels.CodeWorkbenchContext, listener);
+    return () => ipcRenderer.removeListener(PlatformChannels.CodeWorkbenchContext, listener);
+  },
   getInstalledEditors: () => ipcRenderer.invoke(PlatformChannels.GetInstalledEditors),
   getApplicationIcon: (request: string | ApplicationIconRequest) =>
     ipcRenderer.invoke(PlatformChannels.GetApplicationIcon, request),

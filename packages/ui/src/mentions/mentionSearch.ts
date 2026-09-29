@@ -1,3 +1,4 @@
+import { WORKSPACE_FILE_SEARCH_DISPLAY_CAP } from "@zcode/shared/workspaceFileSearch";
 import type { MentionItem } from "@/mentions/mentionTypes.js";
 
 /**
@@ -7,7 +8,8 @@ import type { MentionItem } from "@/mentions/mentionTypes.js";
  */
 const MENTION_DISPLAY_CAP = 1000;
 export const MENTION_DEFAULT_GROUP_PREVIEW_LIMIT = 3;
-export const MENTION_FILES_ONLY_DEFAULT_PREVIEW_LIMIT = 10;
+// 文件列表不能只预览前 10 项，否则排序靠后的源码看起来像未被索引。
+export const MENTION_FILES_ONLY_DEFAULT_PREVIEW_LIMIT = WORKSPACE_FILE_SEARCH_DISPLAY_CAP;
 
 export function hasMentionQuery(query: string): boolean {
   return query.trim().length > 0;

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import { prepareWorkbench } from "./prepare-code-workbench.mjs";
 
 import { existsSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -13,6 +13,8 @@ import { getTargetPlatform } from "./target-platform.mjs";
 
 const desktopRoot = resolve(import.meta.dirname, "..");
 const target = getTargetPlatform();
+// 必须在 all-ready 的提前退出之前校验 IDE，否则已有开发环境会漏准备。
+await prepareWorkbench(target);
 const bundledToolsRoot = join(desktopRoot, "bundled-tools", target.key);
 const pnpmCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const nativeSearchReleasePlan = resolveNativeSearchReleasePlan({

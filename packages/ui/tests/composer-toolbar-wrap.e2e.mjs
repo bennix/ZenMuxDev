@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { build } from 'esbuild';
+import { chromium } from 'playwright-core';
+test('unshrinkable composer actions wrap without covering send at narrow widths',async()=>{
+ const result=await build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import {useComposerToolbarFit} from './packages/ui/src/prompt-editor/useComposerToolbarFit.ts';function App(){const ref=useComposerToolbarFit();return <div id="host"><div ref={ref} id="toolbar"><div data-composer-leading-actions><div data-composer-leading-content>{['+','控制电脑','控制浏览器','Office','创作'].map(text=><button key={text}>{text}</button>)}</div></div><div data-composer-trailing-actions><button>发送</button></div></div></div>}createRoot(document.getElementById('root')).render(<App/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,platform:'browser',jsx:'automatic'});
+ const browser=await chromium.launch({channel:'chrome',headless:true});
+ try{const page=await browser.newPage();await page.setContent('<div id="root"></div>');await page.addStyleTag({content:`#host{width:440px}#toolbar{display:flex;align-items:flex-end;gap:12px}[data-composer-leading-actions]{display:flex;min-width:0;flex:1}[data-composer-leading-content]{display:flex;flex-shrink:0;align-items:center;gap:4px}[data-composer-trailing-actions]{display:flex;flex-shrink:0}button{width:100px;height:30px;flex-shrink:0}[data-composer-trailing-actions] button{width:40px}[data-composer-wrap=true] [data-composer-leading-content]{flex-wrap:wrap;flex-shrink:1;min-width:0;max-width:100%}`});await page.addScriptTag({content:result.outputFiles[0].text});
+ for(const width of [320,400,440,900,320]){await page.locator('#host').evaluate((e,w)=>e.style.width=w+'px',width);await page.waitForTimeout(100);const send=await page.getByRole('button',{name:'发送'}).boundingBox();for(const button of await page.locator('[data-composer-leading-content] button').all()){const r=await button.boundingBox();assert.ok(r.x+r.width<=send.x||r.y+r.height<=send.y,'toolbar action overlaps send');}assert.equal(await page.getByRole('button').count(),6);}
+ }finally{await browser.close()}
+});

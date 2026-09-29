@@ -1,3 +1,4 @@
+import type { CodeWorkbenchRequest, CodeWorkbenchContext } from "@zcode/shared";
 import type {
   DesktopCommandId,
   DesktopZoomState,
@@ -304,6 +305,9 @@ declare global {
       quitAndInstallUpdate(): Promise<void>;
       /** 获取已安装的编辑器/终端列表（含图标） */
       getInstalledEditors(): Promise<EditorInfo[]>;
+      acknowledgeCodeWorkbenchContext(requestId: string, accepted: boolean): Promise<void>;
+      openCodeWorkbench(request: CodeWorkbenchRequest): Promise<{ url: string }>;
+      onCodeWorkbenchContext(callback: (context: CodeWorkbenchContext) => void): () => void;
       /** 按兼容 bundle id 或结构化 locator 获取系统应用图标 */
       getApplicationIcon?(
         request: string | ApplicationIconRequest,

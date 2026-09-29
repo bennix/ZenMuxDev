@@ -1,3 +1,4 @@
+import { registerCodeWorkbenchIpc } from "./code-workbench/ipc.js";
 /* eslint-disable max-lines -- 桌面平台 IPC 集中装配，拆散会让权限边界更难审计；行数随平台能力增长。 */
 import { BrowserWindow, dialog, ipcMain, nativeTheme } from "electron";
 import { readZCodeStdioTapDevState } from "@zcode/services/node";
@@ -385,6 +386,7 @@ export function registerPlatformIpcHandlers(options: {
     const senderWindow = BrowserWindow.fromWebContents(event.sender);
     return resolveDesktopWindowChromeState(senderWindow?.isMaximized() ?? false);
   });
+  registerCodeWorkbenchIpc(options.logger);
   ipcMain.handle(PlatformChannels.GetInstalledEditors, () => getInstalledEditors());
   ipcMain.handle(
     PlatformChannels.GetApplicationIcon,

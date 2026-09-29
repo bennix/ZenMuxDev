@@ -56,6 +56,7 @@ export interface WorkspaceHeaderTitleSectionProps {
 }
 
 export interface WorkspaceHeaderActionSectionProps {
+  onOpenWorkbenchUrl?: (url: string) => void;
   variant?: WorkspaceHeaderVariant;
   activeTaskId?: string | null;
   user?: UserInfo | null;

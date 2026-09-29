@@ -1,5 +1,13 @@
 /** English translations */
 const enUS: Record<string, string> = {
+  "workbench.returnToChat": "Return to chat layout",
+  "workbench.expandAI": "Expand AI",
+  "workbench.collapseAI": "Collapse AI",
+  "workbench.open": "Source IDE",
+  "workbench.preparing": "Starting bundled IDE…",
+  "workbench.remoteUnavailable": "IDE runtime is not deployed on remote workspaces yet",
+  "workbench.failed": "IDE could not open. Click to retry:",
+
   "startPlan.recommendation.subagentDescription":
     "Your Start Plan has quota available for {model}. Switch this subagent’s model to the Start Plan?",
   "startPlan.recommendation.preferenceSaveFailed":

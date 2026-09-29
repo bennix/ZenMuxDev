@@ -15,6 +15,7 @@ export interface BrowserSidePaneTab {
   initialUrl?: string | null;
   /** 由 Agent 控制的页面触发的 popup；不应套用人类浏览器的持久化显示偏好。 */
   agentOpened?: boolean;
+  purpose?: "code-workbench";
   openedAt?: number;
   title?: string | null;
   residency?: BrowserTabResidencyState;
@@ -627,6 +628,7 @@ function createBrowserSidePaneTab(options?: {
   workspaceKey?: string | null;
   remoteSessionId?: string | null;
   agentOpened?: boolean;
+  purpose?: "code-workbench";
 }): BrowserSidePaneTab {
   return {
     id: options?.tabId ?? `browser:${createUuid()}`,
@@ -641,6 +643,7 @@ function createBrowserSidePaneTab(options?: {
     faviconUrl: null,
     initialUrl: options?.initialUrl ?? null,
     ...(options?.agentOpened ? { agentOpened: true } : {}),
+    ...(options?.purpose ? { purpose: options.purpose } : {}),
     openedAt: Date.now(),
     title: null,
   };
@@ -1058,7 +1061,8 @@ const WORKSPACE_GLOBAL_SIDE_PANE_TAB_TYPES = new Set<WorkspaceSidePaneTab["type"
 ]);
 
 function isWorkspaceGlobalSidePaneTab(tab: WorkspaceSidePaneTab): boolean {
-  return WORKSPACE_GLOBAL_SIDE_PANE_TAB_TYPES.has(tab.type);
+  return WORKSPACE_GLOBAL_SIDE_PANE_TAB_TYPES.has(tab.type) ||
+    (tab.type === "browser" && tab.purpose === "code-workbench");
 }
 
 interface SidePaneVisibilityScope {
@@ -1140,6 +1144,9 @@ function resolveActiveTabForOwner(
   if (!state) return null;
   const visibleTabs = getVisibleSidePaneTabsByScope(state.tabs, scope);
   if (visibleTabs.length === 0) return null;
+  // IDE 属于工作区；发送时草稿转正不能被目标任务记忆的 tab 抢走前台。
+  const active = visibleTabs.find((tab) => tab.id === state.activeTabId);
+  if (active?.type === "browser" && active.purpose === "code-workbench") return active.id;
   if (preferredTabId && visibleTabs.some((tab) => tab.id === preferredTabId)) {
     return preferredTabId;
   }
@@ -1195,6 +1202,7 @@ function activateBrowserSidePane(
     workspaceKey?: string | null;
     remoteSessionId?: string | null;
     agentOpened?: boolean;
+  purpose?: "code-workbench";
   },
 ): WorkspaceSidePaneState {
   if (!options?.forceNew && !options?.tabId && !options?.initialUrl) {
@@ -1221,6 +1229,7 @@ export function openBrowserSidePane(
     remoteSessionId?: string | null;
     activate?: boolean;
     agentOpened?: boolean;
+  purpose?: "code-workbench";
   },
 ): WorkspaceSidePaneState {
   const next = activateBrowserSidePane(current, {

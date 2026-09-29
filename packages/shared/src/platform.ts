@@ -1,3 +1,4 @@
+import type { CodeWorkbenchRequest, CodeWorkbenchContext } from "./codeWorkbench.js";
 /* eslint-disable max-lines -- 跨端 platform contract 集中声明 renderer 能力；OAuth 与 browser lifecycle 必须保持 desktop/web 类型合同，本 MR 不拆分平台边界。 */
 import type {
   DockerConnectOptions,
@@ -957,6 +958,10 @@ export interface IPlatformService {
 
   /** 获取系统中已安装的编辑器/终端列表（含图标） */
   getInstalledEditors(): Promise<EditorInfo[]>;
+
+  acknowledgeCodeWorkbenchContext?(requestId: string, accepted: boolean): Promise<void>;
+  openCodeWorkbench?(request: CodeWorkbenchRequest): Promise<{ url: string }>;
+  onCodeWorkbenchContext?(callback: (context: CodeWorkbenchContext) => void): () => void;
 
   /** 用指定编辑器打开路径 */
   openInEditor(

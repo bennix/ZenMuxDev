@@ -115,7 +115,8 @@ import {
 } from "@/lib/promptHistoryStorage.js";
 import {
   WORKSPACE_FILE_ADD_TO_CHAT_EVENT,
-  readWorkspaceFileDragPayload,
+  readWorkspaceFileDragPayloads,
+  hasWorkspaceFileDragPayload,
   isWorkspaceFileAddToChatEvent,
 } from "@/lib/workspaceFileDrag.js";
 import { appendWorkspaceFileMentionToComposer } from "@/lib/workspaceFileComposer.js";
@@ -644,6 +645,11 @@ function ConversationComposerImpl({
   });
   const handleConversationDragOver = useCallback(
     (event: DragEvent<HTMLElement>) => {
+      if (hasWorkspaceFileDragPayload(event.dataTransfer)) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        return;
+      }
       attachmentsApi.handleDragOverComposer(event);
     },
     [attachmentsApi.handleDragOverComposer],
@@ -656,19 +662,34 @@ function ConversationComposerImpl({
   );
   const handleConversationDrop = useCallback(
     (event: DragEvent<HTMLElement>) => {
-      const workspaceFilePayload = readWorkspaceFileDragPayload(event.dataTransfer);
-      if (workspaceFilePayload) {
+      const workspaceFilePayloads = readWorkspaceFileDragPayloads(
+        event.dataTransfer,
+        workspacePath,
+        workspaceIdentity,
+      );
+      if (workspaceFilePayloads.length) {
         // 文件树 payload 与 OS File[] 语义不同：只插入 mention，绝不能进入上传队列。
         event.preventDefault();
-        attachmentsApi.handleDropComposer(event);
-        appendWorkspaceFileMentionToComposer({
-          inputApiRef,
-          currentMarkdown: inputApiRef.current?.getMarkdown() ?? textRef.current,
-          payload: workspaceFilePayload,
-          workspacePath,
-          workspaceIdentity,
-          onTextChange: updateText,
-        });
+        event.stopPropagation();
+        let currentMarkdown = inputApiRef.current?.getMarkdown() ?? textRef.current;
+        for (const workspaceFilePayload of workspaceFilePayloads) {
+          currentMarkdown = appendWorkspaceFileMentionToComposer({
+            inputApiRef,
+            currentMarkdown,
+            payload: workspaceFilePayload,
+            workspacePath,
+            workspaceIdentity,
+            onTextChange: updateText,
+          });
+        }
+        return;
+      }
+      if (
+        hasWorkspaceFileDragPayload(event.dataTransfer) &&
+        !Array.from(event.dataTransfer.types).includes("Files")
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
       attachmentsApi.handleDropComposer(event);
@@ -2183,9 +2204,7 @@ function ConversationComposerImpl({
           aria-pressed={studioOpen}
           className={cn(
             "h-7 w-fit justify-center gap-1 rounded-lg border px-2 py-1.5 text-ui-base transition-colors",
-            studioOpen
-              ? "border-foreground bg-foreground text-background"
-              : "border-transparent",
+            studioOpen ? "border-foreground bg-foreground text-background" : "border-transparent",
           )}
           onClick={() => setStudioOpen((open) => !open)}
         >

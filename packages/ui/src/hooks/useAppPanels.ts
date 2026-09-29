@@ -327,11 +327,15 @@ export function useAppPanels(options: {
         readTaskSidePaneMemoryState(activeSidePaneMemoryKeyRef.current),
         sidePaneOwnerId,
       );
+      const activeTab = current?.tabs.find((tab) => tab.id === current.activeTabId);
+      // IDE 当前的显隐是工作区布局，不继承新任务历史中的侧栏收起偏好。
+      const preserveWorkbench = activeTab?.type === "browser" &&
+        activeTab.purpose === "code-workbench" && activeTab.workspaceKey === activeWorkspaceKey;
       const resolved = resolveSidePaneScopeState(
         current,
         { workspaceKey: activeWorkspaceKey, ownerTaskId: sidePaneOwnerId },
         preferredTabId,
-        collapsedPreference,
+        preserveWorkbench ? latestSidePaneMemoryRef.current.isSidePaneCollapsed : collapsedPreference,
       );
       setIsSidePaneCollapsed(resolved.isSidePaneCollapsed);
       logger.debug("[App] 同步对话右侧面板 scope", {
@@ -379,7 +383,7 @@ export function useAppPanels(options: {
   );
 
   const handleOpenBrowserUrl = useCallback(
-    (request: string | EmbeddedBrowserOpenUrlRequest) => {
+    (request: string | EmbeddedBrowserOpenUrlRequest, options?: { purpose?: "code-workbench" }) => {
       const payload: EmbeddedBrowserOpenUrlRequest =
         typeof request === "string" ? { url: request, disposition: "foreground-tab" } : request;
       const sourceWorkspaceKey = payload.workspaceKey ?? activeWorkspaceKeyRef.current;
@@ -434,6 +438,7 @@ export function useAppPanels(options: {
               ...(sourceRemoteSessionId ? { remoteSessionId: sourceRemoteSessionId } : {}),
               activate: isCurrentOwner,
               agentOpened,
+              purpose: options?.purpose,
             }),
       );
     },

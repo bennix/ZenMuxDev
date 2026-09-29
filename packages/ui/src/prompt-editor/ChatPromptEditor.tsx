@@ -23,7 +23,7 @@ import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import type { AppSlashCommand } from "@/slashCommandHelpers.js";
 import {
   hasWorkspaceFileDragPayload,
-  readWorkspaceFileDragPayload,
+  readWorkspaceFileDragPayloads,
 } from "@/lib/workspaceFileDrag.js";
 import { appendWorkspaceFileMentionToComposer } from "@/lib/workspaceFileComposer.js";
 import { usePromptEditorDragState } from "@/prompt-editor/usePromptEditorDragState.js";
@@ -282,10 +282,10 @@ export function ChatPromptEditor({
 
   const handleDrop: DragEventHandler<HTMLDivElement> = useCallback(
     (event) => {
-      const workspaceFilePayload = enableWorkspaceFileDrop
-        ? readWorkspaceFileDragPayload(event.dataTransfer)
-        : null;
-      if (workspaceFilePayload) {
+      const workspaceFilePayloads = enableWorkspaceFileDrop
+        ? readWorkspaceFileDragPayloads(event.dataTransfer, workspacePath, workspaceIdentity)
+        : [];
+      if (workspaceFilePayloads.length) {
         // file tree 拖拽不是系统文件，不能走附件分支；
         // 这里统一转换成和 @ 文件一致的 mention，避免 contenteditable 插入纯文本。
         event.preventDefault();
@@ -294,21 +294,33 @@ export function ChatPromptEditor({
         event.stopPropagation();
         setInternalDragging(false);
         setWorkspaceFileDragging(false);
-        const currentMarkdown = resolvedInputApiRef.current?.getMarkdown() ?? latestTextRef.current;
-        appendWorkspaceFileMentionToComposer({
-          inputApiRef: resolvedInputApiRef,
-          currentMarkdown,
-          payload: workspaceFilePayload,
-          workspacePath,
-          workspaceIdentity,
-          onTextChange: handleTextChange,
-        });
+        let currentMarkdown = resolvedInputApiRef.current?.getMarkdown() ?? latestTextRef.current;
+        for (const workspaceFilePayload of workspaceFilePayloads) {
+          currentMarkdown = appendWorkspaceFileMentionToComposer({
+            inputApiRef: resolvedInputApiRef,
+            currentMarkdown,
+            payload: workspaceFilePayload,
+            workspacePath,
+            workspaceIdentity,
+            onTextChange: handleTextChange,
+          });
+        }
         return;
       }
 
       setInternalDragging(false);
       setWorkspaceFileDragging(false);
       setExternalFileDragging(false);
+      // IDE 非法/越界引用不能落入 contenteditable 默认粘贴或页面导航。
+      if (
+        enableWorkspaceFileDrop &&
+        hasWorkspaceFileDragPayload(event.dataTransfer) &&
+        !Array.from(event.dataTransfer.types).includes("Files")
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       onDrop?.(event);
     },
     [
@@ -387,7 +399,10 @@ export function ChatPromptEditor({
         />
         <div ref={toolbarRef} className="group/toolbar flex items-end gap-3">
           <div className="flex min-w-0 flex-1 items-center" data-composer-leading-actions>
-            <div className="flex shrink-0 items-center gap-1" data-composer-leading-content>
+            <div
+              className="flex shrink-0 items-center gap-1 group-data-[composer-wrap=true]/toolbar:flex-wrap group-data-[composer-wrap=true]/toolbar:shrink group-data-[composer-wrap=true]/toolbar:min-w-0 group-data-[composer-wrap=true]/toolbar:max-w-full"
+              data-composer-leading-content
+            >
               {hasActionMenu ? (
                 <ChatPromptActionMenu
                   actionMenuTitle={actionMenuTitle}

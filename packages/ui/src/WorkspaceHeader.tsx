@@ -57,6 +57,7 @@ export function WorkspaceHeader({
   isSidePaneOpen,
   onRefreshGit,
   onToggleTerminal,
+  onOpenWorkbenchUrl,
   onToggleSidePane,
   toggleSidePaneShortcutLabel,
   onReloadSession,
@@ -101,6 +102,7 @@ export function WorkspaceHeader({
   isSidePaneOpen: boolean;
   onRefreshGit: () => void;
   onToggleTerminal: () => void;
+  onOpenWorkbenchUrl?: (url: string) => void;
   onToggleBrowser: () => void;
   onToggleSidePane: () => void;
   toggleSidePaneShortcutLabel?: string;
@@ -198,6 +200,7 @@ export function WorkspaceHeader({
           <div className="min-w-0 flex-1" aria-hidden="true" />
         )}
         <WorkspaceHeaderActionSection
+          onOpenWorkbenchUrl={onOpenWorkbenchUrl}
           variant={variant}
           activeTaskId={activeTaskId}
           user={user}

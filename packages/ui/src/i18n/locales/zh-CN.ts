@@ -1,5 +1,13 @@
 /** 中文翻译 */
 const zhCN: Record<string, string> = {
+  "workbench.returnToChat": "返回对话布局",
+  "workbench.expandAI": "展开 AI",
+  "workbench.collapseAI": "收起 AI",
+  "workbench.open": "源码 IDE",
+  "workbench.preparing": "正在启动内置 IDE…",
+  "workbench.remoteUnavailable": "远程工作区尚未部署 IDE 运行时",
+  "workbench.failed": "IDE 打开失败，可点击重试：",
+
   "startPlan.recommendation.subagentDescription":
     "你的体验套餐中，{model} 仍有可用额度，是否将此子智能体的模型切换到体验套餐？",
   "startPlan.recommendation.preferenceSaveFailed": "未能保存“不再提示”，本次仍按你的选择继续。",

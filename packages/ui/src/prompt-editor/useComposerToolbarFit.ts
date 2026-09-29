@@ -7,6 +7,7 @@ function fitComposerToolbar(root: HTMLElement) {
   if (!available || !content) return;
   const controls = root.querySelectorAll<HTMLElement>("[data-composer-collapse-priority]");
   // 每次从完整布局测量，避免各按钮独立 observer 互相抢空间，也覆盖语言与异步入口变化。
+  delete root.dataset.composerWrap;
   delete root.dataset.composerModelIcon;
   delete root.dataset.composerProviderCompact;
   for (const control of controls) delete control.dataset.composerCompact;
@@ -42,6 +43,8 @@ function fitComposerToolbar(root: HTMLElement) {
   // think 去掉绿条后重新测量；只差这点宽度时应保留完整模型名。
   if (overflow() <= 0) return;
   root.dataset.composerModelIcon = "true";
+  // Office/创作等入口不参与文字收缩；仍超宽时换行，不能覆盖右侧发送按钮。
+  if (overflow() > 0) root.dataset.composerWrap = "true";
 }
 
 export function useComposerToolbarFit() {
@@ -66,7 +69,7 @@ export function useComposerToolbarFit() {
       root.parentElement.append(probe);
       try {
         fitComposerToolbar(probe);
-        for (const key of ["composerModelIcon", "composerProviderCompact"]) {
+        for (const key of ["composerModelIcon", "composerProviderCompact", "composerWrap"]) {
           if (probe.dataset[key]) root.dataset[key] = probe.dataset[key];
           else delete root.dataset[key];
         }

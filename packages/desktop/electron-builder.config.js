@@ -1,3 +1,4 @@
+import { verifyWorkbenchBundle } from "./scripts/prepare-code-workbench.mjs";
 /* eslint-disable max-lines -- Electron Builder config keeps related packaging hooks together so build order stays explicit. */
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { readdir, writeFile } from "node:fs/promises";
@@ -504,6 +505,7 @@ export default {
     `node_modules/node-pty/prebuilds/${targetPlatform.key}/**`,
   ],
   beforePack: async (context) => {
+    await verifyWorkbenchBundle(resolve(import.meta.dirname, "bundled-workbench", targetPlatform.key), targetPlatform);
     runTimedSync("beforePack:restoreTargetNodePtyPrebuild", () =>
       restoreTargetNodePtyPrebuild({ desktopPackageRoot, targetPlatform }),
     );
@@ -573,6 +575,7 @@ export default {
     }
   },
   extraResources: [
+    { from: `bundled-workbench/${targetPlatform.key}`, to: "code-workbench", filter: ["**/*"] },
     { from: resolve(workspaceRoot, noticesFileName), to: noticesFileName },
     ...(targetPlatform.os === "darwin"
       ? [

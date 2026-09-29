@@ -1,3 +1,4 @@
+import { hasIdeFileDrag, readIdeFileDrag } from "./ideFileDrag.js";
 import { buildFileMentionMarkdown } from "@/mentions/mentionMarkdown.js";
 
 export const WORKSPACE_FILE_DRAG_MIME = "application/x-zcode-workspace-file";
@@ -91,7 +92,10 @@ export function readWorkspaceFileDragPayload(
 }
 
 export function hasWorkspaceFileDragPayload(dataTransfer: DataTransfer): boolean {
-  return Array.from(dataTransfer.types).includes(WORKSPACE_FILE_DRAG_MIME);
+  return (
+    Array.from(dataTransfer.types).includes(WORKSPACE_FILE_DRAG_MIME) ||
+    hasIdeFileDrag(dataTransfer)
+  );
 }
 
 export function isWorkspaceFileDragStateEvent(
@@ -162,4 +166,13 @@ export function createWorkspaceFileComposerMention(
       relativePath: mentionTarget,
     },
   };
+}
+
+export function readWorkspaceFileDragPayloads(
+  dataTransfer: DataTransfer,
+  workspacePath: string,
+  workspaceIdentity?: string,
+): WorkspaceFileDragPayload[] {
+  const own = readWorkspaceFileDragPayload(dataTransfer);
+  return own ? [own] : readIdeFileDrag(dataTransfer, workspacePath, workspaceIdentity);
 }

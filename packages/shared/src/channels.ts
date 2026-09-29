@@ -1,3 +1,4 @@
+import type { CodeWorkbenchRequest } from "./codeWorkbench.js";
 /* eslint-disable max-lines -- 通信频道和请求响应映射必须集中定义，避免跨进程 channel 字符串散落。 */
 import type {
   ResourceUsageSnapshot,
@@ -414,6 +415,9 @@ export const PlatformChannels = {
   QuitAndInstallUpdate: "zcode:quit-and-install-update",
   /** Renderer → Main：获取系统中已安装的编辑器/终端列表（含图标） */
   GetInstalledEditors: "zcode:get-installed-editors",
+  OpenCodeWorkbench: "zcode:open-code-workbench",
+  CodeWorkbenchContext: "zcode:code-workbench-context",
+  CodeWorkbenchContextAck: "zcode:code-workbench-context-ack",
   /** Renderer → Main：按 bundle id 获取系统应用图标 */
   GetApplicationIcon: "zcode:get-application-icon",
   /** Renderer → Main：用指定编辑器打开路径 */
@@ -1142,6 +1146,10 @@ export interface PlatformChannelMap {
   [PlatformChannels.QuitAndInstallUpdate]: {
     request: void;
     response: void;
+  };
+  [PlatformChannels.OpenCodeWorkbench]: {
+    request: CodeWorkbenchRequest;
+    response: { url: string };
   };
   [PlatformChannels.GetInstalledEditors]: {
     request: void;

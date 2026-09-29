@@ -1,3 +1,5 @@
+import { useContext as useWorkbenchContext } from "react";
+import { CodeWorkbenchLayoutContext } from "@/lib/codeWorkbenchLayout.js";
 import { useTaskActivitySound } from "@/hooks/useTaskActivitySound.js";
 import { resolveSelectionSideInheritedModel } from "@/lib/selectionSideInheritedModel.js";
 import { useStartPlanRecommendation } from "@/hooks/useStartPlanRecommendation.js";
@@ -556,6 +558,7 @@ export function SessionPane({
   const platform = useOptionalPlatform();
   const { conversationShareService, modelSelectionService, zcodeSessionService, zcodeTaskService } =
     useServices();
+  const isWorkbenchDocked = useWorkbenchContext(CodeWorkbenchLayoutContext);
   const { intl, locale } = useZCodeIntl();
   const slashCommands = useSlashCommands(workspacePath, workspaceIdentity);
   const baseWorkspaceServices = useBaseWorkspaceServices();
@@ -4823,13 +4826,13 @@ export function SessionPane({
                 ) : null
               }
               emptyState={
-                isDraft ? (
+                isDraft && !isWorkbenchDocked ? (
                   <div data-testid={TID_CHAT_EMPTY} className="w-full">
                     <ConversationDraftEmptyState />
                   </div>
                 ) : null
               }
-              centerEmptyStateWithDock={isDraft}
+              centerEmptyStateWithDock={isDraft && !isWorkbenchDocked}
               summaryPanelLayout={statusPanelLayout}
               conversationFindQuery={!isDraft && focused ? conversationFindQuery : ""}
               conversationFindActiveIndex={!isDraft && focused ? conversationFindActiveIndex : -1}

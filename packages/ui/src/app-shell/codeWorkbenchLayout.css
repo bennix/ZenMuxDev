@@ -1,0 +1,39 @@
+/* 保持原面板与 composer 挂载，仅改变 IDE 模式的几何布局，避免丢失草稿/进行中的任务。 */
+[data-code-workbench-focus="true"] {
+  position: relative;
+}
+[data-code-workbench-focus="true"] > #browser {
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+[data-code-workbench-focus="true"] > [data-workspace-side-pane-resize-handle] {
+  display: none !important;
+}
+[data-code-workbench-focus="true"] > #conversation-column {
+  position: absolute !important;
+  right: 12px;
+  bottom: 12px;
+  width: min(440px, calc(100% - 24px)) !important;
+  height: min(520px, 60%) !important;
+  min-width: 0 !important;
+  z-index: 30;
+  border-radius: var(--workspace-panel-radius);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 16%);
+}
+[data-code-workbench-focus="true"] #conversation-column [data-workspace-header-variant] {
+  display: none;
+}
+[data-code-workbench-focus="true"][data-workbench-dock-collapsed="true"] > #conversation-column {
+  height: 44px !important;
+}
+[data-workbench-dock-collapsed="true"] [data-workbench-chat-body] {
+  display: none;
+}
+/* 收起时让标题栏占满原会话列，终端与分隔条不挤压标题栏。 */
+[data-workbench-dock-collapsed="true"] #conversation-column #conversation {
+  flex: 1 1 100% !important;
+}
+[data-workbench-dock-collapsed="true"] #conversation-column #conversation ~ * {
+  display: none !important;
+}

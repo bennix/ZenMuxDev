@@ -1,3 +1,4 @@
+import { WorkspaceCodeWorkbenchButton } from "@/WorkspaceCodeWorkbenchButton.js";
 import { WorkspaceEditorButtonGroup } from "@/WorkspaceEditorButtonGroup.js";
 import { WorkspaceSidePaneToggleButton } from "@/WorkspaceSidePaneToggleButton.js";
 import { WorkspaceTerminalToggleButton } from "@/WorkspaceTerminalToggleButton.js";
@@ -11,6 +12,8 @@ export type { WorkspaceHeaderActionSectionProps } from "@/WorkspaceHeaderSection
 
 export function WorkspaceHeaderActionSection({
   variant = "task",
+  onOpenWorkbenchUrl,
+  remoteSessionId,
   activeTaskId,
   user,
   readOnlyReason,
@@ -38,6 +41,12 @@ export function WorkspaceHeaderActionSection({
         useWindowsCaptionSpacing ? "-my-2 h-12 gap-0" : "gap-0.5",
       )}
     >
+      <WorkspaceCodeWorkbenchButton
+        workspacePath={workspaceAbsPath}
+        workspaceIdentity={workspaceIdentity}
+        remote={Boolean(remoteTarget || remoteSessionId)}
+        onOpenUrl={onOpenWorkbenchUrl}
+      />
       {variant === "task" ? (
         <WorkspaceEditorButtonGroup
           disabledReason={readOnlyReason}

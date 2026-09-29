@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkspaceFileEntry } from "@zcode/shared";
 import { useServices } from "@/hooks/useServices.js";
 import { buildFileMentionMarkdown } from "@/mentions/mentionMarkdown.js";
@@ -50,6 +50,7 @@ export function useFileMentionProvider(
     }),
     [fileService, workspacePath, workspaceIdentity, enabled],
   );
+  const refreshedScope = useRef<typeof scope | null>(null);
   const [result, setResult] = useState<{
     scope: typeof scope;
     query: string;
@@ -65,9 +66,13 @@ export function useFileMentionProvider(
     let active = true;
     setResult({ scope, query, limit, entries: [], loading: true, error: null });
     const params = { rootPath: workspacePath, workspaceIdentity, query, limit };
-    const search = async () => {
+    let busy = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const search = async (refresh = false) => {
+      if (!active || busy || scope.error) return;
+      busy = true;
       try {
-        let entries = await fileService.searchWorkspaceFiles(params);
+        let entries = await fileService.searchWorkspaceFiles({ ...params, refresh });
         if (!active) return;
         const normalizedQuery = normalizeRefreshQuery(query);
         if (entries.length === 0 && normalizedQuery && scope.lastMissQuery !== normalizedQuery) {
@@ -81,12 +86,32 @@ export function useFileMentionProvider(
         if (!active) return;
         scope.error = error instanceof Error ? error : new Error(String(error));
         setResult({ scope, query, limit, entries: [], loading: false, error: scope.error });
+      } finally {
+        busy = false;
+        if (active && !scope.error)
+          timer = setTimeout(() => {
+            if (document.visibilityState === "hidden") return;
+            void search(true);
+          }, 3000);
       }
     };
-    void search();
+    const refreshOnFocus = () => {
+      if (document.visibilityState === "hidden") return;
+      clearTimeout(timer);
+      void search(true);
+    };
+    // 打开面板补扫一次；按键查询继续复用索引，避免逐字扫描工作区。
+    const refresh = refreshedScope.current !== scope;
+    refreshedScope.current = scope;
+    void search(refresh);
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
     // 查询、工作区、连接或面板生命周期变化都使已发出的异步响应失效。
     return () => {
       active = false;
+      clearTimeout(timer);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
     };
   }, [enabled, fileService, workspacePath, workspaceIdentity, query, limit, scope]);
 
