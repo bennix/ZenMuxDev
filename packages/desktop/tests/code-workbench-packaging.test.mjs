@@ -14,6 +14,12 @@ test('packaging rejects absent or mismatched IDE assets', async () => {
   await writeFile(join(root,'out/node/entry.js'),''); await writeFile(join(root,'lib/node'),'');
   const manifest={version:WORKBENCH_VERSION,platform:target.os,arch:target.arch,sha256:workbenchAsset(target.os,target.arch).sha256};
   await writeFile(join(root,'zencode-runtime.json'),JSON.stringify(manifest));
+  await assert.rejects(verifyWorkbenchBundle(root,target));
+  await mkdir(join(root,'lib/vscode/node_modules'),{recursive:true});
+  await writeFile(join(root,'package.json'),JSON.stringify({dependencies:{'@coder/logger':'*'}}));
+  await assert.rejects(verifyWorkbenchBundle(root,target));
+  await mkdir(join(root,'node_modules/@coder/logger'),{recursive:true});
+  await writeFile(join(root,'node_modules/@coder/logger/package.json'),'{}');
   assert.equal(await verifyWorkbenchBundle(root,target),root);
   await assert.rejects(verifyWorkbenchBundle(root,{os:'darwin',arch:'x64'}),/mismatch/);
  } finally { await rm(root,{recursive:true,force:true}); }
@@ -28,5 +34,6 @@ test('release and development preparation include IDE, packaged resources contai
  assert.match(dev,/await prepareWorkbench\(target\)/);
  assert.ok(dev.indexOf("await prepareWorkbench(target)") < dev.indexOf("process.exit(0)"));
  assert.match(builder,/await verifyWorkbenchBundle/);
- assert.match(builder,/to: "code-workbench"/);
+ assert.match(builder,/afterPack:stageWorkbenchBundle/);
+ assert.doesNotMatch(builder,/to: "code-workbench"/);
 });

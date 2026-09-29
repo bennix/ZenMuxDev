@@ -111,3 +111,6 @@ IDE 文件树/编辑器 tab → DataTransfer → 工作区路径校验 → 现�
 ## IDE 启动失败诊断
 工作台子进程 stdout/stderr 使用管道，保留最多 8 KiB 的近期 stderr；启动退出必须返回 exit code / signal 和脱敏摘要，不能仅返回通用 exited。替换工作区、运行时、用户目录和桥接令牌；按通用 token/password/authorization 字段脱敏。通过 Main 原 logger 记录同一摘要，不创建业务状态或自动清理用户配置。启动失败释放 bridge，允许重试。测试真实子进程非零退出及敏感值脱敏；无法复现用户退出时明确报告未知，不声明故障已解决。
 启动诊断验证：两项测试通过（真实子进程 exit 77、stderr 脱敏、连续重试）；typecheck、lint 和架构检查通过。尚未复现用户启动退出原因，诊断增强不等于已修复该退出故障。
+
+## 打包版 IDE 依赖完整性
+code-server 为独立 Node 应用，不得通过 Electron 应用依赖裁剪规则复制。afterPack 在签名前使用异步 fs.cp 完整复制预置运行时（包含顶层及 lib/vscode 的 node_modules）；移除原 extraResources 的工作台复制路径，避免两个所有者。复制前后检查平台/版本、入口、Node 和 package.json 中声明的全部直接依赖目录。任一缺失阻止出包。测试必须从独立目标目录启动工作台，不能只验证源码资产或 stub 空入口。

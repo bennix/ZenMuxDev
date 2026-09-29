@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
-import { access, mkdir, mkdtemp, rename, rm, readFile, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, rename, rm, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Readable } from "node:stream";
@@ -22,7 +22,22 @@ export async function verifyWorkbenchBundle(directory, target) {
     throw new Error("IDE bundle platform/version mismatch");
   await access(join(directory, "out/node/entry.js"));
   await access(join(directory, "lib", target.os === "win32" ? "node.exe" : "node"));
+  // code-server 的 node_modules 是运行时资产，不能被 Electron 的应用依赖过滤裁掉。
+  await access(join(directory, "lib/vscode/node_modules"));
+  // VS Code 上游按 OS 裁剪平台专用模块；只对 code-server 的通用依赖逐个验收。
+  for (const base of [directory]) {
+    const pkg = JSON.parse(await readFile(join(base, "package.json"), "utf8"));
+    for (const dependency of Object.keys(pkg.dependencies ?? {})) {
+      await access(join(base, "node_modules", dependency, "package.json"));
+    }
+  }
   return directory;
+}
+
+export async function stageWorkbenchBundle(source, destination, target) {
+  await verifyWorkbenchBundle(source, target);
+  await cp(source, destination, { recursive: true, force: true, dereference: true });
+  await verifyWorkbenchBundle(destination, target);
 }
 export async function prepareWorkbench(
   target = getTargetPlatform(),

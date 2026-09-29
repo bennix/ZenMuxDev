@@ -1,4 +1,4 @@
-import { verifyWorkbenchBundle } from "./scripts/prepare-code-workbench.mjs";
+import { verifyWorkbenchBundle, stageWorkbenchBundle } from "./scripts/prepare-code-workbench.mjs";
 /* eslint-disable max-lines -- Electron Builder config keeps related packaging hooks together so build order stays explicit. */
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { readdir, writeFile } from "node:fs/promises";
@@ -545,6 +545,11 @@ export default {
     await stageElectronNotices(context.appOutDir, resources, framework.version);
   },
   afterPack: async (context) => {
+    await runTimedAsync("afterPack:stageWorkbenchBundle", () => stageWorkbenchBundle(
+      resolve(import.meta.dirname, "bundled-workbench", targetPlatform.key),
+      resolve(resolvePackagedResourcesDir(context), "code-workbench"),
+      targetPlatform,
+    ));
     const actualWindowsTarget =
       context.electronPlatformName === "win32"
         ? resolveElectronBuilderWindowsTarget({
@@ -575,7 +580,6 @@ export default {
     }
   },
   extraResources: [
-    { from: `bundled-workbench/${targetPlatform.key}`, to: "code-workbench", filter: ["**/*"] },
     { from: resolve(workspaceRoot, noticesFileName), to: noticesFileName },
     ...(targetPlatform.os === "darwin"
       ? [
