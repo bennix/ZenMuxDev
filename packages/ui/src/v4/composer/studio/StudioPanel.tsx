@@ -1,3 +1,4 @@
+import { renderDeckPdf } from "./deckPdfExport.js";
 import { useStudioMediaLibrary } from "@/hooks/useStudioMediaLibrary.js";
 import { resolveStudioRepairModel } from "@/store/studioRepairModelStore.js";
 import { retainedLayoutWarning } from "./studioSlideLayout.js";
@@ -326,6 +327,8 @@ export function StudioPanel({
 }) {
   const { intl } = useZCodeIntl();
   const platform = usePlatform();
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const pdfExportLock = useRef(false);
   const {
     library: mediaLibrary,
     loading: mediaLoading,
@@ -818,6 +821,28 @@ export function StudioPanel({
       }
     } finally {
       if (abortRef.current === controller) setBusy(false);
+    }
+  };
+
+  const saveDeckPdf = async () => {
+    if (pdfExportLock.current || busy || !platform.printPageToPdf || !platform.saveFile) return;
+    pdfExportLock.current = true;
+    setExportingPdf(true);
+    let host: Awaited<ReturnType<typeof renderDeckPdf>> | undefined;
+    try {
+      host = await renderDeckPdf([...deckPages], document);
+      const pdf = await platform.printPageToPdf();
+      host.dispose();
+      host = undefined;
+      if (!pdf.success || !pdf.data) throw new Error(pdf.error || "PDF export failed");
+      const saved = await platform.saveFile({ data: pdf.data, suggestedName: "zencode-deck-a4.pdf" });
+      if (!saved.success && saved.error) throw new Error(saved.error);
+    } catch {
+      setError(intl.formatMessage({ id: "codeViewer.pptx.exportPdfFailed" }));
+    } finally {
+      host?.dispose();
+      pdfExportLock.current = false;
+      setExportingPdf(false);
     }
   };
 
@@ -1695,6 +1720,12 @@ export function StudioPanel({
             >
               {intl.formatMessage({ id: "chat.studio.save" })}
             </Button>
+            {platform.printPageToPdf && platform.saveFile ? (
+              <Button variant="outline" disabled={busy || exportingPdf || deckPages.length === 0}
+                onClick={() => void saveDeckPdf()}>
+                {intl.formatMessage({ id: exportingPdf ? "codeViewer.pptx.exportingPdf" : "chat.studio.exportAllPdf" })}
+              </Button>
+            ) : null}
           </>
         ) : null}
       </div>

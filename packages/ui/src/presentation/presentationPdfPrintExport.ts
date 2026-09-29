@@ -317,12 +317,28 @@ function formatCssPx(value: number): string {
 }
 
 function buildPrintCss(pageSize: { width: number; height: number }): string {
-  const width = formatCssPx(pageSize.width);
-  const height = formatCssPx(pageSize.height);
+  const landscape = pageSize.width >= pageSize.height;
+  const paperWidth = landscape ? 297 : 210;
+  const paperHeight = landscape ? 210 : 297;
+  const width = `${paperWidth}mm`;
+  const height = `${paperHeight}mm`;
+  const pxPerMm = 96 / 25.4;
+  const scale = Math.min(paperWidth * pxPerMm / pageSize.width, paperHeight * pxPerMm / pageSize.height);
+  const left = (paperWidth * pxPerMm - pageSize.width * scale) / 2;
+  const top = (paperHeight * pxPerMm - pageSize.height * scale) / 2;
   // screen 下不能用 display:none / visibility:hidden——canvas、img 需要真实绘制才能进入打印输出。
   // print 下 fixed 元素会在每一页重复，必须反转为 static；html/body 的 height:100% 会撑出尾部空白页。
   // 幻灯片内部元素的轻微溢出会露出原生滚动条并被画进 PDF，整体隐藏。
   return `
+[${PAGE_ATTRIBUTE}] {
+  width: ${width}; height: ${height}; position: relative; overflow: hidden;
+  background: white; print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+[${PAGE_ATTRIBUTE}] > [data-zcode-pptx-print-slide] {
+  position: absolute; left: ${formatCssPx(left)}; top: ${formatCssPx(top)};
+  width: ${formatCssPx(pageSize.width)}; height: ${formatCssPx(pageSize.height)};
+  transform: scale(${scale}); transform-origin: top left;
+}
 [${HOST_ATTRIBUTE}] * {
   scrollbar-width: none;
 }
@@ -441,7 +457,11 @@ export async function renderPresentationToPrintHost(
       const page = hostDocument.createElement("div");
       page.setAttribute(PAGE_ATTRIBUTE, "");
       host.append(page);
-      const handle = doc.renderPage(pageIndex, page);
+      // A4 仅缩放外层，原幻灯片尺寸保持不变，避免正文重排。
+      const slide = hostDocument.createElement("div");
+      slide.setAttribute("data-zcode-pptx-print-slide", "");
+      page.append(slide);
+      const handle = doc.renderPage(pageIndex, slide);
       handles.push(handle);
       // 顺序 await：摊平媒体解码内存峰值；document 中途被 dispose 时尽快抛错终止
       await handle.ready;
