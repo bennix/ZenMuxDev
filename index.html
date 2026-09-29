@@ -3,11 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ZenCode 3.14.20 — 源码与成稿的桌面</title>
+    <title>ZenCode 3.14.20：内置源码 IDE 的 AI 桌面，支持生图、生视频和写幻灯片</title>
     <meta
       name="description"
-      content="ZenCode 在本机工作区里内置源码 IDE，对话仍交给原来的 AI。模型只走 ZenMux。也可以生图、生视频、写幻灯片，并在微信里回复。"
+      content="ZenCode 是内置源码 IDE 的 AI 桌面应用：文件留在本机工作区，模型统一通过 ZenMux 调用，可生图、生视频、写幻灯片，并在微信里收发结果。"
     />
+    <link rel="icon" href="packages/desktop/build/icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ZenCode 3.14.20：内置源码 IDE 的 AI 桌面" />
+    <meta property="og:description" content="写代码，也出图、出视频、出幻灯片。文件留在本机，模型统一走 ZenMux。" />
+    <meta property="og:image" content="https://bennix.github.io/ZenMuxDev/media/ui-desk.png" />
+    <meta property="og:url" content="https://bennix.github.io/ZenMuxDev/" />
     <style>
       :root {
         color-scheme: dark;
@@ -62,6 +68,16 @@
       nav { display: flex; gap: 28px; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; }
       nav a { color: var(--muted); text-decoration: none; }
       nav a:hover { color: var(--ivory); }
+      nav a.cta {
+        background: var(--ivory);
+        color: var(--ink);
+        padding: 6px 14px;
+      }
+      nav a.cta:hover { color: var(--ink); }
+      :focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 3px;
+      }
       .hero { padding: 72px 0 28px; }
       .hero-grid { display: block; }
       .shot { margin-top: 36px; }
@@ -74,9 +90,9 @@
       }
       h1 {
         margin: 0;
-        max-width: 9em;
+        max-width: 12em;
         font-family: "Iowan Old Style", Palatino, "Songti SC", "Noto Serif SC", serif;
-        font-size: clamp(52px, 6.4vw, 84px);
+        font-size: clamp(44px, 5.6vw, 76px);
         font-weight: 500;
         letter-spacing: -0.035em;
         line-height: 0.96;
@@ -165,8 +181,17 @@
         text-decoration: none;
       }
       .downloads a:hover { border-color: var(--brass); }
+      .downloads a.rec { border-color: var(--brass); }
+      .downloads a.rec small::after { content: " · 推荐"; }
       .downloads strong { font-size: 18px; }
       .downloads small { color: var(--muted); font-size: 13px; }
+      .note { margin: -12px 0 0; color: var(--muted); font-size: 13px; }
+      .changes { margin: 0; padding-left: 1.2em; max-width: 40em; color: var(--muted); }
+      .changes li { margin: 0 0 10px; }
+      .changes strong { color: var(--ivory); }
+      details { max-width: 40em; border-bottom: 1px solid var(--line); }
+      summary { cursor: pointer; padding: 14px 0; font-weight: 600; }
+      details p { margin: 0 0 16px; color: var(--muted); }
       .origin { max-width: 42em; color: var(--muted); }
       .origin a { color: var(--ivory); }
       #studio a, #relay a { color: #1c1915; }
@@ -198,7 +223,9 @@
           <a href="#ide">源码</a>
           <a href="#studio">成稿</a>
           <a href="#relay">微信</a>
-          <a href="#download">下载</a>
+          <a href="#model">模型</a>
+          <a href="#faq">常见问题</a>
+          <a class="cta" href="#download">下载</a>
           <a href="https://github.com/bennix/ZenMuxDev">源码库</a>
         </nav>
       </div>
@@ -209,10 +236,9 @@
         <div class="hero-grid">
           <div>
             <p class="kicker">Desktop · 3.14.20</p>
-            <h1>写代码的桌子，也出图、出片、出幻灯片。</h1>
+            <h1>写代码，也出图、出片、出幻灯片。</h1>
             <p class="lede">
-              ZenCode 把源码工作台和原来的 AI 对话放在同一个桌面里。文件留在本机工作区，模型只走 ZenMux。
-              选中一段代码，或从文件树拖进输入框，仍交给正在用的那一个对话。
+              ZenCode 是一个桌面应用，把源码 IDE 和 AI 对话放进同一个窗口。文件留在本机工作区，模型统一通过 ZenMux 调用。选中代码，或从文件树拖进输入框，就能直接交给 AI 处理。
             </p>
             <div class="actions">
               <a class="primary" href="#download">下载 3.14.20</a>
@@ -239,12 +265,27 @@
           </figure>
         </div>
         <figure class="stage">
-          <video controls playsinline preload="metadata" src="ZenCode-Promo.mp4">
+          <video controls playsinline preload="none" poster="media/ui-desk.png" src="ZenCode-Promo.mp4">
             <a href="ZenCode-Promo.mp4">观看介绍</a>
           </video>
-          <figcaption>产品介绍</figcaption>
+          <figcaption>产品介绍视频</figcaption>
         </figure>
       </div>
+
+      <section id="changes">
+        <div class="wrap chapter">
+          <p class="index">更新</p>
+          <div>
+            <h2>3.14.20 包含什么。</h2>
+            <ul class="changes">
+              <li><strong>内置源码 IDE：</strong>随安装包带上，首次打开不再下载运行时。</li>
+              <li><strong>幻灯片：</strong>可编辑 PPT、保真 PPT，以及 A4 PDF 导出。</li>
+              <li><strong>微信：</strong>中断的任务可从检查点继续，失败会说明停在哪一步。</li>
+              <li><strong>稳定性：</strong>IDE 启动失败会显示退出码和脱敏后的原因；模型连续失败三次后可切到备用模型。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
       <section id="ide">
         <div class="wrap chapter">
@@ -252,9 +293,7 @@
           <div>
             <h2>工作台占满主区，AI 停在右下。</h2>
             <p class="prose">
-              打开源码 IDE 之后，不需要另装编辑器。工作台是随安装包带上的 code-server，只监听本机。
-              原来的对话还在，草稿、附件和正在进行的任务都留着，可以收成一条标题栏。
-              启动失败时会给出退出码和脱敏后的原因，可以再试一次。
+              不用另装编辑器，打开就能用，而且只在本机运行（基于随安装包附带的 code-server）。打开 IDE 后，对话里的草稿、附件和进行中的任务都保留，可以收成一条标题栏。启动失败时会给出退出码和脱敏后的原因，可以重试。
             </p>
             <div class="points">
               <article>
@@ -262,12 +301,12 @@
                 <p>资源管理器、多文件保存、搜索、Git、终端和扩展宿主都在应用里。首次打开不再下载运行时。</p>
               </article>
               <article>
-                <h3>把代码交给原来的对话</h3>
+                <h3>把代码交给 AI 对话</h3>
                 <p>选中代码并写上要求，会进入当前工作区的输入草稿。从文件树拖进来的是文件引用，按磁盘上已保存的内容读取。</p>
               </article>
               <article>
                 <h3>扩展从 Open VSX 安装</h3>
-                <p>可以粘贴扩展页面链接，或选择本地 VSIX。安装仍由工作台自己完成。微软商店里的专有扩展不保证可用。</p>
+                <p>可以粘贴扩展页面链接，或选择本地 VSIX。安装由工作台自己完成。微软商店里的专有扩展不保证可用。</p>
               </article>
               <article>
                 <h3>只用于本机工作区</h3>
@@ -282,9 +321,9 @@
         <div class="wrap chapter">
           <p class="index">02 · 成稿</p>
           <div>
-            <h2>图、视频和幻灯片，仍在对话框里完成。</h2>
+            <h2>图、视频和幻灯片，在同一个对话框里完成。</h2>
             <p class="prose">
-              创作没有另开一套任务。比例、时长和页数按所选模型与你的指定来。生成结果可以留下，也可以存到本地。
+              不用切换到别的工具。比例、时长和页数按所选模型和你的指定来。生成结果可以留下，也可以存到本地。
             </p>
             <div class="points">
               <article>
@@ -312,9 +351,9 @@
         <div class="wrap chapter">
           <p class="index">03 · 微信</p>
           <div>
-            <h2>同一套模型，也能在微信里把事情做完。</h2>
+            <h2>同一套模型，在微信里也能把事情做完。</h2>
             <p class="prose">
-              微信出图、PDF 和图表走本机已有的网络和任务。文件要真正写出来才会发回。失败会说明停在模型请求、下载还是上传。
+              在微信里发一句话，就能收到图、PDF 或图表。它们走本机已有的网络和任务，文件真正写出来才会发回；失败时会说明停在模型请求、下载还是上传。
             </p>
             <div class="points">
               <article>
@@ -331,7 +370,7 @@
               </article>
               <article>
                 <h3>工作区记得说过的话</h3>
-                <p>记忆开启时，原文按工作区留在本机。本机嵌入模型可用时按内容检索；不可用时原文仍在，对话继续。</p>
+                <p>记忆开启时，原文按工作区留在本机。本机嵌入模型可用时按内容检索；不可用时原文保留，对话继续。</p>
               </article>
             </div>
           </div>
@@ -344,8 +383,8 @@
           <div>
             <h2>只接 ZenMux。</h2>
             <p class="prose">
-              在欢迎页或设置里填写 API Key，加密显示，保存在本机。没有 Key 时给出
-              <a href="https://zenmux.ai/invite/GBQMC5">邀请链接</a>。
+              需要自备 ZenMux API Key，费用由你自己承担。在欢迎页或设置里填写，加密显示，保存在本机。没有 Key 时给出
+              <a href="https://zenmux.ai/invite/GBQMC5">ZenMux 邀请链接</a>（https://zenmux.ai/invite/GBQMC5）。
               请求发往 zenmux.ai。默认模型包括 openai/gpt-6-sol、anthropic/claude-opus-5.5 和 x-ai/grok-4.7，也可以自己增改。
               连接连续失败三次后，可以换到你设置的备用模型。进行中的对话会显示当前在做什么。
             </p>
@@ -362,6 +401,8 @@
             <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.20">GitHub Release</a>。
             macOS 包由开发者签名并完成公证。
           </p>
+          <p class="note">目前 macOS 只提供 Apple 芯片版本。</p>
+          <!-- TODO: 补文件大小和 SHA256 -->
           <div class="downloads">
             <a id="mac" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.20/ZenCode-3.14.20-mac-arm64.dmg">
               <strong>macOS</strong>
@@ -383,13 +424,38 @@
         </div>
       </section>
 
+      <section id="faq">
+        <div class="wrap chapter">
+          <p class="index">常见问题</p>
+          <div>
+            <h2>常见问题</h2>
+            <details>
+              <summary>用它要花钱吗？</summary>
+              <p>需要使用你自己的 ZenMux API Key，模型调用的费用由你直接向 ZenMux 支付，用量和计费以 ZenMux 为准。</p>
+            </details>
+            <details>
+              <summary>我的数据会去哪里？</summary>
+              <p>文件留在本机工作区，API Key 加密保存在本机，记忆开启时原文也按工作区留在本机。对话内容会发往 zenmux.ai 用于调用模型。</p>
+            </details>
+            <details>
+              <summary>和 ZCode 有什么区别？</summary>
+              <p>ZenCode 改自智谱开源的 ZCode：产品名改为 ZenCode，模型供应商改为 ZenMux，并加入了内置源码 IDE、成稿和微信能力。</p>
+            </details>
+            <details>
+              <summary>远程工作区能用源码 IDE 吗？</summary>
+              <p>这一版不能。源码 IDE 只用于本机工作区，远程工作区和网页版都不显示入口。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <section id="origin">
         <div class="wrap">
           <p class="index">来源</p>
           <h2>改自 ZCode。</h2>
           <p class="origin">
             ZenCode 改自智谱开源的 <a href="https://github.com/zai-org/ZCode">ZCode</a>。
-            仓库结构仍沿用上游，产品名是 ZenCode，模型供应商是 ZenMux。
+            仓库结构沿用上游，产品名是 ZenCode，模型供应商是 ZenMux。
             当前源码在 <a href="https://github.com/bennix/ZenMuxDev">bennix/ZenMuxDev</a> 的
             <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">cursor/zenmux-zencode-provider</a> 分支。
           </p>
@@ -399,5 +465,14 @@
     <footer>
       <div class="wrap">ZenCode · 基于 ZCode · 模型由 ZenMux 提供</div>
     </footer>
+    <script>
+      (function () {
+        var ua = navigator.userAgent;
+        var id = /Windows/i.test(ua) ? "win" : /Mac/i.test(ua) ? "mac" : /Linux/i.test(ua) ? "deb" : "";
+        if (!id) return;
+        var card = document.getElementById(id);
+        if (card) card.classList.add("rec");
+      })();
+    </script>
   </body>
 </html>
