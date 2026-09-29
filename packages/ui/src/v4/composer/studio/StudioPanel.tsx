@@ -1,3 +1,5 @@
+import { useStudioDeckHistory } from "@/hooks/useStudioDeckHistory.js";
+import { StudioDeckHistory } from "./StudioDeckHistory.js";
 import { renderDeckPdf } from "./deckPdfExport.js";
 import { useStudioMediaLibrary } from "@/hooks/useStudioMediaLibrary.js";
 import { resolveStudioRepairModel } from "@/store/studioRepairModelStore.js";
@@ -364,7 +366,8 @@ export function StudioPanel({
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [generatingDeck, setGeneratingDeck] = useState(false);
-  const [deckPages, setDeckPages] = useState<string[]>([]);
+  const deckHistory = useStudioDeckHistory();
+  const { pages: deckPages, setPages: setDeckPages } = deckHistory;
   const [deckPage, setDeckPage] = useState(0);
   const deckHtml = deckPages[deckPage] ?? "";
   const [deckProgress, setDeckProgress] = useState("");
@@ -569,7 +572,7 @@ export function StudioPanel({
     setBusy(true);
     setGeneratingDeck(true);
     setError(null);
-    setDeckPages([]);
+    deckHistory.begin(pptMode === "guided" ? topic : prompt);
     setDeckPage(0);
     setDeckProgress("");
     setDeckOutput("");
@@ -1126,6 +1129,24 @@ export function StudioPanel({
         void addDeckFiles(files);
       }}
     >
+      <StudioDeckHistory
+        records={deckHistory.records}
+        disabled={busy || generatingDeck || exportingPdf}
+        error={deckHistory.error}
+        onRefresh={deckHistory.refresh}
+        onDelete={deckHistory.remove}
+        onOpen={(record) => {
+          deckHistory.open(record);
+          setMode("ppt");
+          setDeckPage(0);
+          setSelectedIds([]);
+          setDeckProgress("");
+          setDeckOutput("");
+          setEditOutput("");
+          setEditStatus("");
+          setError(null);
+        }}
+      />
       <StudioSettingsDisclosure
         collapseLabel={intl.formatMessage({ id: "chat.studio.collapseSettings" })}
         expandLabel={intl.formatMessage({ id: "chat.studio.expandSettings" })}

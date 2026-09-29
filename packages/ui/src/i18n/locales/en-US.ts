@@ -1421,6 +1421,18 @@ const enUS: Record<string, string> = {
   "codeViewer.pptx.zoomOut": "Zoom out",
   "codeViewer.pptx.thumbnails": "Slide thumbnails",
   "codeViewer.pptx.thumbnail": "Slide {pageNumber}",
+  "chat.studio.history.title": "PPT history",
+  "chat.studio.history.local":
+    "Saved automatically in this app or browser after generation and edits.",
+  "chat.studio.history.all": "Select all",
+  "chat.studio.history.delete": "Delete selected ({count})",
+  "chat.studio.history.confirm": "Permanently delete {count} selected decks?",
+  "chat.studio.history.confirmDelete": "Confirm deletion",
+  "chat.studio.history.cancel": "Cancel",
+  "chat.studio.history.pages": "{count} slides",
+  "chat.studio.history.empty": "No saved decks",
+  "chat.studio.history.error":
+    "Could not read or save PPT history. Check storage space and try again.",
   "chat.studio.exportAllPdf": "Export all slides as A4 PDF",
   "codeViewer.pptx.exportPdf": "Export all slides as A4 PDF",
   "codeViewer.pptx.exportingPdf": "Exporting PDF...",
