@@ -1,3 +1,4 @@
+import { buildVisualDeckPptx } from "./deckVisualPptx.js";
 import { useStudioDeckHistory } from "@/hooks/useStudioDeckHistory.js";
 import { StudioDeckHistory } from "./StudioDeckHistory.js";
 import { renderDeckPdf } from "./deckPdfExport.js";
@@ -827,7 +828,7 @@ export function StudioPanel({
     }
   };
 
-  const saveDeckPdf = async () => {
+  const saveDeckPdf = async (visualPpt = false) => {
     if (pdfExportLock.current || busy || !platform.printPageToPdf || !platform.saveFile) return;
     pdfExportLock.current = true;
     setExportingPdf(true);
@@ -838,10 +839,14 @@ export function StudioPanel({
       host.dispose();
       host = undefined;
       if (!pdf.success || !pdf.data) throw new Error(pdf.error || "PDF export failed");
-      const saved = await platform.saveFile({ data: pdf.data, suggestedName: "zencode-deck-a4.pdf" });
+      const data = visualPpt ? new Uint8Array(await buildVisualDeckPptx(pdf.data)).buffer : pdf.data;
+      const saved = await platform.saveFile({
+        data,
+        suggestedName: visualPpt ? "zencode-deck-visual.pptx" : "zencode-deck-a4.pdf",
+      });
       if (!saved.success && saved.error) throw new Error(saved.error);
     } catch {
-      setError(intl.formatMessage({ id: "codeViewer.pptx.exportPdfFailed" }));
+      setError(intl.formatMessage({ id: visualPpt ? "chat.studio.visualPptFailed" : "codeViewer.pptx.exportPdfFailed" }));
     } finally {
       host?.dispose();
       pdfExportLock.current = false;
@@ -1741,6 +1746,13 @@ export function StudioPanel({
             >
               {intl.formatMessage({ id: "chat.studio.save" })}
             </Button>
+            {platform.printPageToPdf && platform.saveFile ? (
+              <Button variant="outline" disabled={busy || exportingPdf || deckPages.length === 0}
+                title={intl.formatMessage({ id: "chat.studio.visualPptHint" })}
+                onClick={() => void saveDeckPdf(true)}>
+                {intl.formatMessage({ id: "chat.studio.visualPpt" })}
+              </Button>
+            ) : null}
             {platform.printPageToPdf && platform.saveFile ? (
               <Button variant="outline" disabled={busy || exportingPdf || deckPages.length === 0}
                 onClick={() => void saveDeckPdf()}>

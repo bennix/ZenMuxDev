@@ -25,6 +25,7 @@
     "@dnd-kit/react": "^0.4.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@embedpdf/pdfium": "2.15.1",
     "@extend-ai/react-docx": "^0.8.1",
     "@extend-ai/react-xlsx": "^0.16.0",
     "@lexical/react": "^0.42.0",

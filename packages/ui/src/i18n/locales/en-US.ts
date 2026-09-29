@@ -1421,6 +1421,9 @@ const enUS: Record<string, string> = {
   "codeViewer.pptx.zoomOut": "Zoom out",
   "codeViewer.pptx.thumbnails": "Slide thumbnails",
   "codeViewer.pptx.thumbnail": "Slide {pageNumber}",
+  "chat.studio.visualPpt": "Export visual PPT (slide images)",
+  "chat.studio.visualPptHint": "Uses the PDF rendering to preserve layout. Individual elements are not editable.",
+  "chat.studio.visualPptFailed": "Visual PPT export failed. Please retry.",
   "chat.studio.history.title": "PPT history",
   "chat.studio.history.local":
     "Saved automatically in this app or browser after generation and edits.",
@@ -4966,7 +4969,7 @@ const enUS: Record<string, string> = {
   "chat.studio.edit": "Edit with sketch",
   "chat.studio.markFirst": "Draw on the picture before editing",
   "chat.studio.makePpt": "Make slides",
-  "chat.studio.save": "Save PPTX",
+  "chat.studio.save": "Export editable PPT",
   "chat.studio.editElements": "Edit selection",
   "chat.studio.selected": "{count} selected",
   "chat.studio.extra": "Extra requirements. Used for generation and for editing the selection",

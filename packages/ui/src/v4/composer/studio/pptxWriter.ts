@@ -1,5 +1,4 @@
 import PptxGenJS from "pptxgenjs";
-import { fitTextInsideDecorations } from "./pptxTextFit.js";
 import type { EditableHtmlPage } from "./htmlToEditablePptx.js";
 
 const SLIDE_W = 1280;
@@ -44,7 +43,7 @@ interface PptxDeck {
   write(options: { outputType: "uint8array" }): Promise<Uint8Array | ArrayBuffer>;
 }
 
-/** 中文注释：布局微调只发生在导出路径，不影响浏览器预览和源 HTML。 */
+/** 保留浏览器测量坐标；导出时二次挤压和移动会使 PPT 偏离预览。 */
 export async function buildEditableDeckPptx(
   pages: readonly EditableHtmlPage[],
 ): Promise<Uint8Array> {
@@ -60,8 +59,7 @@ export async function buildEditableDeckPptx(
     const height = Math.max(1, page.height || SLIDE_H);
     const sx = 13.333 / width;
     const sy = 7.5 / height;
-    const exportNodes = fitTextInsideDecorations(page.nodes, width, height);
-    for (const node of exportNodes) {
+    for (const node of page.nodes) {
       const x = Math.min(Math.max(node.x, 0), width) * sx;
       const y = Math.min(Math.max(node.y, 0), height) * sy;
       const w = Math.max(0, Math.min(node.w, width - node.x)) * sx;

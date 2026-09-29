@@ -5,10 +5,10 @@ import { parseColor, cssBorders } from "./pptxCssShape.js";
  */
 import { presentSlide } from "./deckPreview.js";
 import { showSlide, waitForSlideDocument } from "./deckSlides.js";
-import { elementBox, measureWrap } from "./pptxMeasureWrap.js";
+import { elementBox } from "./pptxMeasureWrap.js";
 import { rasterizeSvgImages, svgSnapshot } from "./pptxSvgImage.js";
 import { measuredTextLines, resolvePptxFontFace } from "./pptxTextLines.js";
-import { prepareDeckHtml } from "./deckHtmlOps.js";
+import { pageDocument } from "./deckPreviewDocument.js";
 
 export {
   deckSectionHtml,
@@ -234,23 +234,23 @@ function measureRoot(root: HTMLElement): EditableHtmlPage {
           ? "right"
           : "left";
     const fontPx = Number.parseFloat(computed.fontSize) || 18;
-    const padL = Number.parseFloat(computed.paddingLeft) || 0;
-    const padR = Number.parseFloat(computed.paddingRight) || 0;
-    const box = el.getBoundingClientRect();
-    const contentLeft = box.left + (Number.parseFloat(computed.borderLeftWidth) || 0) + padL;
-    const contentRight = box.right - (Number.parseFloat(computed.borderRightWidth) || 0) - padR;
-    const wrap = measureWrap(el, fontPx, contentLeft, contentRight);
+    const inset = (side: string) =>
+      (Number.parseFloat(computed.getPropertyValue(`padding-${side}`)) || 0) +
+      (Number.parseFloat(computed.getPropertyValue(`border-${side}-width`)) || 0);
+    // 形状保留边框盒；文字应使用内容盒，否则卡片内边距会丢失。
+    const textX = x + inset("left");
+    const textY = y + inset("top");
+    const textW = Math.max(0, w - inset("left") - inset("right"));
+    const textH = Math.max(0, h - inset("top") - inset("bottom"));
     const lineHeight = Number.parseFloat(computed.lineHeight);
     const fontFamily = resolvePptxFontFace(computed.fontFamily, text);
-    // 4% 余量仅加到浏览器测量的文本框；适配器仍会按邻近对象与页边界限制实际扩宽。
-    const widthSlack = Math.min(w * 0.04, Math.max(0, SLIDE_W - x - w));
     nodes.push(
       ...measuredTextLines(el, root, {
         kind: "text",
-        x,
-        y,
-        w,
-        h,
+        x: textX,
+        y: textY,
+        w: textW,
+        h: textH,
         text,
         color: color?.hex,
         fontFace: fontFamily,
@@ -262,9 +262,6 @@ function measureRoot(root: HTMLElement): EditableHtmlPage {
         valign:
           computed.display.includes("flex") && computed.alignItems === "center" ? "middle" : "top",
         lineHeight: Number.isFinite(lineHeight) ? lineHeight : undefined,
-        widenPx:
-          Math.max(wrap.widenPx, widthSlack) > 0 ? Math.max(wrap.widenPx, widthSlack) : undefined,
-        unwrapLines: wrap.unwrapLines > 0 ? wrap.unwrapLines : undefined,
         zIndex,
       }),
     );
@@ -313,11 +310,12 @@ export async function measureDeckHtml(html: string): Promise<EditableHtmlPage[]>
   iframe.style.cssText =
     "position:fixed;left:-16000px;top:0;width:1280px;height:720px;border:0;pointer-events:none";
   // about:blank 的 load 会先到。那时正文还没解析，测量结果是空的，保存就会误报没有可编辑文字。
-  await waitForSlideDocument(iframe, prepareDeckHtml(html));
+  await waitForSlideDocument(iframe, pageDocument(html));
   try {
     const doc = iframe.contentDocument;
     if (!doc) throw new Error("无法测量幻灯片");
     await doc.fonts?.ready;
+    await Promise.all([...doc.images].map((image) => image.decode()));
     // 和预览一样一次只显示一页，按这一页的真实坐标测量，避免整页被收成一列文字。
     const total = Math.max(1, showSlide(doc, 0));
     const pages: EditableHtmlPage[] = [];

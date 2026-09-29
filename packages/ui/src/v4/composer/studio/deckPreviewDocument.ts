@@ -1,4 +1,4 @@
-import { prepareDeckHtml } from "./htmlToEditablePptx.js";
+import { prepareDeckHtml } from "./deckHtmlOps.js";
 import { topSlides } from "./deckSlides.js";
 
 const BLANK_PAGE = "<!doctype html><html><head></head><body></body></html>";
