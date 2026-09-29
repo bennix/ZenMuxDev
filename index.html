@@ -3,40 +3,43 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ZenCode 3.14.19 — 桌面编程与创作</title>
-    <meta name="description" content="ZenCode 是基于 ZCode 的桌面端。模型走 ZenMux。3.14.19 支持生图、生视频、可编辑幻灯片，以及微信出图、PDF 和图表。" />
+    <title>ZenCode 3.14.19 — 源码与成稿的桌面</title>
+    <meta
+      name="description"
+      content="ZenCode 在本机工作区里内置源码 IDE，对话仍交给原来的 AI。模型只走 ZenMux。也可以生图、生视频、写幻灯片，并在微信里回复。"
+    />
     <style>
       :root {
-        color-scheme: light;
-        --paper: #f3efe6;
-        --ink: #1c1915;
-        --muted: #5e584e;
-        --line: rgba(28, 25, 21, 0.14);
-        --navy: #1b2a41;
-        --gold: #8c7348;
+        color-scheme: dark;
+        --ink: #0c0b09;
+        --panel: #161410;
+        --ivory: #f4efe6;
+        --muted: #b3aa9c;
+        --line: rgba(244, 239, 230, 0.14);
+        --brass: #c6a56a;
+        --brass-deep: #8d7040;
       }
       * { box-sizing: border-box; }
       html { scroll-behavior: smooth; }
       body {
         margin: 0;
-        color: var(--ink);
+        color: var(--ivory);
         background:
-          radial-gradient(1200px 480px at 80% -10%, rgba(140, 115, 72, 0.16), transparent 60%),
-          var(--paper);
+          radial-gradient(900px 420px at 100% 0%, rgba(198, 165, 106, 0.16), transparent 55%),
+          linear-gradient(180deg, #14120e 0%, var(--ink) 42%);
         font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
         font-size: 17px;
-        line-height: 1.7;
+        line-height: 1.75;
       }
       a { color: inherit; }
-      img { display: block; }
-      .wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+      .wrap { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
       header {
         position: sticky;
         top: 0;
-        z-index: 2;
-        backdrop-filter: blur(16px);
-        background: rgba(243, 239, 230, 0.86);
+        z-index: 3;
+        background: rgba(12, 11, 9, 0.78);
         border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(18px);
       }
       .bar {
         display: flex;
@@ -45,104 +48,145 @@
         min-height: 72px;
         gap: 24px;
       }
-      .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 600; letter-spacing: 0.04em; }
-      .brand img { width: 36px; height: 36px; border-radius: 8px; }
-      nav { display: flex; gap: 28px; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; }
-      nav a { text-decoration: none; color: var(--muted); }
-      nav a:hover { color: var(--ink); }
-      .hero { padding: 88px 0 40px; }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ivory);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+      .brand img { width: 34px; height: 34px; border-radius: 8px; }
+      nav { display: flex; gap: 28px; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; }
+      nav a { color: var(--muted); text-decoration: none; }
+      nav a:hover { color: var(--ivory); }
+      .hero { padding: 72px 0 28px; }
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+        gap: 48px;
+        align-items: end;
+      }
       .kicker {
         margin: 0 0 18px;
-        color: var(--gold);
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
+        color: var(--brass);
         font-size: 12px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
       }
       h1 {
         margin: 0;
-        max-width: 14ch;
-        font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", serif;
-        font-size: clamp(52px, 7vw, 88px);
+        max-width: 9em;
+        font-family: "Iowan Old Style", Palatino, "Songti SC", "Noto Serif SC", serif;
+        font-size: clamp(52px, 6.4vw, 84px);
         font-weight: 500;
+        letter-spacing: -0.035em;
         line-height: 0.96;
-        letter-spacing: -0.03em;
       }
-      .lede { max-width: 38em; margin: 28px 0 0; color: var(--muted); font-size: 19px; }
-      .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+      .lede { max-width: 34em; margin: 28px 0 0; color: var(--muted); font-size: 18px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
       .actions a {
+        padding: 13px 20px;
+        border: 1px solid var(--ivory);
+        color: var(--ivory);
         text-decoration: none;
-        padding: 14px 22px;
-        border: 1px solid var(--ink);
       }
-      .actions a.primary { background: var(--navy); color: #f7f3ea; border-color: var(--navy); }
-      .stage { margin: 28px 0 8px; }
-      video {
+      .actions a.primary { background: var(--ivory); color: var(--ink); border-color: var(--ivory); }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        margin-top: 40px;
+        border-top: 1px solid var(--line);
+      }
+      .facts div { padding: 18px 18px 0 0; }
+      .facts strong { display: block; font-size: 15px; font-weight: 600; }
+      .facts span { color: var(--muted); font-size: 14px; }
+      .stage { position: relative; }
+      .stage video {
         width: 100%;
         aspect-ratio: 16 / 9;
-        background: #111;
+        background: #000;
         border: 1px solid var(--line);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
       }
-      section { padding: 72px 0; }
-      h2 {
-        margin: 0 0 8px;
-        font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", serif;
-        font-size: clamp(32px, 4vw, 44px);
-        font-weight: 500;
-        letter-spacing: -0.02em;
+      .stage figcaption {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.08em;
       }
-      .section-note { margin: 0 0 36px; max-width: 40em; color: var(--muted); }
-      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--line); }
-      article {
-        padding: 28px 28px 32px 0;
-        border-bottom: 1px solid var(--line);
+      section { padding: 84px 0; }
+      .chapter {
+        display: grid;
+        grid-template-columns: 140px minmax(0, 1fr);
+        gap: 28px;
+        padding-top: 36px;
+        border-top: 1px solid var(--line);
       }
-      article:nth-child(odd) { padding-right: 40px; border-right: 1px solid var(--line); }
-      article:nth-child(even) { padding-left: 40px; }
-      article span {
-        display: block;
-        margin-bottom: 10px;
-        color: var(--gold);
+      .index {
+        color: var(--brass);
         font-size: 12px;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
       }
-      article h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
-      article p { margin: 0; color: var(--muted); }
-      .downloads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+      h2 {
+        margin: 0 0 16px;
+        font-family: "Iowan Old Style", Palatino, "Songti SC", "Noto Serif SC", serif;
+        font-size: clamp(34px, 4vw, 52px);
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+      .prose { max-width: 40em; margin: 0 0 28px; color: var(--muted); }
+      .points {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px 36px;
+      }
+      .points h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+      .points p { margin: 0; color: var(--muted); }
+      #studio, #relay { background: #f4efe6; color: #1c1915; }
+      #studio .index, #relay .index { color: var(--brass-deep); }
+      #studio .chapter, #relay .chapter { border-top-color: rgba(28, 25, 21, 0.14); }
+      #studio .prose, #studio .points p, #relay .prose, #relay .points p { color: #5c564c; }
+      .downloads {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-top: 28px;
+      }
       .downloads a {
         display: flex;
+        min-height: 150px;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 168px;
-        padding: 22px;
-        text-decoration: none;
-        background: #fffdf8;
+        padding: 20px;
         border: 1px solid var(--line);
+        text-decoration: none;
       }
-      .downloads a:hover { border-color: var(--navy); }
-      .downloads strong { font-size: 18px; font-weight: 600; }
-      .downloads small { color: var(--muted); font-size: 14px; }
-      .origin {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 40px;
-        padding-top: 8px;
-      }
+      .downloads a:hover { border-color: var(--brass); }
+      .downloads strong { font-size: 18px; }
+      .downloads small { color: var(--muted); font-size: 13px; }
+      .origin { max-width: 42em; color: var(--muted); }
+      .origin a { color: var(--ivory); }
+      #studio a, #relay a { color: #1c1915; }
       footer {
         padding: 28px 0 48px;
         color: var(--muted);
         font-size: 13px;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         border-top: 1px solid var(--line);
       }
-      @media (max-width: 800px) {
-        .wrap { width: min(100% - 32px, 1120px); }
+      @media (max-width: 860px) {
+        .wrap { width: min(100% - 32px, 1180px); }
         nav { display: none; }
-        .hero { padding-top: 48px; }
-        .grid, .downloads, .origin { grid-template-columns: 1fr; }
-        article, article:nth-child(odd), article:nth-child(even) {
-          padding: 24px 0;
-          border-right: 0;
-        }
+        .hero { padding-top: 40px; }
+        .hero-grid, .chapter, .facts, .points, .downloads { grid-template-columns: 1fr; }
+        .facts div { padding-right: 0; }
+        section { padding: 56px 0; }
       }
     </style>
   </head>
@@ -150,154 +194,172 @@
     <header>
       <div class="wrap bar">
         <a class="brand" href="#top">
-          <img src="packages/desktop/build/icon.png" alt="" width="36" height="36" />
+          <img src="packages/desktop/build/icon.png" alt="" width="34" height="34" />
           ZenCode
         </a>
         <nav>
-          <a href="#new">这一版</a>
-          <a href="#weixin">微信</a>
-          <a href="#work">工作方式</a>
+          <a href="#ide">源码</a>
+          <a href="#studio">成稿</a>
+          <a href="#relay">微信</a>
           <a href="#download">下载</a>
-          <a href="https://github.com/bennix/ZenMuxDev">源码</a>
+          <a href="https://github.com/bennix/ZenMuxDev">源码库</a>
         </nav>
       </div>
     </header>
 
     <main id="top">
       <div class="wrap hero">
-        <p class="kicker">Desktop · 3.14.19</p>
-        <h1>把编程、画面和幻灯片放在同一张桌上。</h1>
-        <p class="lede">
-          ZenCode 是桌面端工作台。代码、文件和对话留在本机；模型请求走 ZenMux。
-          这一版可以在对话框里生图、生视频、写可编辑幻灯片，也可以在微信里出图、回 PDF 和图表。
-        </p>
-        <div class="actions">
-          <a class="primary" href="#download">下载 3.14.19</a>
-          <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">查看源码</a>
-        </div>
-        <div class="stage">
-          <video controls playsinline preload="metadata" src="ZenCode-Promo.mp4">
-            <a href="ZenCode-Promo.mp4">观看介绍</a>
-          </video>
+        <div class="hero-grid">
+          <div>
+            <p class="kicker">Desktop · 3.14.19</p>
+            <h1>写代码的桌子，也出图、出片、出幻灯片。</h1>
+            <p class="lede">
+              ZenCode 把源码工作台和原来的 AI 对话放在同一个桌面里。文件留在本机工作区，模型只走 ZenMux。
+              选中一段代码，或从文件树拖进输入框，仍交给正在用的那一个对话。
+            </p>
+            <div class="actions">
+              <a class="primary" href="#download">下载 3.14.19</a>
+              <a href="#ide">看源码工作台</a>
+            </div>
+            <div class="facts">
+              <div>
+                <strong>内置源码 IDE</strong>
+                <span>文件、搜索、Git、终端、扩展</span>
+              </div>
+              <div>
+                <strong>本机工作区</strong>
+                <span>AI 与编辑器读写同一目录</span>
+              </div>
+              <div>
+                <strong>只接 ZenMux</strong>
+                <span>密钥留在本机</span>
+              </div>
+            </div>
+          </div>
+          <figure class="stage">
+            <video controls playsinline preload="metadata" src="ZenCode-Promo.mp4">
+              <a href="ZenCode-Promo.mp4">观看介绍</a>
+            </video>
+            <figcaption>产品介绍</figcaption>
+          </figure>
         </div>
       </div>
 
-      <section id="new">
-        <div class="wrap">
-          <h2>这一版新做的</h2>
-          <p class="section-note">创作仍在对话框里完成。3.14.19 在工作区里内置源码 IDE，不需要另装编辑器。文件、搜索、Git、终端和扩展都在应用内。选中代码或把文件拖进对话，仍交给原来的 ZenCode AI。</p>
-          <div class="grid">
-            <article>
-              <span>01</span>
-              <h3>生图与生视频</h3>
-              <p>在对话框里直接出图或出视频。比例和时长按所选模型给出。生成结果可以拷贝，也可以存到本地。</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>讨论之后再生成</h3>
-              <p>意图、美术、挑刺、成稿四个角色按顺序发言。成稿的最终提示词单独列出，然后才交给生图或生视频模型。意图和成稿模型可以各自选择，思考强度跟主界面一致。</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>按页写幻灯片</h3>
-              <p>页数可选 5、8、10、12、15、20，也可以自己指定。一页写完就能预览，写满指定页数才算完成。深色代码块用浅色字；讲流程、分支或步骤的页面自带示意图。</p>
-            </article>
-            <article>
-              <span>04</span>
-              <h3>保存成可编辑的 PPT</h3>
-              <p>可编辑 PPT 仍是一段话、一个标题或一条列表一个文本框。位置按预览量到的几何导出，不再把文字拉宽或把字号缩小。另外可以导出保真 PPT：每一页是一张完整图片，版式和预览一致，元素不能单独编辑。全部页面仍可导出成 A4 PDF。</p>
-            </article>
-            <article>
-              <span>05</span>
-              <h3>只改选中的元素</h3>
-              <p>选择模式默认关闭。打开后，悬停是虚线框，点中的元素有蓝色实线。可以多选，再用自然语言交给模型。回复会流式出现，并只替换这些元素。</p>
-            </article>
-            <article>
-              <span>06</span>
-              <h3>手绘、参考图和附件</h3>
-              <p>图片和文档可以粘贴或拖放，以缩略图列出。手绘默认说明要画什么，结果是自然照片，除非明确要求线稿。已经有照片时，笔迹只改盖住的区域。</p>
-            </article>
-            <article>
-              <span>07</span>
-              <h3>PPT 历史</h3>
-              <p>每写完一页或改完一处，幻灯片会自动留在本机。列表按最近更新排列，打开后恢复全部页面。可以勾选后一次删除，删除前会确认数量。生成、编辑或导出 PDF 时不能切换历史。</p>
-            </article>
+      <section id="ide">
+        <div class="wrap chapter">
+          <p class="index">01 · 源码</p>
+          <div>
+            <h2>工作台占满主区，AI 停在右下。</h2>
+            <p class="prose">
+              打开源码 IDE 之后，不需要另装编辑器。工作台是随安装包带上的 code-server，只监听本机。
+              原来的对话还在，草稿、附件和正在进行的任务都留着，可以收成一条标题栏。
+            </p>
+            <div class="points">
+              <article>
+                <h3>完整工作台</h3>
+                <p>资源管理器、多文件保存、搜索、Git、终端和扩展宿主都在应用里。首次打开不再下载运行时。</p>
+              </article>
+              <article>
+                <h3>把代码交给原来的对话</h3>
+                <p>选中代码并写上要求，会进入当前工作区的输入草稿。从文件树拖进来的是文件引用，按磁盘上已保存的内容读取。</p>
+              </article>
+              <article>
+                <h3>扩展从 Open VSX 安装</h3>
+                <p>可以粘贴扩展页面链接，或选择本地 VSIX。安装仍由工作台自己完成。微软商店里的专有扩展不保证可用。</p>
+              </article>
+              <article>
+                <h3>只用于本机工作区</h3>
+                <p>远程工作区这一版没有源码 IDE 入口。网页版也不显示这个按钮。</p>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="weixin">
-        <div class="wrap">
-          <h2>微信、记忆和更新</h2>
-          <p class="section-note">这些能力和创作面板用同一套模型和本机网络，不另开一套任务。</p>
-          <div class="grid">
-            <article>
-              <span>07</span>
-              <h3>微信里出图和改图</h3>
-              <p>用系统默认生图模型，和创作面板是同一套目录。口语的生图请求也能识别。只有这次明确要求，或消息里带了照片，才会用最近的参考图。</p>
-            </article>
-            <article>
-              <span>08</span>
-              <h3>按对话回 PDF 和图表</h3>
-              <p>先判断是聊天、出图、PDF 还是图表。PDF 和图表走本机任务，写成真实文件后再发回微信。没有写出来的文件不会被说成已经完成。</p>
-            </article>
-            <article>
-              <span>09</span>
-              <h3>工作区文件发到微信</h3>
-              <p>可以把工作区里的文件发到最近绑定的微信会话。远程工作区在没有文件通道时不会悄悄在本机执行。</p>
-            </article>
-            <article>
-              <span>10</span>
-              <h3>未完成的任务可以接着做</h3>
-              <p>紧凑界面可以继续微信任务，也可以改已经排队的输入。一次看很多图时按每十张一批处理，中断后按检查点接着做。</p>
-            </article>
-            <article>
-              <span>11</span>
-              <h3>失败时说明停在哪一步</h3>
-              <p>生图和微信出图走本机已有的网络设置。失败会区分模型拒绝、图片下载和上传，而不是只显示请求失败。</p>
-            </article>
-            <article>
-              <span>12</span>
-              <h3>工作区记得说过的话</h3>
-              <p>记忆开启时，对话原文按工作区保存。本机 Ollama 的嵌入模型可用时，后续回合按内容检索。嵌入不可用时原文仍保留，普通对话继续。</p>
-            </article>
-            <article>
-              <span>13</span>
-              <h3>Office 文档分页预览</h3>
-              <p>Office 文档在应用里按页查看。微信里的 PDF 附件会保留，并在处理过程中给出状态。</p>
-            </article>
-            <article>
-              <span>14</span>
-              <h3>关于页检查新版本</h3>
-              <p>关于页对照 GitHub Release 看有没有更新。对话里安装技能后，设置会立刻刷新。</p>
-            </article>
+      <section id="studio">
+        <div class="wrap chapter">
+          <p class="index">02 · 成稿</p>
+          <div>
+            <h2>图、视频和幻灯片，仍在对话框里完成。</h2>
+            <p class="prose">
+              创作没有另开一套任务。比例、时长和页数按所选模型与你的指定来。生成结果可以留下，也可以存到本地。
+            </p>
+            <div class="points">
+              <article>
+                <h3>先讨论，再生成</h3>
+                <p>意图、美术、挑刺、成稿按顺序发言。成稿的最终提示词单独列出，然后才交给生图或生视频模型。</p>
+              </article>
+              <article>
+                <h3>按页写幻灯片</h3>
+                <p>页数可以指定。一页写完就能预览。深色代码用浅色字。讲流程、分支或步骤的页面自带示意图。</p>
+              </article>
+              <article>
+                <h3>两种 PPT，外加 A4 PDF</h3>
+                <p>可编辑 PPT 按预览量到的位置放文本框。保真 PPT 每一页是一张完整图片，元素不能单独改。全部页面也能导出成 A4 PDF，横页横向，竖页纵向。</p>
+              </article>
+              <article>
+                <h3>历史和局部修改</h3>
+                <p>写完的页留在本机，重新打开可恢复。可以选择元素再交给模型，只替换这些元素。手绘默认出照片；盖在已有照片上时，只改笔迹底下的区域。</p>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="work">
-        <div class="wrap">
-          <h2>原来就在的工作方式</h2>
-          <p class="section-note">创作是加在现有桌面端上的，没有换掉编程和本机文件这一层。</p>
-          <div class="grid">
-            <article>
-              <span>模型</span>
-              <h3>只接 ZenMux</h3>
-              <p>在欢迎页或设置里填写 API Key，加密显示，保存在本机。没有 Key 时给出邀请链接。请求发往 zenmux.ai，不附带温度参数。默认模型包括 openai/gpt-6-sol、anthropic/claude-opus-5.5 和 x-ai/grok-4.7，也可以自己增改。</p>
-            </article>
-            <article>
-              <span>桌面</span>
-              <h3>代码、电脑和浏览器</h3>
-              <p>对话改本机工作区里的文件。源码 IDE 占满主工作区，AI 停在右下角，可以收起。选中代码可以交给 AI，也可以把文件拖进输入框。扩展来自 Open VSX 或本地安装包。远程工作区暂不提供这个入口。</p>
-            </article>
+      <section id="relay">
+        <div class="wrap chapter">
+          <p class="index">03 · 微信</p>
+          <div>
+            <h2>同一套模型，也能在微信里把事情做完。</h2>
+            <p class="prose">
+              微信出图、PDF 和图表走本机已有的网络和任务。文件要真正写出来才会发回。失败会说明停在模型请求、下载还是上传。
+            </p>
+            <div class="points">
+              <article>
+                <h3>出图、PDF 和图表</h3>
+                <p>先判断这是聊天、出图、PDF 还是图表。PDF 和图表写成工作区里的真实文件后再发送。</p>
+              </article>
+              <article>
+                <h3>工作区文件可以发回去</h3>
+                <p>最近绑定的微信会话可以收到工作区里的文件。远程工作区没有文件通道时，不会改在本机执行。</p>
+              </article>
+              <article>
+                <h3>任务可以接着做</h3>
+                <p>紧凑界面可以继续未完成的微信任务，也可以改已经排队的输入。中断之后按检查点继续。</p>
+              </article>
+              <article>
+                <h3>工作区记得说过的话</h3>
+                <p>记忆开启时，原文按工作区留在本机。本机嵌入模型可用时按内容检索；不可用时原文仍在，对话继续。</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="model">
+        <div class="wrap chapter">
+          <p class="index">04 · 模型</p>
+          <div>
+            <h2>只接 ZenMux。</h2>
+            <p class="prose">
+              在欢迎页或设置里填写 API Key，加密显示，保存在本机。没有 Key 时给出
+              <a href="https://zenmux.ai/invite/GBQMC5">邀请链接</a>。
+              请求发往 zenmux.ai。默认模型包括 openai/gpt-6-sol、anthropic/claude-opus-5.5 和 x-ai/grok-4.7，也可以自己增改。
+              连接连续失败三次后，可以换到你设置的备用模型。进行中的对话会显示当前在做什么。
+            </p>
           </div>
         </div>
       </section>
 
       <section id="download">
         <div class="wrap">
-          <h2>下载 3.14.19</h2>
-          <p class="section-note">四个安装包都挂在 <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.19">GitHub Release</a>。macOS 包由开发者签名并完成公证。</p>
+          <p class="index">下载</p>
+          <h2>3.14.19</h2>
+          <p class="prose">
+            四个安装包都在
+            <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.19">GitHub Release</a>。
+            macOS 包由开发者签名并完成公证。
+          </p>
           <div class="downloads">
             <a id="mac" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.19/ZenCode-3.14.19-mac-arm64.dmg">
               <strong>macOS</strong>
@@ -320,11 +382,12 @@
       </section>
 
       <section id="origin">
-        <div class="wrap origin">
-          <h2>源自哪里</h2>
-          <p class="section-note">
+        <div class="wrap">
+          <p class="index">来源</p>
+          <h2>改自 ZCode。</h2>
+          <p class="origin">
             ZenCode 改自智谱开源的 <a href="https://github.com/zai-org/ZCode">ZCode</a>。
-            仓库结构仍沿用上游，可见产品名改为 ZenCode，模型供应商改为 ZenMux。
+            仓库结构仍沿用上游，产品名是 ZenCode，模型供应商是 ZenMux。
             当前源码在 <a href="https://github.com/bennix/ZenMuxDev">bennix/ZenMuxDev</a> 的
             <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">cursor/zenmux-zencode-provider</a> 分支。
           </p>
