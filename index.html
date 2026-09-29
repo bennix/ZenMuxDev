@@ -63,12 +63,8 @@
       nav a { color: var(--muted); text-decoration: none; }
       nav a:hover { color: var(--ivory); }
       .hero { padding: 72px 0 28px; }
-      .hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
-        gap: 48px;
-        align-items: end;
-      }
+      .hero-grid { display: block; }
+      .shot { margin-top: 36px; }
       .kicker {
         margin: 0 0 18px;
         color: var(--brass);
@@ -104,15 +100,16 @@
       .facts div { padding: 18px 18px 0 0; }
       .facts strong { display: block; font-size: 15px; font-weight: 600; }
       .facts span { color: var(--muted); font-size: 14px; }
-      .stage { position: relative; }
-      .stage video {
+      .shot, .stage { margin: 0; }
+      .shot img, .stage video {
         width: 100%;
-        aspect-ratio: 16 / 9;
-        background: #000;
         border: 1px solid var(--line);
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
       }
-      .stage figcaption {
+      .shot img { background: #f4f4f5; }
+      .stage { margin-top: 28px; }
+      .stage video { aspect-ratio: 16 / 9; background: #000; }
+      .shot figcaption, .stage figcaption {
         margin-top: 10px;
         color: var(--muted);
         font-size: 13px;
@@ -184,7 +181,7 @@
         .wrap { width: min(100% - 32px, 1180px); }
         nav { display: none; }
         .hero { padding-top: 40px; }
-        .hero-grid, .chapter, .facts, .points, .downloads { grid-template-columns: 1fr; }
+        .chapter, .facts, .points, .downloads { grid-template-columns: 1fr; }
         .facts div { padding-right: 0; }
         section { padding: 56px 0; }
       }
@@ -236,13 +233,17 @@
               </div>
             </div>
           </div>
-          <figure class="stage">
-            <video controls playsinline preload="metadata" src="ZenCode-Promo.mp4">
-              <a href="ZenCode-Promo.mp4">观看介绍</a>
-            </video>
-            <figcaption>产品介绍</figcaption>
+          <figure class="shot">
+            <img src="media/ui-desk.png" alt="ZenCode 桌面：晚间问候、当前工作区输入框，以及右上角的源码 IDE" />
+            <figcaption>当前桌面。源码 IDE 在右上角，创作和本机操作在输入框里。</figcaption>
           </figure>
         </div>
+        <figure class="stage">
+          <video controls playsinline preload="metadata" src="ZenCode-Promo.mp4">
+            <a href="ZenCode-Promo.mp4">观看介绍</a>
+          </video>
+          <figcaption>产品介绍</figcaption>
+        </figure>
       </div>
 
       <section id="ide">
