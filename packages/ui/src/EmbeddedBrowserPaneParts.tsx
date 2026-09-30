@@ -74,6 +74,7 @@ export function BrowserToolbar({
 }) {
   return (
     <form
+      data-browser-toolbar=""
       onSubmit={(event) =>
         runUserAction({
           input: { featureId: "workbench.browser", action: "navigate", trigger: "keyboard" },

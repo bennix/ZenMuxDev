@@ -2194,7 +2194,10 @@ function ConversationComposerImpl({
               ? "border-foreground bg-foreground text-background"
               : "border-transparent",
           )}
-          onClick={() => setWorkspaceOpen((open) => !open)}
+          onClick={() => {
+            setWorkspaceOpen((open) => !open);
+            setStudioOpen(false);
+          }}
         >
           {intl.formatMessage({ id: "chat.workspace.toggle" })}
         </Button>
@@ -2206,7 +2209,10 @@ function ConversationComposerImpl({
             "h-7 w-fit justify-center gap-1 rounded-lg border px-2 py-1.5 text-ui-base transition-colors",
             studioOpen ? "border-foreground bg-foreground text-background" : "border-transparent",
           )}
-          onClick={() => setStudioOpen((open) => !open)}
+          onClick={() => {
+            setStudioOpen((open) => !open);
+            setWorkspaceOpen(false);
+          }}
         >
           {intl.formatMessage({ id: "chat.studio.toggle" })}
         </Button>
@@ -2282,8 +2288,16 @@ function ConversationComposerImpl({
           />
         </div>
       ) : null}
-      {workspaceOpen ? <WorkspaceAgentBoard modelSelectionView={modelSelectionView} /> : null}
-      {studioOpen ? <StudioPanel modelSelectionView={modelSelectionView} /> : null}
+      {/* 辅助面板曾直接撑高底部 dock，小窗口会顶进 macOS 标题栏；限制高度并在面板内滚动。 */}
+      {workspaceOpen || studioOpen ? (
+        <div
+          data-testid="composer-guided-panel"
+          className="mb-3 max-h-[min(60dvh,calc(100dvh-14rem))] min-h-0 overflow-y-auto overscroll-contain rounded-2xl"
+        >
+          {workspaceOpen ? <WorkspaceAgentBoard modelSelectionView={modelSelectionView} /> : null}
+          {studioOpen ? <StudioPanel modelSelectionView={modelSelectionView} /> : null}
+        </div>
+      ) : null}
       <div
         className={cn(
           "chat-composer-input-surface w-full",

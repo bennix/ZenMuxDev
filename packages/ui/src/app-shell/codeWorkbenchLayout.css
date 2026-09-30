@@ -10,6 +10,18 @@
 [data-code-workbench-focus="true"] > [data-workspace-side-pane-resize-handle] {
   display: none !important;
 }
+/* macOS 原生窗口按钮占据顶部：保留可拖动的空白高度，隐藏标签内容与浏览器工具栏。 */
+[data-code-workbench-focus="true"] [data-side-pane-tabs-list] {
+  border-color: transparent;
+}
+[data-code-workbench-focus="true"] [data-side-pane-tabs-list] > * {
+  visibility: hidden;
+  pointer-events: none;
+}
+[data-code-workbench-focus="true"] [data-browser-toolbar],
+[data-code-workbench-focus="true"] [data-browser-viewport-toolbar] {
+  display: none;
+}
 [data-code-workbench-focus="true"] > #conversation-column {
   position: absolute !important;
   right: 12px;

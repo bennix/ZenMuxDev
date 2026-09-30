@@ -736,7 +736,8 @@ const enUS: Record<string, string> = {
   "bots.providerSettings.wecom": "WeCom support is not available yet.",
   "bots.telegramBotToken": "Link bot",
   "bots.weixinAccess.title": "Weixin user allowlist",
-  "bots.weixinAccess.description": "Defaults to the scanning user. Separate IDs with commas; saving an empty list denies everyone. Allowed users share this bot’s workspace and session. Turn off Echo to use the configured AI model.",
+  "bots.weixinAccess.description":
+    "Defaults to the scanning user. Separate IDs with commas; saving an empty list denies everyone. Allowed users share this bot’s workspace and session. Turn off Echo to use the configured AI model.",
   "bots.weixinAccess.invalid": "Enter user IDs ending in @im.wechat.",
   "bots.weixinAccess.save": "Save allowlist",
   "bots.weixinAccess.reset": "Scanning user only",
@@ -1430,7 +1431,8 @@ const enUS: Record<string, string> = {
   "codeViewer.pptx.thumbnails": "Slide thumbnails",
   "codeViewer.pptx.thumbnail": "Slide {pageNumber}",
   "chat.studio.visualPpt": "Export visual PPT (slide images)",
-  "chat.studio.visualPptHint": "Uses the PDF rendering to preserve layout. Individual elements are not editable.",
+  "chat.studio.visualPptHint":
+    "Uses the PDF rendering to preserve layout. Individual elements are not editable.",
   "chat.studio.visualPptFailed": "Visual PPT export failed. Please retry.",
   "chat.studio.history.title": "PPT history",
   "chat.studio.history.local":
@@ -4680,7 +4682,8 @@ const enUS: Record<string, string> = {
   "chat.activity.turnSteer": "Processing guidance input",
   "chat.activity.foregroundSubagent": "Subagent is executing the task",
   "settings.fallback.title": "Connection fallback model",
-  "settings.fallback.description": "Switch after 3 consecutive connection failures using the selected reasoning effort. Applies to new or reloaded tasks.",
+  "settings.fallback.description":
+    "Switch after 3 consecutive connection failures using the selected reasoning effort. Applies to new or reloaded tasks.",
   "settings.fallback.off": "Disabled",
   "settings.fallback.effort": "Fallback reasoning effort",
   "settings.fallback.saveFailed": "Could not save. Please retry.",
@@ -4948,6 +4951,8 @@ const enUS: Record<string, string> = {
   "chat.studio.edit.failed": "Edit failed; original content kept",
   "chat.studio.stopped": "Stopped; completed content kept",
   "chat.studio.stop": "Stop",
+  "chat.studio.guide":
+    "Choose what to make, then describe your idea. Open detailed settings when needed.",
   "chat.studio.toggle": "Create",
   "chat.studio.image": "Image",
   "chat.studio.video": "Video",
@@ -5013,6 +5018,8 @@ const enUS: Record<string, string> = {
   "settings.studioMedia.modelId": "Model id, or pick from the catalog",
   "settings.studioMedia.add": "Add",
   "settings.studioMedia.remove": "Remove",
+  "chat.workspace.guideTask": "Describe the task to discuss",
+  "chat.workspace.configure": "Configure agents, review, and whiteboard",
   "chat.workspace.title": "Multi-agent workspace",
   "chat.workspace.hint":
     "Up to 5 agents speak in order. Each one sees the previous output. Google is searched in a browser first. A judge accepts the result.",

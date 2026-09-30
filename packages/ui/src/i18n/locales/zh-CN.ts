@@ -668,7 +668,8 @@ const zhCN: Record<string, string> = {
   "bots.providerSettings.wecom": "企业微信暂未开放配置。",
   "bots.telegramBotToken": "关联机器人",
   "bots.weixinAccess.title": "微信用户白名单",
-  "bots.weixinAccess.description": "默认仅允许扫码用户。多个用户 ID 用逗号分隔；保存空列表将拒绝所有用户。名单内用户共用此 Bot 的工作区和会话。关闭 Echo 后使用当前配置的 AI 模型。",
+  "bots.weixinAccess.description":
+    "默认仅允许扫码用户。多个用户 ID 用逗号分隔；保存空列表将拒绝所有用户。名单内用户共用此 Bot 的工作区和会话。关闭 Echo 后使用当前配置的 AI 模型。",
   "bots.weixinAccess.invalid": "请输入以 @im.wechat 结尾的用户 ID。",
   "bots.weixinAccess.save": "保存白名单",
   "bots.weixinAccess.reset": "仅允许扫码用户",
@@ -4376,7 +4377,8 @@ const zhCN: Record<string, string> = {
   "chat.activity.turnSteer": "正在处理引导输入",
   "chat.activity.foregroundSubagent": "子代理正在执行任务",
   "settings.fallback.title": "连接故障备用模型",
-  "settings.fallback.description": "连续连接失败达到 3 次后切换；按所选推理强度运行。新建或重新加载任务后生效。",
+  "settings.fallback.description":
+    "连续连接失败达到 3 次后切换；按所选推理强度运行。新建或重新加载任务后生效。",
   "settings.fallback.off": "不启用",
   "settings.fallback.effort": "备用模型推理强度",
   "settings.fallback.saveFailed": "保存失败，请重试",
@@ -4641,6 +4643,7 @@ const zhCN: Record<string, string> = {
   "chat.studio.edit.failed": "修改失败，保留原内容",
   "chat.studio.stopped": "已停止，保留已完成内容",
   "chat.studio.stop": "停止",
+  "chat.studio.guide": "选择要创作的内容，再填写想法；需要时展开详细设置。",
   "chat.studio.toggle": "创作",
   "chat.studio.image": "生图",
   "chat.studio.video": "生视频",
@@ -4706,6 +4709,8 @@ const zhCN: Record<string, string> = {
   "settings.studioMedia.modelId": "模型 ID，可从目录里选",
   "settings.studioMedia.add": "添加",
   "settings.studioMedia.remove": "删除",
+  "chat.workspace.guideTask": "先写下要讨论的任务",
+  "chat.workspace.configure": "配置 Agent、裁定与白板",
   "chat.workspace.title": "多 Agent 工作区",
   "chat.workspace.hint":
     "最多 5 个 Agent，按顺序发言，后一位能看到前一位。发言前用浏览器打开谷歌检索。最后由裁定 Agent 验收。",

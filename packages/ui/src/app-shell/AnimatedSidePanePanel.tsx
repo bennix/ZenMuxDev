@@ -945,6 +945,7 @@ export function AnimatedSidePanePanel({
                 className="relative h-full gap-0"
               >
                 <TabsList
+                  data-side-pane-tabs-list=""
                   style={captionControlsStyle}
                   className={cn(
                     "flex justify-start w-full rounded-none p-0 border-0 border-b border-border/50 bg-transparent shadow-none !h-12 overflow-hidden",

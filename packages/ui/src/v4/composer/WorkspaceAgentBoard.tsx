@@ -21,7 +21,12 @@ import { Button } from "@/components/ui/button.js";
 import { cn } from "@/components/lib/utils.js";
 import { usePlatform } from "@/hooks/usePlatform.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
-import { defaultEffort, reasoningBody, resolveEffort, supportedEfforts } from "./reasoningEffort.js";
+import {
+  defaultEffort,
+  reasoningBody,
+  resolveEffort,
+  supportedEfforts,
+} from "./reasoningEffort.js";
 
 const STORAGE_KEY = "zencode.workspace.board.v1";
 const MAX_AGENTS = 5;
@@ -253,9 +258,9 @@ export function WorkspaceAgentBoard({
   const [outputs, setOutputs] = useState<Record<string, string>>({});
   const [running, setRunning] = useState(false);
   const [searchStatus, setSearchStatus] = useState<string | null>(null);
-  const [searchLog, setSearchLog] = useState<Array<{ query: string; hits: readonly DuckDuckGoHit[] }>>(
-    [],
-  );
+  const [searchLog, setSearchLog] = useState<
+    Array<{ query: string; hits: readonly DuckDuckGoHit[] }>
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const liveBoard = useMemo(() => {
@@ -310,7 +315,8 @@ export function WorkspaceAgentBoard({
     setSearchLog([]);
     setOutputs({});
     const noteText = notes.length > 0 ? `\n\n${notes.join("\n\n")}` : "";
-    const boardText = whiteboardOn && whiteboard.trim() ? `\n\n共享白板：\n${whiteboard.trim()}` : "";
+    const boardText =
+      whiteboardOn && whiteboard.trim() ? `\n\n共享白板：\n${whiteboard.trim()}` : "";
     const boardRule = boardText
       ? "共享白板是用户给定的约束和已知条件，必须遵守，并在发言里直接用到。白板上的数字按用户给定处理，不要用检索摘要替换，也不要略过。"
       : "";
@@ -379,8 +385,7 @@ export function WorkspaceAgentBoard({
         messages: [
           {
             role: "system",
-            content:
-              `你是验收裁定。根据任务、谷歌检索摘要和各位 Agent 的发言，给出是否通过、必须修改的点，以及最终结论。摘要里没有的当前数字不能算作已核实。${boardRule}`,
+            content: `你是验收裁定。根据任务、谷歌检索摘要和各位 Agent 的发言，给出是否通过、必须修改的点，以及最终结论。摘要里没有的当前数字不能算作已核实。${boardRule}`,
           },
           { role: "user", content: judgeContent },
         ],
@@ -406,7 +411,9 @@ export function WorkspaceAgentBoard({
     <section className="mb-3 rounded-2xl border border-border bg-card p-3 text-foreground">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-ui-base font-medium">{intl.formatMessage({ id: "chat.workspace.title" })}</h2>
+          <h2 className="text-ui-base font-medium">
+            {intl.formatMessage({ id: "chat.workspace.title" })}
+          </h2>
           <p className="text-ui-caption text-muted-foreground">
             {searchStatus
               ? intl.formatMessage({ id: "chat.workspace.searching" }, { query: searchStatus })
@@ -442,7 +449,9 @@ export function WorkspaceAgentBoard({
             <div key={entry.query} className="rounded-xl border border-border bg-surface p-2">
               <p className="text-ui-caption text-muted-foreground">{entry.query}</p>
               {entry.hits.length === 0 ? (
-                <p className="text-ui-caption">{intl.formatMessage({ id: "chat.workspace.searchEmpty" })}</p>
+                <p className="text-ui-caption">
+                  {intl.formatMessage({ id: "chat.workspace.searchEmpty" })}
+                </p>
               ) : (
                 entry.hits.map((hit) => (
                   <button
@@ -452,7 +461,9 @@ export function WorkspaceAgentBoard({
                     onClick={() => platform.openExternal(hit.url)}
                   >
                     <span className="text-ui-caption text-foreground">{hit.title}</span>
-                    <span className="mt-0.5 block text-ui-caption text-muted-foreground">{hit.snippet}</span>
+                    <span className="mt-0.5 block text-ui-caption text-muted-foreground">
+                      {hit.snippet}
+                    </span>
                   </button>
                 ))
               )}
@@ -470,35 +481,239 @@ export function WorkspaceAgentBoard({
           {intl.formatMessage({ id: "chat.workspace.noModel" })}
         </p>
       ) : null}
-      <div className="flex flex-col gap-2">
-        {agents.map((agent) => {
-          const efforts = choiceByKey(agent.modelKey)?.efforts ?? [];
-          return (
-            <div key={agent.id} className="rounded-xl border border-border bg-surface p-2">
+      <div className="mb-3 rounded-xl border border-border bg-surface p-3">
+        <p className="mb-2 text-ui-caption font-medium text-foreground">
+          {intl.formatMessage({ id: "chat.workspace.guideTask" })}
+        </p>
+        <textarea
+          value={task}
+          placeholder={intl.formatMessage({ id: "chat.workspace.task" })}
+          onChange={(event) => setTask(event.target.value)}
+          onPaste={(event) => {
+            const files = [...event.clipboardData.files];
+            if (files.length === 0) return;
+            event.preventDefault();
+            void addFiles(files);
+          }}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+            void addFiles([...event.dataTransfer.files]);
+          }}
+          className="mt-2 min-h-16 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
+        />
+        <p className="mt-1 text-ui-caption text-muted-foreground">
+          {intl.formatMessage({ id: "chat.workspace.drop" })}
+        </p>
+        {images.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {images.map((image) => (
+              <div
+                key={image.id}
+                className="relative size-12 overflow-hidden rounded-lg border border-border"
+              >
+                <img src={image.url} alt={image.name} className="size-full object-cover" />
+                <button
+                  type="button"
+                  aria-label={intl.formatMessage({ id: "chat.attachments.remove" })}
+                  className="absolute top-0.5 right-0.5 z-10 grid size-3.5 place-items-center rounded-full bg-primary text-[10px] leading-none text-primary-foreground"
+                  onClick={() =>
+                    setImages((current) => current.filter((item) => item.id !== image.id))
+                  }
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {error ? <p className="mt-2 text-ui-caption text-warning">{error}</p> : null}
+        <div className="mt-2 flex gap-2">
+          <Button
+            type="button"
+            className={cn("h-8 px-3 text-ui-caption")}
+            disabled={running || !apiKey || !task.trim() || choices.length === 0}
+            onClick={() => void run()}
+          >
+            {intl.formatMessage({ id: "chat.workspace.run" })}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-8 px-3 text-ui-caption"
+            disabled={!running}
+            onClick={() => abortRef.current?.abort()}
+          >
+            {intl.formatMessage({ id: "chat.workspace.cancel" })}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-8 px-3 text-ui-caption"
+            disabled={
+              running ||
+              (searchLog.length === 0 &&
+                !outputs.judge?.trim() &&
+                agents.every((agent) => !outputs[agent.id]?.trim()))
+            }
+            onClick={() => {
+              const markdown = discussionMarkdown({
+                task,
+                searchLog,
+                sections: [
+                  ...agents.map((agent) => ({
+                    title: `${agent.name} · ${choiceByKey(agent.modelKey)?.label ?? agent.modelKey}`,
+                    body: outputs[agent.id] ?? "",
+                  })),
+                  {
+                    title: intl.formatMessage({ id: "chat.workspace.judge" }),
+                    body: outputs.judge ?? "",
+                  },
+                ],
+              });
+              const bytes = new TextEncoder().encode(markdown);
+              const data = bytes.buffer.slice(
+                bytes.byteOffset,
+                bytes.byteOffset + bytes.byteLength,
+              );
+              void (async () => {
+                if (!platform.saveFile) {
+                  setError(intl.formatMessage({ id: "chat.workspace.exportFailed" }));
+                  return;
+                }
+                const result = await platform.saveFile({
+                  data,
+                  suggestedName: "workspace-discussion.md",
+                });
+                if (result.canceled) return;
+                if (!result.success) {
+                  setError(intl.formatMessage({ id: "chat.workspace.exportFailed" }));
+                }
+              })();
+            }}
+          >
+            {intl.formatMessage({ id: "chat.workspace.export" })}
+          </Button>
+        </div>
+      </div>
+      <details className="rounded-xl border border-border bg-surface p-3">
+        <summary className="cursor-pointer text-ui-caption font-medium">
+          {intl.formatMessage({ id: "chat.workspace.configure" })}
+        </summary>
+        <div className="mt-3">
+          <div className="flex flex-col gap-2">
+            {agents.map((agent) => {
+              const efforts = choiceByKey(agent.modelKey)?.efforts ?? [];
+              return (
+                <div key={agent.id} className="rounded-xl border border-border bg-surface p-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      value={agent.name}
+                      onChange={(event) => {
+                        const next = agents.map((item) =>
+                          item.id === agent.id ? { ...item, name: event.target.value } : item,
+                        );
+                        setAgents(next);
+                        persist({ agents: next });
+                      }}
+                      className="h-7 w-28 rounded-lg border border-border bg-background px-2 text-ui-caption"
+                    />
+                    <select
+                      value={agent.modelKey}
+                      onChange={(event) => {
+                        const modelKey = event.target.value;
+                        const effort = defaultEffort(
+                          choices.find((choice) => choice.key === modelKey)?.efforts ?? [],
+                        );
+                        const next = agents.map((item) =>
+                          item.id === agent.id ? { ...item, modelKey, effort } : item,
+                        );
+                        setAgents(next);
+                        persist({ agents: next });
+                      }}
+                      className="h-7 max-w-full flex-1 rounded-lg border border-border bg-background px-2 text-ui-caption"
+                    >
+                      {choices.map((choice) => (
+                        <option key={choice.key} value={choice.key}>
+                          {choice.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={agent.stance}
+                      onChange={(event) => {
+                        const stance: Stance =
+                          event.target.value === "critique" ? "critique" : "collaborate";
+                        const next = agents.map((item) =>
+                          item.id === agent.id ? { ...item, stance } : item,
+                        );
+                        setAgents(next);
+                        persist({ agents: next });
+                      }}
+                      className="h-7 rounded-lg border border-border bg-background px-2 text-ui-caption"
+                    >
+                      <option value="collaborate">
+                        {intl.formatMessage({ id: "chat.workspace.collaborate" })}
+                      </option>
+                      <option value="critique">
+                        {intl.formatMessage({ id: "chat.workspace.critique" })}
+                      </option>
+                    </select>
+                    {efforts.length > 0 ? (
+                      <select
+                        aria-label={intl.formatMessage({ id: "chat.workspace.effort" })}
+                        value={resolveEffort(agent.effort, efforts)}
+                        onChange={(event) => {
+                          const next = agents.map((item) =>
+                            item.id === agent.id ? { ...item, effort: event.target.value } : item,
+                          );
+                          setAgents(next);
+                          persist({ agents: next });
+                        }}
+                        className="h-7 rounded-lg border border-border bg-background px-2 text-ui-caption"
+                      >
+                        {efforts.map((effort) => (
+                          <option key={effort} value={effort}>
+                            {effort}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-7 px-2 text-ui-caption"
+                      disabled={agents.length <= 1 || running}
+                      onClick={() => {
+                        const next = agents.filter((item) => item.id !== agent.id);
+                        setAgents(next);
+                        persist({ agents: next });
+                      }}
+                    >
+                      {intl.formatMessage({ id: "chat.workspace.remove" })}
+                    </Button>
+                  </div>
+                  {outputs[agent.id] ? (
+                    <WorkspaceMarkdown text={outputs[agent.id] ?? ""} streaming={running} />
+                  ) : null}
+                </div>
+              );
+            })}
+            <div className="rounded-xl border border-border bg-surface p-2">
               <div className="flex flex-wrap items-center gap-2">
-                <input
-                  value={agent.name}
-                  onChange={(event) => {
-                    const next = agents.map((item) =>
-                      item.id === agent.id ? { ...item, name: event.target.value } : item,
-                    );
-                    setAgents(next);
-                    persist({ agents: next });
-                  }}
-                  className="h-7 w-28 rounded-lg border border-border bg-background px-2 text-ui-caption"
-                />
+                <span className="text-ui-caption">
+                  {intl.formatMessage({ id: "chat.workspace.judge" })}
+                </span>
                 <select
-                  value={agent.modelKey}
+                  value={judgeModelKey}
                   onChange={(event) => {
                     const modelKey = event.target.value;
                     const effort = defaultEffort(
                       choices.find((choice) => choice.key === modelKey)?.efforts ?? [],
                     );
-                    const next = agents.map((item) =>
-                      item.id === agent.id ? { ...item, modelKey, effort } : item,
-                    );
-                    setAgents(next);
-                    persist({ agents: next });
+                    setJudgeModelKey(modelKey);
+                    setJudgeEffort(effort);
+                    persist({ judgeModelKey: modelKey, judgeEffort: effort });
                   }}
                   className="h-7 max-w-full flex-1 rounded-lg border border-border bg-background px-2 text-ui-caption"
                 >
@@ -508,240 +723,58 @@ export function WorkspaceAgentBoard({
                     </option>
                   ))}
                 </select>
-                <select
-                  value={agent.stance}
-                  onChange={(event) => {
-                    const stance: Stance = event.target.value === "critique" ? "critique" : "collaborate";
-                    const next = agents.map((item) =>
-                      item.id === agent.id ? { ...item, stance } : item,
-                    );
-                    setAgents(next);
-                    persist({ agents: next });
-                  }}
-                  className="h-7 rounded-lg border border-border bg-background px-2 text-ui-caption"
-                >
-                  <option value="collaborate">
-                    {intl.formatMessage({ id: "chat.workspace.collaborate" })}
-                  </option>
-                  <option value="critique">
-                    {intl.formatMessage({ id: "chat.workspace.critique" })}
-                  </option>
-                </select>
-                {efforts.length > 0 ? (
+                {(choiceByKey(judgeModelKey)?.efforts.length ?? 0) > 0 ? (
                   <select
                     aria-label={intl.formatMessage({ id: "chat.workspace.effort" })}
-                    value={resolveEffort(agent.effort, efforts)}
+                    value={resolveEffort(judgeEffort, choiceByKey(judgeModelKey)?.efforts ?? [])}
                     onChange={(event) => {
-                      const next = agents.map((item) =>
-                        item.id === agent.id ? { ...item, effort: event.target.value } : item,
-                      );
-                      setAgents(next);
-                      persist({ agents: next });
+                      setJudgeEffort(event.target.value);
+                      persist({ judgeEffort: event.target.value });
                     }}
                     className="h-7 rounded-lg border border-border bg-background px-2 text-ui-caption"
                   >
-                    {efforts.map((effort) => (
+                    {choiceByKey(judgeModelKey)?.efforts.map((effort) => (
                       <option key={effort} value={effort}>
                         {effort}
                       </option>
                     ))}
                   </select>
                 ) : null}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-7 px-2 text-ui-caption"
-                  disabled={agents.length <= 1 || running}
-                  onClick={() => {
-                    const next = agents.filter((item) => item.id !== agent.id);
-                    setAgents(next);
-                    persist({ agents: next });
-                  }}
-                >
-                  {intl.formatMessage({ id: "chat.workspace.remove" })}
-                </Button>
               </div>
-              {outputs[agent.id] ? (
-                <WorkspaceMarkdown text={outputs[agent.id] ?? ""} streaming={running} />
+              {outputs.judge ? (
+                <WorkspaceMarkdown text={outputs.judge} streaming={running} />
               ) : null}
             </div>
-          );
-        })}
-        <div className="rounded-xl border border-border bg-surface p-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-ui-caption">{intl.formatMessage({ id: "chat.workspace.judge" })}</span>
-            <select
-              value={judgeModelKey}
-              onChange={(event) => {
-                const modelKey = event.target.value;
-                const effort = defaultEffort(
-                  choices.find((choice) => choice.key === modelKey)?.efforts ?? [],
-                );
-                setJudgeModelKey(modelKey);
-                setJudgeEffort(effort);
-                persist({ judgeModelKey: modelKey, judgeEffort: effort });
-              }}
-              className="h-7 max-w-full flex-1 rounded-lg border border-border bg-background px-2 text-ui-caption"
-            >
-              {choices.map((choice) => (
-                <option key={choice.key} value={choice.key}>
-                  {choice.label}
-                </option>
-              ))}
-            </select>
-            {(choiceByKey(judgeModelKey)?.efforts.length ?? 0) > 0 ? (
-              <select
-                aria-label={intl.formatMessage({ id: "chat.workspace.effort" })}
-                value={resolveEffort(judgeEffort, choiceByKey(judgeModelKey)?.efforts ?? [])}
-                onChange={(event) => {
-                  setJudgeEffort(event.target.value);
-                  persist({ judgeEffort: event.target.value });
-                }}
-                className="h-7 rounded-lg border border-border bg-background px-2 text-ui-caption"
-              >
-                {choiceByKey(judgeModelKey)?.efforts.map((effort) => (
-                  <option key={effort} value={effort}>
-                    {effort}
-                  </option>
-                ))}
-              </select>
-            ) : null}
           </div>
-          {outputs.judge ? <WorkspaceMarkdown text={outputs.judge} streaming={running} /> : null}
+          <label className="mt-2 flex items-center gap-2 text-ui-caption">
+            <input
+              type="checkbox"
+              checked={whiteboardOn}
+              onChange={(event) => {
+                setWhiteboardOn(event.target.checked);
+                persist({ whiteboardOn: event.target.checked });
+              }}
+            />
+            {intl.formatMessage({ id: "chat.workspace.whiteboard" })}
+          </label>
+          {whiteboardOn ? (
+            <textarea
+              value={whiteboard}
+              onChange={(event) => {
+                setWhiteboard(event.target.value);
+                persist({ whiteboard: event.target.value });
+              }}
+              placeholder={intl.formatMessage({ id: "chat.workspace.whiteboardHint" })}
+              className="mt-2 min-h-16 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
+            />
+          ) : null}
         </div>
-      </div>
-      <label className="mt-2 flex items-center gap-2 text-ui-caption">
-        <input
-          type="checkbox"
-          checked={whiteboardOn}
-          onChange={(event) => {
-            setWhiteboardOn(event.target.checked);
-            persist({ whiteboardOn: event.target.checked });
-          }}
-        />
-        {intl.formatMessage({ id: "chat.workspace.whiteboard" })}
-      </label>
-      {whiteboardOn ? (
-        <textarea
-          value={whiteboard}
-          onChange={(event) => {
-            setWhiteboard(event.target.value);
-            persist({ whiteboard: event.target.value });
-          }}
-          placeholder={intl.formatMessage({ id: "chat.workspace.whiteboardHint" })}
-          className="mt-2 min-h-16 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
-        />
-      ) : null}
+      </details>
       {liveBoard ? (
         <div className="mt-2 rounded-lg border border-border bg-background p-2">
           <WorkspaceMarkdown text={liveBoard} streaming={running} />
         </div>
       ) : null}
-      <textarea
-        value={task}
-        placeholder={intl.formatMessage({ id: "chat.workspace.task" })}
-        onChange={(event) => setTask(event.target.value)}
-        onPaste={(event) => {
-          const files = [...event.clipboardData.files];
-          if (files.length === 0) return;
-          event.preventDefault();
-          void addFiles(files);
-        }}
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={(event) => {
-          event.preventDefault();
-          void addFiles([...event.dataTransfer.files]);
-        }}
-        className="mt-2 min-h-16 w-full rounded-lg border border-border bg-background p-2 text-ui-base"
-      />
-      <p className="mt-1 text-ui-caption text-muted-foreground">
-        {intl.formatMessage({ id: "chat.workspace.drop" })}
-      </p>
-      {images.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {images.map((image) => (
-            <div
-              key={image.id}
-              className="relative size-12 overflow-hidden rounded-lg border border-border"
-            >
-              <img src={image.url} alt={image.name} className="size-full object-cover" />
-              <button
-                type="button"
-                aria-label={intl.formatMessage({ id: "chat.attachments.remove" })}
-                className="absolute top-0.5 right-0.5 z-10 grid size-3.5 place-items-center rounded-full bg-primary text-[10px] leading-none text-primary-foreground"
-                onClick={() => setImages((current) => current.filter((item) => item.id !== image.id))}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : null}
-      {error ? <p className="mt-2 text-ui-caption text-warning">{error}</p> : null}
-      <div className="mt-2 flex gap-2">
-        <Button
-          type="button"
-          className={cn("h-8 px-3 text-ui-caption")}
-          disabled={running || !apiKey || !task.trim() || choices.length === 0}
-          onClick={() => void run()}
-        >
-          {intl.formatMessage({ id: "chat.workspace.run" })}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-8 px-3 text-ui-caption"
-          disabled={!running}
-          onClick={() => abortRef.current?.abort()}
-        >
-          {intl.formatMessage({ id: "chat.workspace.cancel" })}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-8 px-3 text-ui-caption"
-          disabled={
-            running ||
-            (searchLog.length === 0 &&
-              !outputs.judge?.trim() &&
-              agents.every((agent) => !outputs[agent.id]?.trim()))
-          }
-          onClick={() => {
-            const markdown = discussionMarkdown({
-              task,
-              searchLog,
-              sections: [
-                ...agents.map((agent) => ({
-                  title: `${agent.name} · ${choiceByKey(agent.modelKey)?.label ?? agent.modelKey}`,
-                  body: outputs[agent.id] ?? "",
-                })),
-                {
-                  title: intl.formatMessage({ id: "chat.workspace.judge" }),
-                  body: outputs.judge ?? "",
-                },
-              ],
-            });
-            const bytes = new TextEncoder().encode(markdown);
-            const data = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-            void (async () => {
-              if (!platform.saveFile) {
-                setError(intl.formatMessage({ id: "chat.workspace.exportFailed" }));
-                return;
-              }
-              const result = await platform.saveFile({
-                data,
-                suggestedName: "workspace-discussion.md",
-              });
-              if (result.canceled) return;
-              if (!result.success) {
-                setError(intl.formatMessage({ id: "chat.workspace.exportFailed" }));
-              }
-            })();
-          }}
-        >
-          {intl.formatMessage({ id: "chat.workspace.export" })}
-        </Button>
-      </div>
     </section>
   );
 }

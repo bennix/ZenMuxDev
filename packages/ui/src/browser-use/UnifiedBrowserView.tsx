@@ -1041,13 +1041,15 @@ export function UnifiedBrowserView({
         isResponsiveMode={isResponsiveMode}
       />
       {isResponsiveMode ? (
-        <BrowserViewportToolbar
-          isVisible={isVisible}
-          onViewportSizeChange={handleResponsiveViewportInput}
-          onZoomChange={setResponsiveViewportZoom}
-          viewportSize={responsiveViewportSize}
-          zoom={responsiveViewportZoom}
-        />
+        <div data-browser-viewport-toolbar="">
+          <BrowserViewportToolbar
+            isVisible={isVisible}
+            onViewportSizeChange={handleResponsiveViewportInput}
+            onZoomChange={setResponsiveViewportZoom}
+            viewportSize={responsiveViewportSize}
+            zoom={responsiveViewportZoom}
+          />
+        </div>
       ) : null}
       <BrowserViewportSurface
         browserRegionRef={browserRegionRef}

@@ -839,14 +839,20 @@ export function StudioPanel({
       host.dispose();
       host = undefined;
       if (!pdf.success || !pdf.data) throw new Error(pdf.error || "PDF export failed");
-      const data = visualPpt ? new Uint8Array(await buildVisualDeckPptx(pdf.data)).buffer : pdf.data;
+      const data = visualPpt
+        ? new Uint8Array(await buildVisualDeckPptx(pdf.data)).buffer
+        : pdf.data;
       const saved = await platform.saveFile({
         data,
         suggestedName: visualPpt ? "zencode-deck-visual.pptx" : "zencode-deck-a4.pdf",
       });
       if (!saved.success && saved.error) throw new Error(saved.error);
     } catch {
-      setError(intl.formatMessage({ id: visualPpt ? "chat.studio.visualPptFailed" : "codeViewer.pptx.exportPdfFailed" }));
+      setError(
+        intl.formatMessage({
+          id: visualPpt ? "chat.studio.visualPptFailed" : "codeViewer.pptx.exportPdfFailed",
+        }),
+      );
     } finally {
       host?.dispose();
       pdfExportLock.current = false;
@@ -1134,6 +1140,27 @@ export function StudioPanel({
         void addDeckFiles(files);
       }}
     >
+      <div className="mb-3">
+        <h2 className="text-ui-base font-medium">
+          {intl.formatMessage({ id: "chat.studio.toggle" })}
+        </h2>
+        <p className="text-ui-caption text-muted-foreground">
+          {intl.formatMessage({ id: "chat.studio.guide" })}
+        </p>
+      </div>
+      <div className="mb-2 flex flex-wrap gap-2">
+        {(["image", "video", "ppt"] as const).map((item) => (
+          <Button
+            key={item}
+            type="button"
+            variant={mode === item ? "secondary" : "ghost"}
+            className="h-7 px-2 text-ui-caption"
+            onClick={() => setMode(item)}
+          >
+            {intl.formatMessage({ id: `chat.studio.${item}` })}
+          </Button>
+        ))}
+      </div>
       <StudioDeckHistory
         records={deckHistory.records}
         disabled={busy || generatingDeck || exportingPdf}
@@ -1156,19 +1183,6 @@ export function StudioPanel({
         collapseLabel={intl.formatMessage({ id: "chat.studio.collapseSettings" })}
         expandLabel={intl.formatMessage({ id: "chat.studio.expandSettings" })}
       >
-        <div className="mb-2 flex flex-wrap gap-2">
-          {(["image", "video", "ppt"] as const).map((item) => (
-            <Button
-              key={item}
-              type="button"
-              variant={mode === item ? "secondary" : "ghost"}
-              className="h-7 px-2 text-ui-caption"
-              onClick={() => setMode(item)}
-            >
-              {intl.formatMessage({ id: `chat.studio.${item}` })}
-            </Button>
-          ))}
-        </div>
         <div className="mb-2 flex flex-wrap items-center gap-2 text-ui-caption">
           <ModelPick
             label={intl.formatMessage({ id: "chat.studio.intentModel" })}
@@ -1747,16 +1761,24 @@ export function StudioPanel({
               {intl.formatMessage({ id: "chat.studio.save" })}
             </Button>
             {platform.printPageToPdf && platform.saveFile ? (
-              <Button variant="outline" disabled={busy || exportingPdf || deckPages.length === 0}
+              <Button
+                variant="outline"
+                disabled={busy || exportingPdf || deckPages.length === 0}
                 title={intl.formatMessage({ id: "chat.studio.visualPptHint" })}
-                onClick={() => void saveDeckPdf(true)}>
+                onClick={() => void saveDeckPdf(true)}
+              >
                 {intl.formatMessage({ id: "chat.studio.visualPpt" })}
               </Button>
             ) : null}
             {platform.printPageToPdf && platform.saveFile ? (
-              <Button variant="outline" disabled={busy || exportingPdf || deckPages.length === 0}
-                onClick={() => void saveDeckPdf()}>
-                {intl.formatMessage({ id: exportingPdf ? "codeViewer.pptx.exportingPdf" : "chat.studio.exportAllPdf" })}
+              <Button
+                variant="outline"
+                disabled={busy || exportingPdf || deckPages.length === 0}
+                onClick={() => void saveDeckPdf()}
+              >
+                {intl.formatMessage({
+                  id: exportingPdf ? "codeViewer.pptx.exportingPdf" : "chat.studio.exportAllPdf",
+                })}
               </Button>
             ) : null}
           </>
