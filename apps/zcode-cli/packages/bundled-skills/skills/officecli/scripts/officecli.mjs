@@ -27,6 +27,16 @@ export function verifyAssetBytes(asset, bytes) {
 export async function ensureRuntime({ root, platform = process.platform, arch = process.arch, musl, signal } = {}) {
   const isMusl = musl ?? (platform === "linux" && !process.report.getReport().header.glibcVersionRuntime);
   const asset = selectAsset(platform, arch, isMusl);
+  if (!root) {
+    const bundled = join(dirname(fileURLToPath(import.meta.url)), "runtime", release.version, asset);
+    try {
+      // 生产包预置工具仍按锁定版本验哈希，损坏资产不能静默当作另一版本使用。
+      verifyAssetBytes(asset, await readFile(bundled));
+      return bundled;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
   const target = join(root ?? join(homedir(), ".zcode", "tools", "officecli"), release.version, asset);
   try {
     verifyAssetBytes(asset, await readFile(target));

@@ -1,3 +1,5 @@
+import { callZenMuxSystemOne } from "@zcode/shared";
+import { useStudioRepairModelStore } from "@/store/studioRepairModelStore.js";
 import { streamStudioChat, type StudioRetry } from "./studioChatRetry.js";
 import { applyDeckTheme, type DeckTheme } from "./deckTheme.js";
 import { prepareDeckHtml, measureDeckPages } from "./htmlToEditablePptx.js";
@@ -42,7 +44,7 @@ export async function auditSlideLayout(
     const issues: SlideLayoutIssue[] = [];
     const seen = new Set<string>();
     const boxes: TextBox[] = [];
-    const visibleText: {id:string; text:string}[] = [];
+    const visibleText: { id: string; text: string }[] = [];
     const add = (issue: SlideLayoutIssue) => {
       const key = `${issue.kind}:${issue.elements.join(",")}`;
       if (!seen.has(key)) {
@@ -62,7 +64,8 @@ export async function auditSlideLayout(
       const range = doc.createRange();
       range.selectNodeContents(node);
       const container = owner.getBoundingClientRect();
-      if ([...range.getClientRects()].some(rect=>rect.width>=1 && rect.height>=1)) visibleText.push({id,text:node.textContent ?? ""});
+      if ([...range.getClientRects()].some((rect) => rect.width >= 1 && rect.height >= 1))
+        visibleText.push({ id, text: node.textContent ?? "" });
       for (const rect of range.getClientRects()) {
         if (rect.width < 1 || rect.height < 1) continue;
         const bounds = `x=${Math.round(rect.x)}, y=${Math.round(rect.y)}, w=${Math.round(rect.width)}, h=${Math.round(rect.height)}`;
@@ -95,17 +98,37 @@ export async function auditSlideLayout(
     }
     // 预览正常不代表导出有正文；复用实际 PPTX 测量路径检查文本遗漏。
     for (const img of doc.images) {
-      if (!img.getAttribute("src") || img.getAttribute("src")?.includes("{{ILLUSTRATION}}") || (img.complete && img.naturalWidth === 0)) {
-        add({kind:"resource",elements:[img.dataset.pptxId ?? "img"],detail:"图片资源未绑定或加载失败。没有可用配图时，请改用内联 SVG 或可编辑图形呈现内容，禁止保留图片占位符。"});
+      if (
+        !img.getAttribute("src") ||
+        img.getAttribute("src")?.includes("{{ILLUSTRATION}}") ||
+        (img.complete && img.naturalWidth === 0)
+      ) {
+        add({
+          kind: "resource",
+          elements: [img.dataset.pptxId ?? "img"],
+          detail:
+            "图片资源未绑定或加载失败。没有可用配图时，请改用内联 SVG 或可编辑图形呈现内容，禁止保留图片占位符。",
+        });
       }
     }
     const exported = await measureDeckPages([html]);
     signal.throwIfAborted();
-    const compact = (text:string) => text.replace(/\s/gu, "");
-    const exportedText = compact(exported.flatMap(page=>page.nodes.filter(node=>node.kind === "text").map(node=>node.text ?? "")).join(""));
+    const compact = (text: string) => text.replace(/\s/gu, "");
+    const exportedText = compact(
+      exported
+        .flatMap((page) =>
+          page.nodes.filter((node) => node.kind === "text").map((node) => node.text ?? ""),
+        )
+        .join(""),
+    );
     for (const item of visibleText) {
-      const expected=compact(item.text);
-      if (expected && !exportedText.includes(expected)) add({kind:"export",elements:[item.id],detail:`PPTX 导出遗漏正文：${item.text.trim().slice(0,100)}。请使用独立可编辑文本块保留该内容。`});
+      const expected = compact(item.text);
+      if (expected && !exportedText.includes(expected))
+        add({
+          kind: "export",
+          elements: [item.id],
+          detail: `PPTX 导出遗漏正文：${item.text.trim().slice(0, 100)}。请使用独立可编辑文本块保留该内容。`,
+        });
     }
     return issues.slice(0, 12);
   } finally {
@@ -151,16 +174,21 @@ export async function ensureSlideLayout(input: {
   theme?: DeckTheme;
   illustration?: string;
   onLayoutProgress?: (progress: SlideLayoutProgress) => void;
+  evaluate?: (html: string, issues: SlideLayoutIssue[]) => Promise<unknown>;
   repair: (
     html: string,
     issues: SlideLayoutIssue[],
     attempt: number,
     rejectedOutput?: string,
+    evaluation?: unknown,
   ) => Promise<string>;
 }): Promise<string> {
   const normalize = (raw: string) => {
     const doc = new DOMParser().parseFromString(prepareSingleSlide(raw), "text/html");
-    if (input.illustration) for (const img of doc.images) if (img.getAttribute("src") === "{{ILLUSTRATION}}") img.setAttribute("src",input.illustration);
+    if (input.illustration)
+      for (const img of doc.images)
+        if (img.getAttribute("src") === "{{ILLUSTRATION}}")
+          img.setAttribute("src", input.illustration);
     const html = doc.documentElement.outerHTML;
     return input.theme ? applyDeckTheme(html, input.theme) : html;
   };
@@ -200,11 +228,15 @@ export async function ensureSlideLayout(input: {
       return markLayoutWarning(lastComplete, remaining);
     }
     input.onLayoutProgress?.({ stage: "repairing", attempt: attempt + 1, issues });
+    // JEV 仅提供修复建议，最终验收仍由真实浏览器测量负责。
+    const evaluation = html !== undefined ? await input.evaluate?.(html, issues) : undefined;
+    input.signal.throwIfAborted();
     raw = await input.repair(
       lastComplete ?? raw,
       issues,
       attempt + 1,
       html === undefined ? raw : undefined,
+      evaluation,
     );
   }
 }
@@ -224,9 +256,50 @@ export async function repairStudioSlide(input: {
   onLayoutProgress?: (progress: SlideLayoutProgress) => void;
   onRetry?: (retry: StudioRetry) => void;
 }): Promise<string> {
+  const evaluator = useStudioRepairModelStore.getState().evaluatorModelId.trim();
   return ensureSlideLayout({
     ...input,
-    repair: async (html, issues, attempt, rejectedOutput) => {
+    evaluate: evaluator
+      ? async (html, issues) => {
+          input.onOutput(`正在评估版面：${evaluator}`);
+          try {
+            // 独立信号限制评估等待，用户取消必须透传，不能继续修复旧任务。
+            const signal = AbortSignal.any([input.signal, AbortSignal.timeout(120_000)]);
+            return await callZenMuxSystemOne(
+              input.apiKey,
+              {
+                model: evaluator,
+                state: { html, issues, contentContext: input.contentContext },
+                questions: {
+                  repair_priority: {
+                    type: "choice",
+                    instructions:
+                      "选择此页最优先的版面修复策略。保留完整内容，不能通过隐藏、删除或缩小正文回避问题。",
+                    criteria: {
+                      reflow: "重新分配内容区域，修复重叠或越界",
+                      hierarchy: "改善标题、正文与重点的视觉层级",
+                      resources: "修复图片或导出资源",
+                      preserve: "保持现有版面，仅修复本地检查报告的问题",
+                    },
+                  },
+                  layout_quality: {
+                    type: "score",
+                    instructions:
+                      "评估单页 PPT 的可读性、层级、空间布局与内容完整性；结合报告的问题，不得建议隐藏或删除内容。",
+                  },
+                },
+              },
+              undefined,
+              (url, options) => fetch(url, { ...options, signal }),
+            );
+          } catch {
+            input.signal.throwIfAborted();
+            input.onOutput("版面评估暂不可用，继续本地检查和修复。");
+            return undefined;
+          }
+        }
+      : undefined,
+    repair: async (html, issues, attempt, rejectedOutput, evaluation) => {
       input.onRepair();
       let reply = "";
       await streamStudioChat({
@@ -247,6 +320,7 @@ export async function repairStudioSlide(input: {
             content: JSON.stringify({
               attempt,
               rejectedOutput,
+              evaluation,
               contentContext: input.contentContext,
               guidance:
                 attempt > 2

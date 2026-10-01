@@ -252,6 +252,12 @@ export interface CreateTempTextAttachmentResult {
 
 export type SaveFileRequest =
   | {
+      officeSlideImages: readonly string[];
+      data?: never;
+      sourceUrl?: never;
+      suggestedName: string;
+    }
+  | {
       data: ArrayBuffer;
       sourceUrl?: never;
       suggestedName: string;

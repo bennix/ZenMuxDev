@@ -43,7 +43,7 @@ async function loadRenderer() {
 }
 
 /** 使用 PDFium 保留 Chromium 输出的 Type 1 渐变，避免 PDF.js 的粉色占位图案。 */
-export async function buildVisualDeckPptx(pdfBytes: ArrayBuffer): Promise<Uint8Array> {
+export async function renderVisualDeckImages(pdfBytes: ArrayBuffer): Promise<string[]> {
   const engine = await loadRenderer();
   const memory = engine.pdfium as typeof engine.pdfium & { HEAPU8: Uint8Array };
   const ptr = memory.wasmExports.malloc(pdfBytes.byteLength);
@@ -96,9 +96,13 @@ export async function buildVisualDeckPptx(pdfBytes: ArrayBuffer): Promise<Uint8A
       }
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
     }
-    return await buildImageDeckPptx(images);
+    return images;
   } finally {
     if (doc) engine.FPDF_CloseDocument(doc);
     memory.wasmExports.free(ptr);
   }
+}
+
+export async function buildVisualDeckPptx(pdfBytes: ArrayBuffer): Promise<Uint8Array> {
+  return buildImageDeckPptx(await renderVisualDeckImages(pdfBytes));
 }

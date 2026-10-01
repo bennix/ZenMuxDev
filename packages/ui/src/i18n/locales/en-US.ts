@@ -5010,6 +5010,8 @@ const enUS: Record<string, string> = {
   "chat.studio.libraryDelete": "Delete selected",
   "chat.studio.ratio": "Ratio",
   "chat.studio.duration": "Duration (sec)",
+  "settings.studioMedia.evaluatorModel": "PPT layout evaluator (JEV)",
+  "settings.studioMedia.evaluatorHelp": "Defaults to typesafe/jev-1.13 via System One. Advice is sent to the repair model above. Leave blank to disable. Local checks continue if evaluation fails.",
   "settings.studioMedia.repairModel": "PPT repair model",
   "settings.studioMedia.followWriter": "Use the drafting model",
   "settings.studioMedia.repairHelp":

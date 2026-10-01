@@ -29,8 +29,41 @@ try {
     const signal = new AbortController().signal;
     const issues = await auditSlideLayout(bad, signal);
     const valid = await auditSlideLayout(good, signal);
-    const resourceIssues=await auditSlideLayout(good.replace('</body>','<img data-pptx-id="missing" src="{{ILLUSTRATION}}" style="position:absolute;left:800px;top:180px;width:200px;height:200px"></body>'),signal);
-    const exportIssues = await auditSlideLayout('<html><body data-pptx-slide style="margin:0;width:1280px;height:720px">Export-only missing text</body></html>',signal);
+    const resourceIssues = await auditSlideLayout(
+      good.replace(
+        "</body>",
+        '<img data-pptx-id="missing" src="{{ILLUSTRATION}}" style="position:absolute;left:800px;top:180px;width:200px;height:200px"></body>',
+      ),
+      signal,
+    );
+    const exportIssues = await auditSlideLayout(
+      '<html><body data-pptx-slide style="margin:0;width:1280px;height:720px">Export-only missing text</body></html>',
+      signal,
+    );
+    const evaluationInputs = [];
+    const repairEvaluations = [];
+    await ensureSlideLayout({
+      html: bad,
+      signal,
+      evaluate: async (html, problems) => {
+        evaluationInputs.push({ html, count: problems.length });
+        return { layout_quality: 0.4 };
+      },
+      repair: async (_html, _issues, _attempt, _rejected, evaluation) => {
+        repairEvaluations.push(evaluation);
+        return good;
+      },
+    });
+    await ensureSlideLayout({
+      html: good,
+      signal,
+      evaluate: async () => {
+        throw new Error("Valid page must not call evaluator");
+      },
+      repair: async () => {
+        throw new Error("Valid page must not repair");
+      },
+    });
     let repairs = 0;
     const progress = [];
     const fixed = await ensureSlideLayout({
@@ -104,7 +137,7 @@ try {
           ],
         });
       else if (system.includes("Repair the layout")) {
-        if(request.model !== "repair-test") throw new Error("Wrong repair model");
+        if (request.model !== "repair-test") throw new Error("Wrong repair model");
         generationRepairs++;
         content = bad;
       } else if (request.messages[1].content.startsWith("Slide 1 of")) content = bad;
@@ -130,6 +163,8 @@ try {
     return {
       cappedCalls,
       cappedEvents,
+      evaluationInputs,
+      repairEvaluations,
       retainedWarning,
       generationRepairs,
       generatedCount: generated.length,
@@ -137,7 +172,8 @@ try {
       formatEvents,
       bases,
       rejected,
-      exportIssues,resourceIssues,
+      exportIssues,
+      resourceIssues,
       kinds: issues.map((i) => i.kind),
       valid,
       repairs,
@@ -152,8 +188,8 @@ try {
   });
   assert.ok(result.kinds.includes("overlap") && result.kinds.includes("overflow"));
   assert.deepEqual(result.valid, []);
-  assert.ok(result.resourceIssues.some(issue=>issue.kind === "resource"));
-  assert.ok(result.exportIssues.some(issue=>issue.kind === "export"));
+  assert.ok(result.resourceIssues.some((issue) => issue.kind === "resource"));
+  assert.ok(result.exportIssues.some((issue) => issue.kind === "export"));
   assert.equal(result.cappedCalls, 5);
   assert.equal(result.cappedEvents.at(-1).stage, "retained");
   assert.ok(result.retainedWarning);
@@ -163,6 +199,9 @@ try {
   assert.ok(result.formatEvents.some((e) => e.issues.some((i) => i.kind === "format")));
   assert.ok(result.bases[2].includes("先把中文规则翻译为条件"));
   assert.equal(result.rejected[2], "<html><body>truncated");
+  assert.equal(result.evaluationInputs.length, 1);
+  assert.ok(result.evaluationInputs[0].count > 0);
+  assert.deepEqual(result.repairEvaluations, [{ layout_quality: 0.4 }]);
   assert.equal(result.repairs, 4);
   assert.deepEqual(
     result.progress.filter((p) => p.stage === "repairing").map((p) => p.attempt),

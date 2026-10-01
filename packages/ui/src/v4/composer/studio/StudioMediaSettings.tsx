@@ -9,6 +9,8 @@ import { type StudioMediaLibrary } from "./studioMediaStore.js";
 export function StudioMediaSettings() {
   const { intl } = useZCodeIntl();
   const repairModel = useStudioRepairModelStore((state) => state.modelId);
+  const evaluatorModel = useStudioRepairModelStore((state) => state.evaluatorModelId);
+  const setEvaluatorModel = useStudioRepairModelStore((state) => state.setEvaluatorModelId);
   const setRepairModel = useStudioRepairModelStore((state) => state.setModelId);
   const { library, save, loading, error } = useStudioMediaLibrary();
   const [saving, setSaving] = useState(false);
@@ -43,6 +45,21 @@ export function StudioMediaSettings() {
         />
         <p id="studio-repair-help" className="mt-2 text-ui-caption text-muted-foreground">
           {intl.formatMessage({ id: "settings.studioMedia.repairHelp" })}
+        </p>
+      </section>
+      <section className="rounded-xl border border-border bg-card p-4">
+        <label htmlFor="studio-layout-evaluator" className="mb-3 block text-ui-base font-medium">
+          {intl.formatMessage({ id: "settings.studioMedia.evaluatorModel" })}
+        </label>
+        <input
+          id="studio-layout-evaluator"
+          value={evaluatorModel}
+          onChange={(event) => setEvaluatorModel(event.target.value)}
+          aria-describedby="studio-layout-evaluator-help"
+          className="h-8 w-full rounded-lg border border-border bg-background px-2 font-mono text-ui-caption"
+        />
+        <p id="studio-layout-evaluator-help" className="mt-2 text-ui-caption text-muted-foreground">
+          {intl.formatMessage({ id: "settings.studioMedia.evaluatorHelp" })}
         </p>
       </section>
       <ModelList

@@ -1,3 +1,4 @@
+import { saveOfficeVisualDeck, validOfficeSlideImages } from "./desktopOfficeExport.js";
 import { copyFile, mkdtemp, open, rm, writeFile } from "node:fs/promises";
 import { lookup } from "node:dns/promises";
 import { BlockList } from "node:net";
@@ -190,7 +191,14 @@ export function registerDesktopSaveFileIpcHandler(logger: { warn: (...args: unkn
       const suggestedName = basename(payload.suggestedName.trim()).slice(0, 120);
       const sourceUrl = parseRemoteImageUrl(payload.sourceUrl);
       const hasData = payload.data instanceof ArrayBuffer;
-      if (!suggestedName || (sourceUrl === null && !hasData)) {
+      const images = "officeSlideImages" in payload ? payload.officeSlideImages : undefined;
+      if (
+        images !== undefined &&
+        (!validOfficeSlideImages(images) || !suggestedName.toLowerCase().endsWith(".pptx"))
+      ) {
+        return { success: false, error: "invalid_slide_images" };
+      }
+      if (!suggestedName || (sourceUrl === null && !hasData && !images)) {
         return { success: false, error: "invalid_file_payload" };
       }
       if (hasData && payload.data.byteLength === 0) {
@@ -210,7 +218,9 @@ export function registerDesktopSaveFileIpcHandler(logger: { warn: (...args: unkn
       }
 
       try {
-        if (sourceUrl) {
+        if (images) {
+          await saveOfficeVisualDeck(images, result.filePath);
+        } else if (sourceUrl) {
           await downloadRemoteFile(sourceUrl, result.filePath);
         } else if (hasData) {
           await writeFile(result.filePath, new Uint8Array(payload.data));

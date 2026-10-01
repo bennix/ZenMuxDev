@@ -17,6 +17,7 @@ import { basename, dirname, relative, resolve, sep } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runCommand } from "../../../scripts/spawn-command.mjs";
+import { ensureRuntime as ensureOfficeRuntime } from "../../../apps/zcode-cli/packages/bundled-skills/skills/officecli/scripts/officecli.mjs";
 import { stageAgentBundle } from "./stage-agent-bundle.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -147,6 +148,7 @@ const bundledSkillPack = {
   requiredPaths: [
     "skills/officecli/SKILL.md",
     "skills/officecli/scripts/officecli.mjs",
+    "skills/officecli/scripts/compatibility.mjs",
     "skills/officecli/scripts/release.json",
     "skills/officecli/LICENSE.OfficeCLI",
     "skills/dynamic-workflows/SKILL.md",
@@ -327,6 +329,15 @@ async function stageBundledSkillPack() {
     const stagedAssetPath = resolve(targetRoot, ...relativePath.split("/"));
     await access(stagedAssetPath);
   }
+  // 构建阶段预下载并校验目标平台工具，生产用户无需首次运行再下载。
+  const officeBinary = await ensureOfficeRuntime({ platform, arch, musl: false });
+  const officeRuntimeDir = resolve(
+    targetRoot,
+    "skills/officecli/scripts/runtime",
+    basename(dirname(officeBinary)),
+  );
+  await mkdir(officeRuntimeDir, { recursive: true });
+  await cp(officeBinary, resolve(officeRuntimeDir, basename(officeBinary)));
   console.log(`[prepare:agent-bundle] staged bundled skill pack ${bundledSkillPack.stagedPath}`);
 }
 

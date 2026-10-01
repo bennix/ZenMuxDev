@@ -47,3 +47,5 @@ HTML → shared preview document → measured content geometry → editable PPT
 Regression checks: padding and centred/flex content coordinates; no writer relocation of text or decoration geometry; identical preview/PPT measurement styles; multi-page visual PPT retains page ordering and 16:9 geometry. Inspect supplied 10-page PDF against visual PPT rendered by LibreOffice. Do not claim PowerPoint/WPS testing unless actually performed.
 
 Visual export bundles PDFium WASM locally (MIT/Apache-2.0), loaded only on export. PDF.js was rejected because Chromium Type 1 shading becomes a magenta placeholder; a generated conic-gradient fixture covers this case. No document content is sent to a remote rendering service. Each bitmap/page/document/allocation is released in finally blocks.
+
+保真 PPT 的 Desktop 保存使用 OfficeCLI 构建/校验，具体协议与打包要求见 [officecli-compatible-export.md](officecli-compatible-export.md)。PDFium 整页渲染和可编辑导出路径保持独立。

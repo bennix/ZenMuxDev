@@ -125,6 +125,7 @@ const remoteBundledSkillPack = {
   requiredPaths: [
     "skills/officecli/SKILL.md",
     "skills/officecli/scripts/officecli.mjs",
+    "skills/officecli/scripts/compatibility.mjs",
     "skills/officecli/scripts/release.json",
     "skills/officecli/LICENSE.OfficeCLI",
     "skills/dynamic-workflows/SKILL.md",

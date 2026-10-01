@@ -4,13 +4,14 @@ import { resolve, join } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright-core";
 import JSZip from "jszip";
+import { exportVisualPptx } from "../../../apps/zcode-cli/packages/bundled-skills/skills/officecli/scripts/compatibility.mjs";
 
 const root = resolve(import.meta.dirname, "../../..");
 const bundle = await build({
   stdin: {
     contents: `
     export {measureDeckPages, buildEditableDeckPptx} from './packages/ui/src/v4/composer/studio/htmlToEditablePptx.ts';
-    export {buildVisualDeckPptx} from './packages/ui/src/v4/composer/studio/deckVisualPptx.ts';
+    export {buildVisualDeckPptx, renderVisualDeckImages} from './packages/ui/src/v4/composer/studio/deckVisualPptx.ts';
     export {renderDeckPdf} from './packages/ui/src/v4/composer/studio/deckPdfExport.ts';
   `,
     resolveDir: root,
@@ -87,6 +88,29 @@ try {
       [...buffer],
     );
   }
+  const images = await page.evaluate(
+    async (bytes) => exports.renderVisualDeckImages(new Uint8Array(bytes).buffer),
+    [...pdf],
+  );
+  const officePath = "/tmp/zencode-officecli-pdf-fidelity.pptx";
+  const report = await exportVisualPptx(images, officePath);
+  assert.equal(report.pages, 2);
+  assert.equal(report.validation.success, true);
+  const office = await JSZip.loadAsync(await readFile(officePath));
+  assert.equal(
+    Object.keys(office.files).filter((path) => /^ppt\/slides\/slide\d+\.xml$/.test(path)).length,
+    2,
+  );
+  const media = Object.values(office.files).filter(
+    (file) => /^ppt\/media\//.test(file.name) && !file.dir,
+  );
+  assert.equal(media.length, 2);
+  const embedded = await Promise.all(media.map((file) => file.async("nodebuffer")));
+  for (const image of images)
+    assert.ok(
+      embedded.some((bytes) => bytes.equals(Buffer.from(image.split(",")[1], "base64"))),
+      "OfficeCLI must preserve exact PDF raster bytes",
+    );
   const visual = await JSZip.loadAsync(new Uint8Array(await convert(pdf)));
   assert.equal(
     Object.keys(visual.files).filter((path) => /^ppt\/slides\/slide\d+\.xml$/.test(path)).length,

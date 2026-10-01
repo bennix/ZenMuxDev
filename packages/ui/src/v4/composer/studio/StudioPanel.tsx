@@ -1,4 +1,4 @@
-import { buildVisualDeckPptx } from "./deckVisualPptx.js";
+import { renderVisualDeckImages } from "./deckVisualPptx.js";
 import { useStudioDeckHistory } from "@/hooks/useStudioDeckHistory.js";
 import { StudioDeckHistory } from "./StudioDeckHistory.js";
 import { renderDeckPdf } from "./deckPdfExport.js";
@@ -839,13 +839,17 @@ export function StudioPanel({
       host.dispose();
       host = undefined;
       if (!pdf.success || !pdf.data) throw new Error(pdf.error || "PDF export failed");
-      const data = visualPpt
-        ? new Uint8Array(await buildVisualDeckPptx(pdf.data)).buffer
-        : pdf.data;
-      const saved = await platform.saveFile({
-        data,
-        suggestedName: visualPpt ? "zencode-deck-visual.pptx" : "zencode-deck-a4.pdf",
-      });
+      const saved = await platform.saveFile(
+        visualPpt
+          ? {
+              officeSlideImages: await renderVisualDeckImages(pdf.data),
+              suggestedName: "zencode-deck-visual.pptx",
+            }
+          : {
+              data: pdf.data,
+              suggestedName: "zencode-deck-a4.pdf",
+            },
+      );
       if (!saved.success && saved.error) throw new Error(saved.error);
     } catch {
       setError(

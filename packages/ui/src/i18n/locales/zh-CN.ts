@@ -4701,6 +4701,8 @@ const zhCN: Record<string, string> = {
   "chat.studio.libraryDelete": "删除所选",
   "chat.studio.ratio": "比例",
   "chat.studio.duration": "时长（秒）",
+  "settings.studioMedia.evaluatorModel": "PPT 版面评估模型（JEV）",
+  "settings.studioMedia.evaluatorHelp": "默认 typesafe/jev-1.13，使用 System One 接口。评估建议交给上方修复模型；留空关闭。评估失败时继续本地检查。",
   "settings.studioMedia.repairModel": "PPT 修复模型",
   "settings.studioMedia.followWriter": "留空跟随成稿模型",
   "settings.studioMedia.repairHelp":
