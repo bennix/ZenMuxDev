@@ -4612,7 +4612,9 @@ const zhCN: Record<string, string> = {
   // CUA 输入框常驻入口按钮
   "chat.toolbar.computerUse.label": "电脑操作",
   "chat.toolbar.control.computer": "控制电脑",
-  "chat.toolbar.control.browser": "控制浏览器",
+  "chat.toolbar.control.browser": "控制内置浏览器",
+  "chat.toolbar.control.computerUnavailable": "当前版本未提供电脑控制插件",
+  "chat.toolbar.control.browserUnavailable": "当前版本未提供浏览器控制插件",
   "chat.workspace.toggle": "工作区",
   "chat.studio.phase.failed": "生成失败，已完成页已保留",
   "chat.studio.zoom": "预览放大",
@@ -6690,9 +6692,7 @@ const zhCN: Record<string, string> = {
   "settings.computerUse.pluginDisabledHint": "电脑控制插件未启用。前往插件开启后即可使用电脑控制。",
   "settings.computerUse.unsupported.title": "当前环境暂不支持电脑控制",
   "settings.computerUse.unsupported.remoteDescription":
-    "Computer Use 暂不支持 SSH、WSL、Docker 或其他远端环境。请切换到本机 macOS 或 Windows 工作区。",
-  "settings.computerUse.unsupported.linuxDescription":
-    "Computer Use 暂不支持 Linux 桌面环境。请切换到本机 macOS 或 Windows 工作区。",
+    "Computer Use 暂不支持 SSH、WSL、Docker 或其他远端环境。请切换到本机 macOS、Windows 或 Linux 桌面工作区。",
   "settings.computerUse.unsupported.badge": "当前环境不可用",
   "settings.computerUse.unsupported.group": "不可用的内置能力",
   "scheduledPreview.keepAwakeEnabled": "已开启保持唤醒",

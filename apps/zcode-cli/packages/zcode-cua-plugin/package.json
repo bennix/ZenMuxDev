@@ -1,0 +1,11 @@
+{
+  "name": "@zcode/zcode-cua-plugin",
+  "version": "0.7.1",
+  "private": true,
+  "description": "ZenCode Computer Use plugin with native desktop executors",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-native.mjs"
+  }
+}

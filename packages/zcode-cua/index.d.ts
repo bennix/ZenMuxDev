@@ -29,6 +29,9 @@ export interface ComputerUseRuntimeOptions {
   refreshMarkerPath?: string;
   ensureBrokerAvailable?: () => Promise<void>;
   env?: Record<string, string | undefined>;
+  /** Test and cross-platform packaging override; production uses process.platform. */
+  platform?: string;
+  arch?: string;
 }
 
 export declare function createComputerUseRuntime(

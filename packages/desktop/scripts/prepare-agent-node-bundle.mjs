@@ -11,9 +11,9 @@
 //
 // 远端（SSH/WSL/Docker）没有 Electron，仍走 prepare:remote-assets 的原生二进制，互不影响。
 
-import { cpSync, existsSync, mkdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { access, cp, mkdir } from "node:fs/promises";
-import { basename, dirname, resolve } from "node:path";
+import { basename, dirname, relative, resolve, sep } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runCommand } from "../../../scripts/spawn-command.mjs";
@@ -112,6 +112,32 @@ const officialPluginPackages = [
     runtimeBuildScript: "scripts/build.mjs",
     stagedPath: "packages/node-repl-host",
   },
+  {
+    // 各平台原生执行器随插件安装，插件本身仍由用户手动启用。
+    packageName: "@zcode/zcode-cua-plugin",
+    relativePath: "apps/zcode-cli/packages/zcode-cua-plugin",
+    requiresRuntime: ["darwin", "win32", "linux"].includes(platform),
+    requiredRuntimePaths:
+      platform === "darwin"
+        ? [`bin/macos-${arch}/OpenComputerUse`]
+        : platform === "win32"
+          ? [`bin/windows-${arch}/open-computer-use.exe`]
+          : platform === "linux"
+            ? [
+                `bin/linux-${arch}/computer-use-linux`,
+                `bin/linux-${arch}/computer-use-linux-cosmic`,
+              ]
+            : [],
+    runtimeBuildScript: "scripts/build-native.mjs",
+    requiredSeedPaths: [
+      ".zcode-plugin/plugin.json",
+      "README.md",
+      "docs/computer-use.md",
+      "scripts/computer-use-client.mjs",
+      "skills/computer-use/SKILL.md",
+    ],
+    stagedPath: "packages/zcode-cua-plugin",
+  },
 ];
 // 随 CLI 内置的技能包（不是插件）：bootstrap 的 resolveBundledSkillRoots 沿官方插件同款候选目录
 // 在 zcode.cjs 旁找 packages/bundled-skills 并原地读取。漏 stage 它，桌面包的 /workflow 会展开成
@@ -134,6 +160,11 @@ const includedOfficialPluginTopLevelPaths = new Set([
   ".mcp.json",
   ".zcode-plugin",
   "README.md",
+  "LICENSE.maka-cu",
+  "LICENSE.open-computer-use",
+  "LICENSE.computer-use-linux",
+  "THIRD_PARTY_NOTICES.md",
+  "bin",
   // Electron 生产资源复制有独立白名单，遗漏 agents 会让首启 filesystem seed 永久缺少子代理。
   "agents",
   "commands",
@@ -248,12 +279,25 @@ function stageOfficialPlugins() {
 
     const targetRoot = resolve(glmDir, plugin.stagedPath);
     mkdirSync(targetRoot, { recursive: true });
+    if (plugin.packageName === "@zcode/zcode-cua-plugin")
+      rmSync(resolve(targetRoot, "bin"), { recursive: true, force: true });
     for (const entryName of includedOfficialPluginTopLevelPaths) {
       const sourcePath = resolve(sourceRoot, entryName);
       if (!existsSync(sourcePath)) continue;
       cpSync(sourcePath, resolve(targetRoot, entryName), {
         recursive: true,
-        filter: shouldCopyOfficialPluginAsset,
+        filter: (assetPath) => {
+          if (!shouldCopyOfficialPluginAsset(assetPath)) return false;
+          if (plugin.packageName !== "@zcode/zcode-cua-plugin") return true;
+          const parts = relative(sourceRoot, assetPath).split(sep);
+          // 修复依据：本地交叉构建会在 bin 留下多个平台产物；只把目标架构送进安装包。
+          return (
+            parts[0] !== "bin" ||
+            parts.length < 2 ||
+            parts[1] ===
+              `${platform === "darwin" ? "macos" : platform === "win32" ? "windows" : "linux"}-${arch}`
+          );
+        },
       });
     }
     for (const relativePath of plugin.requiredSeedPaths ?? []) {

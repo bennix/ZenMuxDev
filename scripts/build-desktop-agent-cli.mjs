@@ -60,6 +60,15 @@ const requiredDevPluginRuntimeBuilds = [
     packageName: "@zcode/browser-use-plugin",
     artifactPath: "browser-use-plugin/scripts/browser-client.mjs",
   },
+  {
+    packageName: "@zcode/zcode-cua-plugin",
+    artifactPath:
+      process.platform === "darwin"
+        ? `zcode-cua-plugin/bin/macos-${process.arch}/OpenComputerUse`
+        : process.platform === "win32"
+          ? `zcode-cua-plugin/bin/windows-${process.arch}/open-computer-use.exe`
+          : `zcode-cua-plugin/bin/linux-${process.arch}/computer-use-linux`,
+  },
 ];
 const defaultBuildFilters = [
   ...cliWorkspaceBuilds.map(({ packageName }) => packageName),

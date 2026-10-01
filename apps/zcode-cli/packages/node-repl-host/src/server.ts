@@ -44,10 +44,7 @@ const pluginRoot = process.env.ZCODE_PLUGIN_ROOT ?? process.cwd();
 // CUA 与 Browser Use 共用 node_repl host，但文档和 native 依赖必须按领域隔离；
 // 否则 CUA skill 会因为 host root 恰好来自 Browser Use 而再次产生隐式依赖。
 const browserDocumentationRoot = resolve(pluginRoot, "docs");
-const cuaDocumentationRoot = resolve(
-  process.env.ZCODE_CUA_PLUGIN_ROOT ?? pluginRoot,
-  "docs",
-);
+const cuaDocumentationRoot = resolve(process.env.ZCODE_CUA_PLUGIN_ROOT ?? pluginRoot, "docs");
 const jsInputSchema = z
   .object({
     code: z.string(),
@@ -120,22 +117,21 @@ export function createInProcessNodeReplExecutor(): NodeReplExecutor {
     let session: NodeReplSession;
     const generation = 1;
     session = new NodeReplSession({
-      injectedGlobals: () =>
-        ({
-          ...createBrowserBridgeGlobals({
-            documentationRoot: browserDocumentationRoot,
-            generation,
-            getActiveCall: () => activeCall,
-            session: () => session,
-          }),
-          ...createComputerUseBridgeGlobals({
-            broker: input.cuaBroker,
-            generation,
-            getActiveCall: () => activeCuaCall,
-            session: () => session,
-            documentationRoot: cuaDocumentationRoot,
-          }),
+      injectedGlobals: () => ({
+        ...createBrowserBridgeGlobals({
+          documentationRoot: browserDocumentationRoot,
+          generation,
+          getActiveCall: () => activeCall,
+          session: () => session,
         }),
+        ...createComputerUseBridgeGlobals({
+          broker: input.cuaBroker,
+          generation,
+          getActiveCall: () => activeCuaCall,
+          session: () => session,
+          documentationRoot: cuaDocumentationRoot,
+        }),
+      }),
       restrictProcess: true,
     });
     activeCall = {
@@ -166,8 +162,7 @@ export function createNodeReplMcpRuntime(
   input: { executeJs?: NodeReplExecutor; cuaRuntime?: ComputerUseRuntime } = {},
 ): NodeReplMcpRuntime {
   const executeJs = input.executeJs ?? executeJsInWorker;
-  const cuaRuntime =
-    input.cuaRuntime ?? captureComputerUseRuntimeFromEnvironment();
+  const cuaRuntime = input.cuaRuntime ?? captureComputerUseRuntimeFromEnvironment();
   const cuaBroker = cuaRuntime
     ? createNodeReplCuaBroker({ runtime: cuaRuntime, platform: process.platform })
     : undefined;
@@ -373,10 +368,13 @@ export function captureComputerUseRuntimeFromEnvironment(
   env: NodeJS.ProcessEnv = process.env,
 ): ComputerUseRuntime | undefined {
   const socketPath = env.ZCODE_CUA_PERMISSION_BROKER_SOCKET?.trim();
-  if (!socketPath) return undefined;
+  // 修复原因：原生执行器由插件根目录提供时，旧门禁只认占位 Helper socket，
+  // 导致已启用的插件永远没有 node_repl CUA bridge。插件 root 才是该能力的注册事实。
+  if (!env.ZCODE_CUA_PLUGIN_ROOT?.trim() || process.platform !== "darwin") return undefined;
   return createComputerUseRuntime({
     brokerSocketPath: socketPath,
     refreshMarkerPath: env.ZCODE_CUA_PERMISSION_BROKER_REFRESH_MARKER?.trim(),
+    env,
   });
 }
 

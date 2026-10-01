@@ -4919,7 +4919,9 @@ const enUS: Record<string, string> = {
   // CUA composer entry button
   "chat.toolbar.computerUse.label": "Computer Use",
   "chat.toolbar.control.computer": "Control computer",
-  "chat.toolbar.control.browser": "Control browser",
+  "chat.toolbar.control.browser": "Control built-in browser",
+  "chat.toolbar.control.computerUnavailable": "Computer control is not available in this build",
+  "chat.toolbar.control.browserUnavailable": "Browser control is not available in this build",
   "chat.workspace.toggle": "Workspace",
   "chat.studio.phase.failed": "Generation failed; completed slides kept",
   "chat.studio.zoom": "Preview zoom",
@@ -7022,9 +7024,7 @@ const enUS: Record<string, string> = {
     "The Computer Use plugin is not enabled. Enable it in Plugins to use Computer Use.",
   "settings.computerUse.unsupported.title": "Computer Use is unavailable here",
   "settings.computerUse.unsupported.remoteDescription":
-    "Computer Use is not yet supported for SSH, WSL, Docker, or other remote environments. Switch to a local macOS or Windows workspace.",
-  "settings.computerUse.unsupported.linuxDescription":
-    "Computer Use is not yet supported on Linux desktops. Switch to a local macOS or Windows workspace.",
+    "Computer Use is not yet supported for SSH, WSL, Docker, or other remote environments. Switch to a local macOS, Windows, or Linux desktop workspace.",
   "settings.computerUse.unsupported.badge": "Unavailable here",
   "settings.computerUse.unsupported.group": "Unavailable built-in capabilities",
   "scheduledPreview.keepAwakeEnabled": "Keep awake enabled",

@@ -17,6 +17,7 @@ import {
 import {
   supportsLocalMacCuaPermissionOnboarding,
   supportsLocalWindowsCuaEntry,
+  supportsLocalLinuxCuaEntry,
 } from "@/lib/cuaPlatform.js";
 import { setPendingSettingsSectionIntent } from "@/lib/settingsNavigation.js";
 import { usePluginManagementStore } from "@/store/pluginManagementStore.js";
@@ -55,6 +56,7 @@ export function useCuaComposerEntry({
 
   const macLocalDesktop = supportsLocalMacCuaPermissionOnboarding(platform);
   const windowsLocalDesktop = supportsLocalWindowsCuaEntry(platform);
+  const linuxLocalDesktop = supportsLocalLinuxCuaEntry(platform);
   // 与 ComputerUseSection 同口径的本地 workspace 判定：远程 workspace 的 CUA 会操作
   // 远端机器的屏幕，产品上不提供。
   const isLocalWorkspace =
@@ -78,7 +80,8 @@ export function useCuaComposerEntry({
   const pluginEnabled = cuaPlugin?.enabled === true;
 
   const pluginManagementService = services.pluginManagementService;
-  const platformSupported = (macLocalDesktop || windowsLocalDesktop) && isLocalWorkspace;
+  const platformSupported =
+    (macLocalDesktop || windowsLocalDesktop || linuxLocalDesktop) && isLocalWorkspace;
   // 插件列表是按钮状态的必要输入。store 是全局单例且 initialize 内部按 workspaceKey 做了
   // in-flight 去重 + 缓存复用，因此与设置页共用同一条初始化路径不会放大 plugins/list 请求。
   const initializedKeyRef = useRef<string | null>(null);
@@ -134,6 +137,7 @@ export function useCuaComposerEntry({
       resolveCuaComposerEntryView({
         macLocalDesktop: macLocalDesktop && isLocalWorkspace,
         windowsLocalDesktop: windowsLocalDesktop && isLocalWorkspace,
+        linuxLocalDesktop: linuxLocalDesktop && isLocalWorkspace,
         hiddenBySettings,
         permissionServiceAvailable: Boolean(services.cuaPermissionService),
         pluginEnabled,
@@ -156,6 +160,7 @@ export function useCuaComposerEntry({
       services.cuaPermissionService,
       togglingPluginId,
       windowsLocalDesktop,
+      linuxLocalDesktop,
     ],
   );
 

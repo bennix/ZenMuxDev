@@ -82,7 +82,7 @@ import {
   selectPluginsForScope,
 } from "@/settings/pluginCapabilityProjection.js";
 import {
-  isComputerUseRemoteOrLinux,
+  isComputerUseUnavailable,
   matchesComputerUseSearch,
   resolveComputerUseAvailability,
 } from "@/settings/computerUseAvailability.js";
@@ -292,7 +292,7 @@ function PluginList({
     configScope === "user" &&
     target &&
     !loading &&
-    isComputerUseRemoteOrLinux(computerUseAvailability) &&
+    isComputerUseUnavailable(computerUseAvailability) &&
     matchesComputerUseSearch(searchQuery),
   );
   const hasEmptySearchResult = Boolean(
@@ -650,10 +650,7 @@ function PluginList({
           </div>
           <div className="mt-0.5 text-ui-sm text-foreground-subtle">
             {intl.formatMessage({
-              id:
-                computerUseAvailability.kind === "local-linux"
-                  ? "settings.computerUse.unsupported.linuxDescription"
-                  : "settings.computerUse.unsupported.remoteDescription",
+              id: "settings.computerUse.unsupported.remoteDescription",
             })}
           </div>
         </div>

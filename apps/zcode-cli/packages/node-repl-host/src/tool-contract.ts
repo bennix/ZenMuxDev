@@ -16,7 +16,8 @@ export const NODE_REPL_DEFAULT_TIMEOUT_MS = 60_000;
 // 是把宿主职责推给模型——模型无法自行知道该传哪个 node_modules，能告诉它的只有 skill 文档，
 // 而文档知道的路径宿主自己就能注入。两者实测调用量均为 0。宿主协议变了就得让 serverInfo 能被
 // 据此识别，否则宿主无法区分自己连上的是哪一代工具面。
-export const NODE_REPL_SERVER_VERSION = "0.6.0";
+// 0.7.0：Computer Use 原生协议接入，模型可见的 observe/token 工作流随之更新。
+export const NODE_REPL_SERVER_VERSION = "0.7.0";
 
 // node_repl 的底层能力是通用 JS，旧文案却没有声明模型路由边界，导致非浏览器任务
 // 也会误选这个高权限工具。Browser Use 与 Computer Use 是合法入口，因此 server 与 tool 文案都要显式限域。
@@ -39,16 +40,12 @@ export const JS_TOOL_DESCRIPTION =
   "`await nodeRepl.emitImage(imageLike)`. Global bindings and module cache do not persist across calls. " +
   "For Computer Use SDK results, do not console.log/JSON.stringify the complete result or call " +
   "nodeRepl.emitImage yourself; the SDK submits the structured image/state result and you should " +
-  "use nodeRepl.write for short text-only status. `get_app_state` is an explicit observation: " +
-  "assign it to `const state`, always call `nodeRepl.write(state.text)`, and use " +
-  "`state.state_id` plus `state.elements[*].index` for element targets; do not leave " +
-  "get_app_state as the final expression or regex state_id from its text. " +
-  "Metadata methods such as list_apps and list_windows may not return " +
-  "action_sent; a missing field is not a failure, so inspect text or structuredContent. " +
+  "use nodeRepl.write for short text-only status. Computer Use `observe` returns a snapshot id " +
+  "and element tokens with digests; use all three for each action and observe again after mutation. " +
   "Never use screenshot_display.bounds or app/window bounds as raster pixel coordinates; " +
   "x/y must be integer pixels inside the width/height of the returned raster. " +
   "Every Computer Use JavaScript call must start with the complete SDK bootstrap in the same cell " +
-  "before agent.computerUse; never split bootstrap and action across calls. Never rely on agent, " +
+  "before calling computerUse; never split bootstrap and action across calls. Never rely on agent, " +
   "runtime, browser, or imported bindings from an earlier call. " +
   "Import only `node:*` builtins and absolute `file://` URLs built from the official skill root, " +
   'for example `await import(pathToFileURL(join(root, "scripts", "client.mjs")).href)`; ' +

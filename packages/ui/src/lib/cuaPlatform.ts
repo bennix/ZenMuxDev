@@ -1,7 +1,7 @@
 import type { IPlatformService } from "@zcode/shared";
 
 // macOS 才具备 TCC 权限、授权引导和 Helper 状态轮询；Windows 本地桌面仅复用
-// zcode-cua 插件总开关，不读取 TCC 或 Helper 状态。Linux、普通 Web 和手机远控不展示电脑控制设置。
+// zcode-cua 插件总开关，不读取 TCC 或 Helper 状态。普通 Web 和手机远控不展示电脑控制设置。
 // 因此权限弹窗、预检和 Helper 状态轮询都必须先判定本地是 macOS desktop。
 // 用 navigator.userAgent 判定，并显式排除 iOS（iPhone/iPad 的 UA 含 Macintosh 子串）。
 //
@@ -18,6 +18,14 @@ function isMacOsDesktopUserAgent(): boolean {
 
 function isWindowsDesktopUserAgent(): boolean {
   return typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent);
+}
+
+function isLinuxDesktopUserAgent(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    /Linux/i.test(navigator.userAgent) &&
+    !/Android/i.test(navigator.userAgent)
+  );
 }
 
 /**
@@ -42,4 +50,11 @@ export function supportsLocalWindowsCuaEntry(
   platform: Pick<IPlatformService, "executeDesktopCommand"> | null | undefined,
 ): boolean {
   return isWindowsDesktopUserAgent() && typeof platform?.executeDesktopCommand === "function";
+}
+
+/** Linux 图形桌面入口与 Windows 一样只要求 desktop preload；实际后端能力由 doctor 检查。 */
+export function supportsLocalLinuxCuaEntry(
+  platform: Pick<IPlatformService, "executeDesktopCommand"> | null | undefined,
+): boolean {
+  return isLinuxDesktopUserAgent() && typeof platform?.executeDesktopCommand === "function";
 }

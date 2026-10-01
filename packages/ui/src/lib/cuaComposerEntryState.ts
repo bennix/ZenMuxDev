@@ -28,6 +28,8 @@ interface CuaComposerEntryInputs {
   macLocalDesktop: boolean;
   /** Windows 本地桌面。 */
   windowsLocalDesktop: boolean;
+  /** Linux 本地图形桌面。 */
+  linuxLocalDesktop?: boolean;
   /** 设置页「在输入框显示电脑操作按钮」已关闭（内部 hidden 态）。 */
   hiddenBySettings: boolean;
   /** cuaPermissionService 是否存在；远端 host 上为 false。 */
@@ -76,8 +78,9 @@ const BUSY_TOOLTIP_MESSAGE_ID = "chat.toolbar.computerUse.tooltip.sessionBusy";
  * 不可用场景下留一个灰按钮会误导用户以为「装了就能用」。
  */
 function isEntryVisible(inputs: CuaComposerEntryInputs): boolean {
-  // 平台门：remote workspace / linux 本地 / 普通 Web / 手机远控都不满足。
-  if (!inputs.macLocalDesktop && !inputs.windowsLocalDesktop) return false;
+  // 平台门：远端 workspace、普通 Web 和手机远控不满足。
+  if (!inputs.macLocalDesktop && !inputs.windowsLocalDesktop && !inputs.linuxLocalDesktop)
+    return false;
   // 设置门：用户显式隐藏后不再渲染，且不因重启或版本更新自愈。
   if (inputs.hiddenBySettings) return false;
   // 服务门：mac 的状态全部来自 Helper；服务缺失时按钮无法反映任何真值。
@@ -103,7 +106,9 @@ function resolveUiState(inputs: CuaComposerEntryInputs): CuaComposerEntryUiState
   if (inputs.pluginToggling) return "starting";
   if (inputs.pluginError) return "error";
 
-  // Windows 无 TCC：插件启用即就绪，不参与权限判定。
+  if (inputs.linuxLocalDesktop) return "idle";
+
+  // Windows/Linux 无 macOS TCC：插件启用即显示入口；实际后端能力仍由调用时报错或 doctor 说明。
   if (!inputs.macLocalDesktop) return "ready";
 
   // 懒启动入口不承载状态展示，permissionStatus 恒为 null——

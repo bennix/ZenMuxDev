@@ -40,6 +40,10 @@ const includedTopLevelPaths = new Set([
   ".mcp.json",
   ".zcode-plugin",
   "README.md",
+  "LICENSE.maka-cu",
+  "LICENSE.open-computer-use",
+  "LICENSE.computer-use-linux",
+  "THIRD_PARTY_NOTICES.md",
   // 官方内容插件新增 agents 后，filesystem seed 的顶层白名单未同步，目录被静默裁掉。
   "agents",
   "commands",

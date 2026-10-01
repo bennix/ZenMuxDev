@@ -41,10 +41,6 @@ import { createCuaPermissionOnboardingOperationId } from "@/lib/cuaPermissionOnb
 import { waitForAccessibilityNotStale } from "@/settings/cuaPermissionRestartVerify.js";
 import { requiredCuaPermissionsForFreshStatus } from "@/settings/cuaPermissionPreparation.js";
 import { ExternalLink } from "lucide-react";
-import {
-  isComputerUseRemoteOrLinux,
-  resolveComputerUseAvailability,
-} from "@/settings/computerUseAvailability.js";
 
 interface ComputerUseSectionProps {
   isDesktop?: boolean;
@@ -84,15 +80,10 @@ export function ComputerUseSection({
     (isMacDesktop ?? supportsLocalMacCuaPermissionOnboarding(platform)) &&
     isLocalWorkspace;
   const supportsLocalWindowsWorkspace = isWindowsDesktop && isLocalWorkspace;
-  const supportsComputerUseSettings = supportsLocalMacWorkspace || supportsLocalWindowsWorkspace;
-  const availability = resolveComputerUseAvailability({
-    isDesktop: isDesktop || isWindowsDesktop || supportsLocalMacWorkspace,
-    isMacDesktop: isMacDesktop || supportsLocalMacWorkspace,
-    isWindowsDesktop,
-    remoteSessionId,
-    remoteTarget,
-    workspaceIdentity,
-  });
+  const supportsLocalLinuxWorkspace =
+    isDesktop && !isWindowsDesktop && !supportsLocalMacWorkspace && isLocalWorkspace;
+  const supportsComputerUseSettings =
+    supportsLocalMacWorkspace || supportsLocalWindowsWorkspace || supportsLocalLinuxWorkspace;
   // CUA 权限是 macOS 本机属性：仅完整 macOS 设置需要 Helper workspace 路径。
   const path = supportsLocalMacWorkspace ? (localWorkspacePath ?? workspacePath) : null;
   // 展示只跟 settled：fresh 每次查询开始都会落回 false，跟着它渲染会让授权按钮的文案
@@ -681,7 +672,7 @@ export function ComputerUseSection({
   };
 
   if (!supportsComputerUseSettings) {
-    // 远端 / Linux 环境若直接 return null，设置页只剩标题，会让用户误以为页面加载失败。
+    // 远端环境若直接 return null，设置页只剩标题，会让用户误以为页面加载失败。
     // 保留入口并明确能力边界，且不渲染任何会触发本地 CUA 写操作的控件。
     return (
       <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-ui-base text-warning">
@@ -689,13 +680,7 @@ export function ComputerUseSection({
           {intl.formatMessage({ id: "settings.computerUse.unsupported.title" })}
         </p>
         <p className="mt-1 text-ui-sm text-foreground-subtle">
-          {intl.formatMessage({
-            id: isComputerUseRemoteOrLinux(availability)
-              ? availability.kind === "local-linux"
-                ? "settings.computerUse.unsupported.linuxDescription"
-                : "settings.computerUse.unsupported.remoteDescription"
-              : "settings.computerUse.unsupported.remoteDescription",
-          })}
+          {intl.formatMessage({ id: "settings.computerUse.unsupported.remoteDescription" })}
         </p>
       </div>
     );

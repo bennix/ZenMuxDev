@@ -72,9 +72,17 @@ export const OFFICIAL_BROWSER_USE_REQUIRED_SEED_PATHS = [
 ] as const;
 
 const OFFICIAL_CUA_REQUIRED_SEED_PATHS = [
+  ".zcode-plugin/plugin.json",
+  "README.md",
+  "LICENSE.maka-cu",
+  ...(process.platform === "win32" ? ["LICENSE.open-computer-use"] : []),
+  ...(process.platform === "linux" ? ["LICENSE.computer-use-linux"] : []),
   "docs/computer-use.md",
   "scripts/computer-use-client.mjs",
   "skills/computer-use/SKILL.md",
+  ...(process.platform === "darwin" ? [`bin/macos-${process.arch}/OpenComputerUse`] : []),
+  ...(process.platform === "win32" ? [`bin/windows-${process.arch}/open-computer-use.exe`] : []),
+  ...(process.platform === "linux" ? [`bin/linux-${process.arch}/computer-use-linux`, `bin/linux-${process.arch}/computer-use-linux-cosmic`] : []),
 ] as const;
 
 // zcode-guide 原本没有 requiredSeedPaths，seed 丢文件时会静默装出一个
@@ -103,7 +111,7 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
       "../../node-repl-host",
       "../../../node-repl-host",
     ],
-    version: "0.6.0",
+    version: "0.7.0",
   },
   {
     listing: {
@@ -350,16 +358,16 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
     },
     rootCandidates: [
       "packages/zcode-cua-plugin",
+      "apps/zcode-cli/packages/zcode-cua-plugin",
       "../zcode-cua-plugin",
       "../../zcode-cua-plugin",
       "../../../zcode-cua-plugin",
     ],
     requiredSeedPaths: OFFICIAL_CUA_REQUIRED_SEED_PATHS,
-    // 当前 CUA 为不可用占位包，无需复制 native runtime；避免把本地旧依赖继续带入缓存。
-    runtimeTopLevelPaths: [],
+    runtimeTopLevelPaths: ["bin"],
     // 这里的 version 追踪上游 zcode-cua runtime 版本，使插件 UI 展示、缓存路径、
     // marketplace 条目都对齐；具体版本由原子 producer bump 工作流维护。
-    version: "0.6.3",
+    version: "0.7.1",
   },
 ];
 

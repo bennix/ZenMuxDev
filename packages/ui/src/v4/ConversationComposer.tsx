@@ -2183,7 +2183,10 @@ function ConversationComposerImpl({
           remoteSessionId={remoteSessionId}
           currentSessionBusy={canStop}
         />
-        <V4ComposerControlToggles />
+        <V4ComposerControlToggles
+          workspacePath={workspacePath}
+          workspaceIdentity={workspaceIdentity}
+        />
         <Button
           type="button"
           variant={workspaceOpen ? "secondary" : "ghost"}
