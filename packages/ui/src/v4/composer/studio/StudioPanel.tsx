@@ -1235,6 +1235,7 @@ export function StudioPanel({
               <label className="flex items-center gap-1">
                 {intl.formatMessage({ id: "chat.studio.duration" })}
                 <select
+                  aria-label={intl.formatMessage({ id: "chat.studio.duration" })}
                   value={String(activeVideoSeconds)}
                   onChange={(event) => setVideoSeconds(Number(event.target.value))}
                   className="h-7 rounded-lg border border-border bg-background px-2"

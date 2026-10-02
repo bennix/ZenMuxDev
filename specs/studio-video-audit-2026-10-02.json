@@ -1,0 +1,284 @@
+{
+  "date": "2026-10-02",
+  "keyType": "subscription",
+  "scope": "text-to-video minimal settings",
+  "results": [
+    {
+      "model": "minimax/minimax-h3-max",
+      "protocol": "native",
+      "seconds": 5,
+      "ratio": "16:9",
+      "resolution": "480p",
+      "submitStatus": 200,
+      "requestId": "5c37673a955b43a48346a5412cfd7eda",
+      "result": "succeeded",
+      "elapsedSeconds": 19,
+      "message": ""
+    },
+    {
+      "model": "google/gemini-omni-1.1-flash-preview",
+      "protocol": "interactions",
+      "seconds": 3,
+      "ratio": "16:9",
+      "submitStatus": 200,
+      "requestId": "8c5398f2992441689ab4ef4bfe1942fa",
+      "result": "succeeded",
+      "elapsedSeconds": 28,
+      "message": ""
+    },
+    {
+      "model": "alibaba/wan3.0-video-prime",
+      "protocol": "native",
+      "seconds": 2,
+      "ratio": "16:9",
+      "resolution": "480p",
+      "submitStatus": 200,
+      "requestId": "bda8b926195a4ed791d7d027318806b5",
+      "result": "succeeded",
+      "elapsedSeconds": 68,
+      "message": ""
+    },
+    {
+      "model": "pixverse/c1",
+      "protocol": "native",
+      "seconds": 1,
+      "ratio": "16:9",
+      "resolution": "360p",
+      "submitStatus": 200,
+      "requestId": "3999382645324ef88d9727614dad3ced",
+      "result": "succeeded",
+      "elapsedSeconds": 50,
+      "message": ""
+    },
+    {
+      "model": "pixverse/v6",
+      "protocol": "native",
+      "seconds": 1,
+      "ratio": "16:9",
+      "resolution": "360p",
+      "submitStatus": 200,
+      "requestId": "d2b482a9ed7d45ee89dcf330a40da934",
+      "result": "succeeded",
+      "elapsedSeconds": 51,
+      "message": ""
+    },
+    {
+      "model": "klingai/kling-3.0",
+      "protocol": "native",
+      "seconds": 3,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "30fcde2c50b74f3e9cc47e84af6ed3c2",
+      "result": "generation_failed",
+      "elapsedSeconds": 19,
+      "code": "generation_failed",
+      "message": "Account balance not enough"
+    },
+    {
+      "model": "alibaba/wan3.0-video",
+      "protocol": "native",
+      "seconds": 2,
+      "ratio": "16:9",
+      "resolution": "480p",
+      "submitStatus": 200,
+      "requestId": "bdd0d3a987824c6cba7e8df85845ca66",
+      "result": "succeeded",
+      "elapsedSeconds": 99,
+      "message": ""
+    },
+    {
+      "model": "klingai/kling-3.0-omni",
+      "protocol": "native",
+      "seconds": 3,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "b34adb49919b4b0e9ae825633915a39c",
+      "result": "generation_failed",
+      "elapsedSeconds": 18,
+      "code": "generation_failed",
+      "message": "Account balance not enough"
+    },
+    {
+      "model": "klingai/kling-3.0-turbo",
+      "protocol": "native",
+      "seconds": 3,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "4fd31342d4ca47d4be9c09eff7b82c51",
+      "result": "generation_failed",
+      "elapsedSeconds": 19,
+      "code": "generation_failed",
+      "message": "Account balance not enough"
+    },
+    {
+      "model": "google/gemini-omni-flash-preview",
+      "protocol": "interactions",
+      "seconds": 3,
+      "ratio": "16:9",
+      "submitStatus": 200,
+      "requestId": "5879682f515647a4a7bc29503e02db35",
+      "result": "succeeded",
+      "elapsedSeconds": 29,
+      "message": ""
+    },
+    {
+      "model": "bfl/flux-3-video",
+      "protocol": "native",
+      "seconds": 5,
+      "ratio": "16:9",
+      "resolution": "hd",
+      "submitStatus": 200,
+      "requestId": "a4865aadab9340d696457fb1861f5df0",
+      "result": "succeeded",
+      "elapsedSeconds": 85,
+      "message": ""
+    },
+    {
+      "model": "sapiens-ai/agnes-video-v2.0",
+      "protocol": "vertex",
+      "seconds": 1,
+      "ratio": "16:9",
+      "resolution": "1k",
+      "submitStatus": 200,
+      "requestId": "c6cf23aed89d45f5a7fe150f5672ede6",
+      "result": "generation_failed",
+      "elapsedSeconds": 21,
+      "message": "",
+      "filterReasons": [
+        "Agnes API rate limit exceeded. Please try again later."
+      ],
+      "followupResult": "timeout after bounded polling"
+    },
+    {
+      "model": "alibaba/happyhorse-1.0",
+      "protocol": "vertex",
+      "seconds": 3,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "5d1578b879f34f63b660bc5b74846917",
+      "result": "succeeded",
+      "message": "fetch failed",
+      "elapsedSeconds": 36,
+      "followupResult": "succeeded"
+    },
+    {
+      "model": "minimax/minimax-h3",
+      "protocol": "native",
+      "seconds": 4,
+      "ratio": "16:9",
+      "resolution": "480p",
+      "submitStatus": 200,
+      "requestId": "97f709c93ed84f7fb7413b4457fd3939",
+      "result": "succeeded",
+      "elapsedSeconds": 148,
+      "message": ""
+    },
+    {
+      "model": "skyreels/skyreels-v4",
+      "protocol": "vertex",
+      "seconds": 3,
+      "ratio": "16:9",
+      "submitStatus": 200,
+      "requestId": "2a5f57f8895d4d1e9d97c6eb11b76c12",
+      "result": "succeeded",
+      "elapsedSeconds": 104,
+      "message": ""
+    },
+    {
+      "model": "google/veo-3.1-fast-generate-001",
+      "protocol": "vertex",
+      "seconds": 4,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "744161f896b447d0b775ae76dbccac0d",
+      "result": "succeeded",
+      "elapsedSeconds": 38,
+      "message": ""
+    },
+    {
+      "model": "google/veo-3.1-lite-generate-001",
+      "protocol": "vertex",
+      "seconds": 4,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "16aefa46f1ee4e6189ac33c3b8481b7a",
+      "result": "succeeded",
+      "elapsedSeconds": 56,
+      "message": ""
+    },
+    {
+      "model": "bytedance/doubao-seedance-1.5-pro",
+      "protocol": "vertex",
+      "seconds": 4,
+      "ratio": "16:9",
+      "submitStatus": 404,
+      "requestId": "8ca6d53a2ca8480791626f96f9832ee1",
+      "result": "submit_failed",
+      "type": "invalid_model",
+      "code": "404",
+      "message": "Requested model is not valid (request_id: 8ca6d53a2ca8480791626f96f9832ee1)"
+    },
+    {
+      "model": "bytedance/doubao-seedance-2.0",
+      "protocol": "vertex",
+      "seconds": 4,
+      "ratio": "16:9",
+      "resolution": "480p",
+      "submitStatus": 200,
+      "requestId": "f196f66a6162450a872ac2caa708e880",
+      "result": "succeeded",
+      "elapsedSeconds": 168,
+      "message": ""
+    },
+    {
+      "model": "google/veo-3.1-generate-001",
+      "protocol": "vertex",
+      "seconds": 4,
+      "ratio": "16:9",
+      "resolution": "720p",
+      "submitStatus": 200,
+      "requestId": "3a6a778f0bcb41dba316938a8d1e1bc3",
+      "result": "succeeded",
+      "elapsedSeconds": 71,
+      "message": ""
+    },
+    {
+      "model": "bytedance/doubao-seedance-2.5",
+      "protocol": "vertex",
+      "seconds": 4,
+      "ratio": "16:9",
+      "resolution": "480p",
+      "submitStatus": 200,
+      "requestId": "2647a6c798084c98b2b63f649020e8ef",
+      "result": "succeeded",
+      "elapsedSeconds": 306,
+      "message": ""
+    }
+  ],
+  "omniStructuredDurationChecks": [
+    {
+      "model": "google/gemini-omni-1.1-flash-preview",
+      "seconds": 3,
+      "status": 200,
+      "result": "complete"
+    },
+    {
+      "model": "google/gemini-omni-flash-preview",
+      "seconds": 10,
+      "status": 200,
+      "result": "complete"
+    }
+  ],
+  "klingSubscriptionSourceHeaderCheck": {
+    "model": "klingai/kling-3.0-turbo",
+    "result": "failed",
+    "message": "Account balance not enough",
+    "requestId": "ba919be85c88439a9a04845e6b293536"
+  }
+}

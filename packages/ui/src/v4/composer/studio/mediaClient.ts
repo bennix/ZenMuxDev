@@ -5,14 +5,11 @@ import {
   buildStudioImageRequest,
   requireStudioImage,
   studioImageHttpError,
+  buildStudioVideoRequest,
+  parseStudioVideoResult,
+  studioVideoHttpError,
 } from "@zcode/shared";
-import {
-  readStudioImageModel,
-  readStudioVideoModel,
-  videoCatalogEntry,
-} from "./studioMediaStore.js";
-
-const VERTEX_URL = "https://zenmux.ai/api/vertex-ai/v1";
+import { readStudioImageModel, readStudioVideoModel } from "./studioMediaStore.js";
 
 async function blobBase64(blob: Blob): Promise<string> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -22,10 +19,6 @@ async function blobBase64(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
   return dataUrl.slice(dataUrl.indexOf(",") + 1);
-}
-
-function listedChoice(options: readonly string[], value: string | undefined): string {
-  return value && options.includes(value) ? value : (options[0] ?? "1:1");
 }
 
 /** 把接口拒绝的原因带出来。多张参考图若写成扁平字段，会得到 missing image data。 */
@@ -93,31 +86,21 @@ export function editStudioImage(
   return generateStudioImage(apiKey, prompt, model, image, ratio);
 }
 
-function videoModelPath(model: string): string {
-  const slash = model.indexOf("/");
-  const provider = slash > 0 ? model.slice(0, slash) : "google";
-  const name = slash > 0 ? model.slice(slash + 1) : model;
-  return `${VERTEX_URL}/publishers/${provider}/models/${name}`;
-}
-
-function extractVideoUrl(node: unknown, seen = new Set<unknown>()): string | null {
-  if (!node || typeof node !== "object" || seen.has(node)) return null;
-  seen.add(node);
-  const record = node as Record<string, unknown>;
-  const b64 = record.bytesBase64Encoded ?? record.b64_json;
-  if (typeof b64 === "string" && b64) {
-    const mime = typeof record.mimeType === "string" ? record.mimeType : "video/mp4";
-    return `data:${mime};base64,${b64}`;
-  }
-  for (const key of ["uri", "url", "videoUri"]) {
-    const value = record[key];
-    if (typeof value === "string" && /^https?:\/\//.test(value)) return value;
-  }
-  for (const value of Object.values(record)) {
-    const found = extractVideoUrl(value, seen);
-    if (found) return found;
-  }
-  return null;
+/** 取消时清理等待，不能让旧运行在切换模型后继续轮询。 */
+function waitForVideoPoll(signal: AbortSignal): Promise<void> {
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const cancel = () => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", cancel);
+      reject(signal.reason ?? new DOMException("已取消", "AbortError"));
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", cancel);
+      resolve();
+    }, 15000);
+    signal.addEventListener("abort", cancel, { once: true });
+  });
 }
 
 export async function generateStudioVideo(
@@ -127,57 +110,71 @@ export async function generateStudioVideo(
   signal: AbortSignal,
   options?: { ratio?: string; seconds?: number; model?: string },
 ): Promise<string> {
+  signal.throwIfAborted();
   const model = options?.model ?? readStudioVideoModel();
-  const spec = videoCatalogEntry(model);
-  const ratio = listedChoice(spec.ratios, options?.ratio);
-  const seconds = spec.durations.includes(options?.seconds ?? -1)
-    ? (options?.seconds as number)
-    : spec.durations[0];
-  const base = videoModelPath(model);
-  const instance: Record<string, unknown> = { prompt };
-  if (image) instance.image = { bytesBase64Encoded: image.base64, mimeType: image.mimeType };
-  const submit = await fetch(`${base}:predictLongRunning`, {
+  // 修复：Omni/原生 videos 不支持 Veo URL；协议和时长统一由当前模型目录决定。
+  const request = buildStudioVideoRequest(model, prompt, image, options);
+  const headers = {
+    ...ZENMUX_APPLICATION_HEADERS,
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+  const submit = await fetch(request.url, {
     method: "POST",
-    headers: {
-      ...ZENMUX_APPLICATION_HEADERS,
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      instances: [instance],
-      parameters: { sampleCount: 1, aspectRatio: ratio, durationSeconds: seconds },
-    }),
+    headers,
+    body: JSON.stringify(request.body),
     signal,
   });
-  if (!submit.ok) throw new Error(`视频提交失败 (${submit.status})`);
-  const operation = (await submit.json()) as { name?: string };
-  if (!operation.name) throw new Error("视频提交没有返回任务号");
-  for (let attempt = 0; attempt < 24; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 8000));
-    if (signal.aborted) throw new Error("已取消");
-    const poll = await fetch(`${base}:fetchPredictOperation`, {
-      method: "POST",
-      headers: {
-        ...ZENMUX_APPLICATION_HEADERS,
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ operationName: operation.name }),
-      signal,
-    });
-    if (!poll.ok) continue;
-    const status = (await poll.json()) as {
-      done?: boolean;
-      error?: { message?: string };
-      response?: unknown;
-    };
-    if (!status.done) continue;
-    if (status.error) throw new Error(status.error.message || "视频生成失败");
-    const url = extractVideoUrl(status.response ?? status);
-    if (url) return url;
-    throw new Error("视频生成没有返回文件");
+  const payload = (await submit.json().catch(() => ({}))) as Record<string, unknown>;
+  const requestId = submit.headers.get("x-zenmux-requestid") ?? submit.headers.get("x-request-id");
+  signal.throwIfAborted();
+  if (!submit.ok) throw new Error(studioVideoHttpError(submit.status, payload, model, requestId));
+  const initial = parseStudioVideoResult(request.protocol, payload);
+  if (initial.kind === "complete") return initial.url;
+  if (initial.kind === "failed") throw new Error(`${initial.message}；模型：${model}`);
+  const job = request.protocol === "vertex" ? payload.name : payload.id;
+  if (typeof job !== "string" || !job) throw new Error(`视频提交没有返回任务号；模型：${model}`);
+  const pollUrl =
+    request.protocol === "vertex"
+      ? request.url.replace(/:predictLongRunning$/u, ":fetchPredictOperation")
+      : `https://zenmux.ai/api/v1/${request.protocol === "native" ? "videos" : "interactions"}/${encodeURIComponent(job)}`;
+  let lastPollError = "";
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    await waitForVideoPoll(signal);
+    let poll: Response;
+    try {
+      poll = await fetch(pollUrl, {
+        method: request.protocol === "vertex" ? "POST" : "GET",
+        headers,
+        ...(request.protocol === "vertex" ? { body: JSON.stringify({ operationName: job }) } : {}),
+        signal,
+      });
+    } catch (error) {
+      signal.throwIfAborted();
+      if (!(error instanceof TypeError)) throw error;
+      // 修复：瞬时网络错误只重查已接受的 job，不重复提交付费生成任务。
+      lastPollError = `视频状态查询网络失败；模型：${model}`;
+      continue;
+    }
+    const status = (await poll.json().catch(() => ({}))) as unknown;
+    signal.throwIfAborted();
+    if (!poll.ok) {
+      lastPollError = studioVideoHttpError(poll.status, status, model, requestId);
+      if (poll.status === 429 || poll.status >= 500) continue;
+      throw new Error(lastPollError);
+    }
+    lastPollError = "";
+    const result = parseStudioVideoResult(request.protocol, status);
+    if (result.kind === "pending") continue;
+    if (result.kind === "failed")
+      throw new Error(
+        `${result.message}；模型：${model}${requestId ? `；请求编号：${requestId}` : ""}`,
+      );
+    return result.url;
   }
-  throw new Error("视频生成超时");
+  throw new Error(
+    lastPollError || `视频生成超时；模型：${model}${requestId ? `；请求编号：${requestId}` : ""}`,
+  );
 }
 
 export async function blobFromUrl(url: string): Promise<Blob> {

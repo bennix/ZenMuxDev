@@ -1,10 +1,12 @@
-import { DEFAULT_STUDIO_IMAGE_MODEL as DEFAULT_IMAGE_ID } from "@zcode/shared";
+import {
+  DEFAULT_STUDIO_IMAGE_MODEL as DEFAULT_IMAGE_ID,
+  normalizeStudioVideoSelection,
+  studioVideoCatalogEntry,
+} from "@zcode/shared";
 /** 旧版 localStorage 的一次性迁移与目录查询；当前模型设置由 Host Settings 服务持久化。 */
 
 import {
   CUSTOM_IMAGE_RATIOS,
-  CUSTOM_VIDEO_DURATIONS,
-  CUSTOM_VIDEO_RATIOS,
   IMAGE_CATALOG,
   VIDEO_CATALOG,
   type ImageCatalogEntry,
@@ -13,8 +15,6 @@ import {
 
 const STORAGE_KEY = "zencode.studio.media.v1";
 const LEGACY_IMAGE_KEY = "zencode.studio.imageModel";
-
-const DEFAULT_VIDEO_ID = "google/veo-3.1-fast-generate-001";
 
 const LEGACY_IMAGE_MODELS: Record<string, string> = {
   "google/gemini-3.1-flash-image-preview": "google/gemini-3.1-flash-image",
@@ -42,17 +42,12 @@ export function imageCatalogEntry(id: string): ImageCatalogEntry {
 }
 
 export function videoCatalogEntry(id: string): VideoCatalogEntry {
-  return (
-    VIDEO_CATALOG.find((model) => model.id === id) ?? {
-      id,
-      name: id,
-      ratios: CUSTOM_VIDEO_RATIOS,
-      durations: CUSTOM_VIDEO_DURATIONS,
-    }
-  );
+  return studioVideoCatalogEntry(id);
 }
 
-export function normalizeStudioMediaLibrary(raw: Partial<StudioMediaLibrary> | null): StudioMediaLibrary {
+export function normalizeStudioMediaLibrary(
+  raw: Partial<StudioMediaLibrary> | null,
+): StudioMediaLibrary {
   let imageIds = unique(raw?.imageIds ?? []);
   let videoIds = unique(raw?.videoIds ?? []);
   // 修复：空白 ID 清理后也可能为空；恢复目录才能保证默认模型属于可用列表。
@@ -63,17 +58,12 @@ export function normalizeStudioMediaLibrary(raw: Partial<StudioMediaLibrary> | n
     : imageIds.includes(DEFAULT_IMAGE_ID)
       ? DEFAULT_IMAGE_ID
       : (imageIds[0] ?? DEFAULT_IMAGE_ID);
-  const defaultVideoId = videoIds.includes(raw?.defaultVideoId ?? "")
-    ? (raw?.defaultVideoId as string)
-    : videoIds.includes(DEFAULT_VIDEO_ID)
-      ? DEFAULT_VIDEO_ID
-      : (videoIds[0] ?? DEFAULT_VIDEO_ID);
-  return {
+  return normalizeStudioVideoSelection({
     imageIds,
     videoIds,
     defaultImageId,
-    defaultVideoId,
-  };
+    defaultVideoId: raw?.defaultVideoId ?? "",
+  });
 }
 
 function unique(ids: string[]): string[] {
@@ -94,7 +84,9 @@ export function readStudioMediaLibrary(): StudioMediaLibrary {
     const parsed = stored ? (JSON.parse(stored) as Partial<StudioMediaLibrary>) : null;
     const library = normalizeStudioMediaLibrary(parsed);
     if (!stored) {
-      const legacy = LEGACY_IMAGE_MODELS[localStorage.getItem(LEGACY_IMAGE_KEY) ?? ""] ?? localStorage.getItem(LEGACY_IMAGE_KEY);
+      const legacy =
+        LEGACY_IMAGE_MODELS[localStorage.getItem(LEGACY_IMAGE_KEY) ?? ""] ??
+        localStorage.getItem(LEGACY_IMAGE_KEY);
       if (legacy && library.imageIds.includes(legacy)) library.defaultImageId = legacy;
     }
     return library;

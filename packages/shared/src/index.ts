@@ -317,3 +317,5 @@ export * from "./weixin-file-delivery.js";
 export * from "./task-continuation.js";
 
 export * from "./codeWorkbench.js";
+
+export * from "./studio-video.js";

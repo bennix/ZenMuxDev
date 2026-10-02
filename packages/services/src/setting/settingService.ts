@@ -11,6 +11,7 @@ import {
   appSettingsSchema,
   formatLogPrefix,
   formatZodError,
+  normalizeStudioVideoSelection,
 } from "@zcode/shared";
 import type { ISettingService } from "./setting.js";
 import { normalizeSettingsPatch } from "#src/setting/normalizeSettingsPatch.js";
@@ -58,6 +59,11 @@ function getSettingsDir() {
 
 function getSettingsFile() {
   return join(getSettingsDir(), "setting.json");
+}
+
+function normalizeStudioVideoSettings(settings: AppSettings): AppSettings {
+  if (!settings.studioMediaLibrary) return settings;
+  return { ...settings, studioMediaLibrary: normalizeStudioVideoSelection(settings.studioMediaLibrary) };
 }
 
 function defaultSettings(): AppSettings {
@@ -155,10 +161,13 @@ async function readSettingsWithMeta(): Promise<ReadSettingsResult> {
         needsMigrationPersist: false,
       };
     }
-    debugLog("read result:", JSON.stringify(result.data));
+    // 修复：旧设置仍会列出已经实测失败的内置视频模型；在 owner 的原写队列内持久化迁移。
+    const settings = normalizeStudioVideoSettings(result.data);
+    debugLog("read result:", JSON.stringify(settings));
     return {
-      settings: result.data,
-      needsMigrationPersist: shouldPersistSettingsMigrations(rawValue),
+      settings,
+      needsMigrationPersist: shouldPersistSettingsMigrations(rawValue) ||
+        JSON.stringify(settings.studioMediaLibrary) !== JSON.stringify(result.data.studioMediaLibrary),
     };
   } catch (err) {
     if (
@@ -205,7 +214,7 @@ async function writeSettings(
   maybeThrowInjectedFsFault({ operation: "writeFile", path: settingsFile });
   const raw = await readLegacyAccountConnectionSettingsFile(settingsFile);
   const rollbackFields = retainLegacyAccountConnectionFields(raw);
-  const persisted = { ...rollbackFields, ...settings };
+  const persisted = { ...rollbackFields, ...normalizeStudioVideoSettings(settings) };
   // 旧 Team 尚待 OAuth 补组织时，schema 的默认 {} 不是用户的新选择。
   // 普通偏好保存必须保留新字段缺席；只有迁移提交或用户显式选连接才结束旧导入。
   if (!commitAccountSelection && readIncompleteLegacyTeamConnections(raw).length > 0) {

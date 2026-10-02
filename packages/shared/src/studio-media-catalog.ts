@@ -1,5 +1,5 @@
 /* eslint-disable max-lines -- Static provider model catalog; entries share one public schema. */
-/** ZenMux 图片与视频目录，比例和时长来自 2026-09-26 的模型 api_info。 */
+/** ZenMux 图片与视频目录，图片元数据来自 2026-09-26，视频协议/比例/时长来自 2026-10-02 的模型 api_info。 */
 
 export interface ImageCatalogEntry {
   id: string;
@@ -15,6 +15,8 @@ export interface VideoCatalogEntry {
   name: string;
   ratios: readonly string[];
   durations: readonly number[];
+  protocol: "vertex" | "native" | "interactions";
+  defaultResolution?: string;
 }
 
 export const IMAGE_CATALOG: readonly ImageCatalogEntry[] = [
@@ -475,23 +477,22 @@ export const IMAGE_CATALOG: readonly ImageCatalogEntry[] = [
   }
 ];
 
+export const DEFAULT_STUDIO_VIDEO_MODEL = "google/veo-3.1-fast-generate-001";
+
+/** 2026-10-02 实测未通过的历史内置项；失败不代表供应商永久不可用。 */
+export const RETIRED_STUDIO_VIDEO_MODEL_IDS: readonly string[] = [
+  "bytedance/doubao-seedance-1.5-pro",
+  "klingai/kling-3.0",
+  "klingai/kling-3.0-omni",
+  "klingai/kling-3.0-turbo",
+  "sapiens-ai/agnes-video-v2.0"
+];
+
 export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
-  {
-    "id": "google/veo-3.1-generate-001",
-    "name": "Veo 3.1",
-    "ratios": [
-      "16:9",
-      "9:16"
-    ],
-    "durations": [
-      4,
-      6,
-      8
-    ]
-  },
   {
     "id": "google/veo-3.1-fast-generate-001",
     "name": "Veo 3.1 Fast",
+    "protocol": "vertex",
     "ratios": [
       "16:9",
       "9:16"
@@ -500,37 +501,13 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       4,
       6,
       8
-    ]
-  },
-  {
-    "id": "skyreels/skyreels-v4",
-    "name": "V4",
-    "ratios": [
-      "16:9",
-      "9:16",
-      "4:3",
-      "1:1",
-      "3:4"
     ],
-    "durations": [
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15
-    ]
+    "defaultResolution": "720p"
   },
   {
     "id": "google/veo-3.1-lite-generate-001",
     "name": "Veo 3.1 Lite",
+    "protocol": "vertex",
     "ratios": [
       "16:9",
       "9:16"
@@ -539,46 +516,37 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       4,
       6,
       8
-    ]
+    ],
+    "defaultResolution": "720p"
   },
   {
-    "id": "bytedance/doubao-seedance-1.5-pro",
-    "name": "Doubao-Seedance-1.5-pro",
+    "id": "google/veo-3.1-generate-001",
+    "name": "Veo 3.1",
+    "protocol": "vertex",
     "ratios": [
       "16:9",
-      "4:3",
-      "1:1",
-      "3:4",
-      "9:16",
-      "21:9",
-      "smart"
+      "9:16"
     ],
     "durations": [
       4,
-      5,
       6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12
-    ]
+      8
+    ],
+    "defaultResolution": "720p"
   },
   {
-    "id": "bytedance/doubao-seedance-2.0",
-    "name": "Doubao-Seedance-2.0",
+    "id": "minimax/minimax-h3-max",
+    "name": "MiniMax H3 Max",
+    "protocol": "native",
     "ratios": [
       "21:9",
       "16:9",
       "4:3",
       "1:1",
       "3:4",
-      "9:16",
-      "smart"
+      "9:16"
     ],
     "durations": [
-      4,
       5,
       6,
       7,
@@ -590,68 +558,13 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       13,
       14,
       15
-    ]
-  },
-  {
-    "id": "alibaba/happyhorse-1.0",
-    "name": "HappyHorse 1.0",
-    "ratios": [
-      "16:9",
-      "9:16",
-      "1:1",
-      "4:3",
-      "3:4"
     ],
-    "durations": [
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15
-    ]
+    "defaultResolution": "480p"
   },
   {
-    "id": "sapiens-ai/agnes-video-v2.0",
-    "name": "Agnes Video V2.0",
-    "ratios": [
-      "16:9",
-      "9:16",
-      "1:1",
-      "4:3",
-      "3:4"
-    ],
-    "durations": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18
-    ]
-  },
-  {
-    "id": "google/gemini-omni-flash-preview",
-    "name": "Gemini Omni Flash Preview",
+    "id": "google/gemini-omni-1.1-flash-preview",
+    "name": "Gemini Omni 1.1 Flash Preview",
+    "protocol": "interactions",
     "ratios": [
       "16:9",
       "9:16"
@@ -668,8 +581,99 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
     ]
   },
   {
-    "id": "minimax/minimax-h3",
-    "name": "MiniMax H3",
+    "id": "alibaba/wan3.0-video",
+    "name": "Wan3.0-Video",
+    "protocol": "native",
+    "ratios": [
+      "adaptive",
+      "16:9",
+      "4:3",
+      "1:1",
+      "3:4",
+      "9:16"
+    ],
+    "durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "defaultResolution": "480p"
+  },
+  {
+    "id": "alibaba/wan3.0-video-prime",
+    "name": "Wan3.0-Video-Prime",
+    "protocol": "native",
+    "ratios": [
+      "adaptive",
+      "16:9",
+      "4:3",
+      "1:1",
+      "3:4",
+      "9:16"
+    ],
+    "durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "defaultResolution": "480p"
+  },
+  {
+    "id": "pixverse/c1",
+    "name": "C1",
+    "protocol": "native",
     "ratios": [
       "21:9",
       "16:9",
@@ -679,6 +683,9 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       "9:16"
     ],
     "durations": [
+      1,
+      2,
+      3,
       4,
       5,
       6,
@@ -691,11 +698,44 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       13,
       14,
       15
-    ]
+    ],
+    "defaultResolution": "360p"
+  },
+  {
+    "id": "pixverse/v6",
+    "name": "V6",
+    "protocol": "native",
+    "ratios": [
+      "21:9",
+      "16:9",
+      "4:3",
+      "1:1",
+      "3:4",
+      "9:16"
+    ],
+    "durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "defaultResolution": "360p"
   },
   {
     "id": "bytedance/doubao-seedance-2.5",
     "name": "Doubao-Seedance-2.5",
+    "protocol": "vertex",
     "ratios": [
       "21:9",
       "16:9",
@@ -733,11 +773,13 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       28,
       29,
       30
-    ]
+    ],
+    "defaultResolution": "480p"
   },
   {
     "id": "bfl/flux-3-video",
     "name": "FLUX.3 Video",
+    "protocol": "native",
     "ratios": [
       "21:9",
       "2:1",
@@ -765,11 +807,13 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       18,
       19,
       20
-    ]
+    ],
+    "defaultResolution": "hd"
   },
   {
-    "id": "pixverse/c1",
-    "name": "C1",
+    "id": "minimax/minimax-h3",
+    "name": "MiniMax H3",
+    "protocol": "native",
     "ratios": [
       "21:9",
       "16:9",
@@ -779,9 +823,6 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       "9:16"
     ],
     "durations": [
-      1,
-      2,
-      3,
       4,
       5,
       6,
@@ -794,126 +835,13 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       13,
       14,
       15
-    ]
-  },
-  {
-    "id": "pixverse/v6",
-    "name": "V6",
-    "ratios": [
-      "21:9",
-      "16:9",
-      "4:3",
-      "1:1",
-      "3:4",
-      "9:16"
     ],
-    "durations": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15
-    ]
+    "defaultResolution": "480p"
   },
   {
-    "id": "alibaba/wan3.0-video",
-    "name": "Wan3.0-Video",
-    "ratios": [
-      "adaptive",
-      "16:9",
-      "4:3",
-      "1:1",
-      "3:4",
-      "9:16"
-    ],
-    "durations": [
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      22,
-      23,
-      24,
-      25,
-      26,
-      27,
-      28,
-      29,
-      30
-    ]
-  },
-  {
-    "id": "alibaba/wan3.0-video-prime",
-    "name": "Wan3.0-Video-Prime",
-    "ratios": [
-      "adaptive",
-      "16:9",
-      "4:3",
-      "1:1",
-      "3:4",
-      "9:16"
-    ],
-    "durations": [
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      22,
-      23,
-      24,
-      25,
-      26,
-      27,
-      28,
-      29,
-      30
-    ]
-  },
-  {
-    "id": "google/gemini-omni-1.1-flash-preview",
-    "name": "Gemini Omni 1.1 Flash Preview",
+    "id": "google/gemini-omni-flash-preview",
+    "name": "Gemini Omni Flash Preview",
+    "protocol": "interactions",
     "ratios": [
       "16:9",
       "9:16"
@@ -930,41 +858,74 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
     ]
   },
   {
-    "id": "minimax/minimax-h3-max",
-    "name": "MiniMax H3 Max",
+    "id": "alibaba/happyhorse-1.0",
+    "name": "HappyHorse 1.0",
+    "protocol": "vertex",
+    "ratios": [
+      "16:9",
+      "9:16",
+      "1:1",
+      "4:3",
+      "3:4"
+    ],
+    "durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "defaultResolution": "720p"
+  },
+  {
+    "id": "skyreels/skyreels-v4",
+    "name": "V4",
+    "protocol": "vertex",
+    "ratios": [
+      "16:9",
+      "9:16",
+      "4:3",
+      "1:1",
+      "3:4"
+    ],
+    "durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "id": "bytedance/doubao-seedance-2.0",
+    "name": "Doubao-Seedance-2.0",
+    "protocol": "vertex",
     "ratios": [
       "21:9",
       "16:9",
       "4:3",
       "1:1",
       "3:4",
-      "9:16"
-    ],
-    "durations": [
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15
-    ]
-  },
-  {
-    "id": "klingai/kling-3.0-omni",
-    "name": "Kling-3.0-Omni",
-    "ratios": [
-      "16:9",
-      "1:1",
       "9:16",
       "smart"
     ],
     "durations": [
-      3,
       4,
       5,
       6,
@@ -977,57 +938,8 @@ export const VIDEO_CATALOG: readonly VideoCatalogEntry[] = [
       13,
       14,
       15
-    ]
-  },
-  {
-    "id": "klingai/kling-3.0",
-    "name": "Kling-3.0",
-    "ratios": [
-      "16:9",
-      "1:1",
-      "9:16",
-      "smart"
     ],
-    "durations": [
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15
-    ]
-  },
-  {
-    "id": "klingai/kling-3.0-turbo",
-    "name": "Kling-3.0-Turbo",
-    "ratios": [
-      "16:9",
-      "1:1",
-      "9:16",
-      "smart"
-    ],
-    "durations": [
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15
-    ]
+    "defaultResolution": "480p"
   }
 ];
 
