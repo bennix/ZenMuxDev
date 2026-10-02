@@ -26,9 +26,10 @@ try {
     const truncated=await run(call=>sse(call===1?'discard this partial HTML':'complete page',call!==1));
     const network=await run(call=>{if(call===1)throw new TypeError('network error');return sse('complete');});
     const denied=await run(()=>new Response('{"error":{"message":"denied"}}',{status:401}));
+    const safety=await run(()=>new Response(JSON.stringify({error:{type:"invalid_params",message:"Your request was rejected by the safety system."}}),{status:400}));
     const exhausted=await run(()=>new Response('unavailable',{status:503}));
     const cancelled=await run(()=>new Response('busy',{status:429,headers:{'Retry-After':'2'}}),true);
-    return {truncated,network,denied,exhausted,cancelled};
+    return {truncated,network,denied,safety,exhausted,cancelled};
   });
   assert.equal(result.truncated.calls,2);
   assert.equal(result.truncated.content,'complete page');
@@ -36,6 +37,8 @@ try {
   assert.equal(result.network.failed,false);
   assert.equal(result.denied.calls,1);
   assert.equal(result.denied.failed,true);
+  assert.equal(result.safety.calls,1);
+  assert.equal(result.safety.failed,true);
   assert.equal(result.exhausted.calls,3);
   assert.equal(result.exhausted.failed,true);
   assert.equal(result.cancelled.calls,1);

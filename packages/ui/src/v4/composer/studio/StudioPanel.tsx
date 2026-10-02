@@ -1,3 +1,4 @@
+import { assertStudioPromptAllowed, studioPromptSafetyRules } from "./studioPromptSafety.js";
 import { renderVisualDeckImages } from "./deckVisualPptx.js";
 import { useStudioDeckHistory } from "@/hooks/useStudioDeckHistory.js";
 import { StudioDeckHistory } from "./StudioDeckHistory.js";
@@ -53,10 +54,14 @@ interface Speech {
 }
 
 const COUNCIL = [
-  { name: "意图", duty: "说清对象、动作和限制。用短段落，不要画流程图。" },
+  { name: "意图", duty: "说清对象、动作和限制。保留用户给定的年龄、身份和参考图事实，不根据外貌猜测年龄，不把儿童改成成人。用短段落，不要画流程图。" },
   { name: "美术", duty: "补风格、构图、颜色和光线。用短段落，不要画流程图。" },
-  { name: "挑刺", duty: "指出含糊和容易画错的地方。用短段落，不要画流程图。" },
-  { name: "成稿", duty: "综合前面的意见。最后一行以 FINAL: 开头，写出可直接交给生成器的提示词。" },
+  { name: "挑刺", duty: "指出含糊和容易画错的地方，检查重复描述及讨论主动添加的敏感细节。正常儿童运动、家庭和校园场景不应仅因包含儿童就判为违规。用短段落，不要画流程图。" },
+  // 修复：原规则未指定媒体提示词语言，中文讨论会直接成为生图输入；统一成稿语言并约束模型主动添加的敏感细节，保留真实主体及安全边界。
+  {
+    name: "成稿",
+    duty: "综合前面的意见。最后一行以 FINAL: 开头，写出可直接交给生成器的提示词。For image generation, image editing and video generation, write FINAL in concise English by default, unless the user explicitly requests another prompt language. Write ILLUSTRATE prompts in English by default too. Preserve text intended to appear in the image verbatim, including Chinese text, names and brands. Keep discussion and presentation content in the user's requested language. Remove repeated descriptions without changing the subject, action, reference-image constraints or meaning. For ordinary scenes involving children, use neutral, age-appropriate, non-sexual descriptions of everyday clothing, activities and surroundings. Do not add body-part close-ups, body evaluations, revealing clothing or suggestive poses that the user did not request. Preserve stated age and identity; never recast a child as an adult or infer an age from appearance. Resolve ambiguous wording faithfully rather than adding sensitive details. Do not append instructions to ignore safety policies or disguise or omit content to bypass safety checks.",
+  },
 ] as const;
 
 function readApiKey(view: ModelSelectionView | null): string {
@@ -448,7 +453,7 @@ export function StudioPanel({
         messages: [
           {
             role: "system",
-            content: `你是${agent.name}。${agent.duty} 用户消息里的图片就是参考图，直接看图，不要要求再上传。`,
+            content: `你是${agent.name}。${agent.duty} 用户消息里的图片就是参考图，直接看图，不要要求再上传。 ${studioPromptSafetyRules(mode === "video" ? mediaLibrary.defaultVideoId : mediaLibrary.defaultImageId)}`,
           },
           {
             role: "user",
@@ -486,6 +491,7 @@ export function StudioPanel({
       }
       if (signal.aborted) throw new DOMException("讨论已取消", "AbortError");
     }
+    assertStudioPromptAllowed(spoken[spoken.length - 1]?.text ?? "");
     return spoken;
   };
 

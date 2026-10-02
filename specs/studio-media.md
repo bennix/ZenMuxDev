@@ -275,3 +275,47 @@ Flow: provider response → shared parser → image or explicit diagnostic → S
 No new persisted state or change to desktop/mobile delivery ownership.
 Acceptance: camel/snake inline data, image plus text, empty candidates, text-only,
 SAFETY/MAX_TOKENS, promptFeedback blocking, and request ID regression fixtures.
+
+## 最终媒体提示词语言
+
+- 委员会讨论沿用用户语言；成稿交给生图、改图和视频模型的 `FINAL:` 默认用英文，PPT 的 `ILLUSTRATE:` 同样用英文。用户明确指定提示词语言时遵从指定。画面内需要呈现的文字保留原文，不翻译姓名、品牌或引号内文字。PPT 正文语言不受影响。
+- 成稿只写一份简洁、去重的最终描述，忠实保留主体、动作、参考图约束，不为绕过安全系统删除或伪装内容。此规则由 StudioPanel 委员会系统消息统一提供，不增加翻译请求或状态。
+- 事件顺序：用户输入 → StudioPanel 顺序委员会 → 成稿 FINAL → 现有媒体请求 → 结果或错误。Desktop 与手机使用同一规则，不改变各自传输语义。
+- 验收：中文需求默认得到英文 FINAL；画面内中文文字原样保留；明确指定中文提示词时允许中文；PPT 正文仍遵从用户语言。英文不能保证安全审核通过，400/403 拒绝仍通过现有错误路径报告。
+
+## 媒体描述的合规约束
+
+- 意图角色保留用户给定的年龄、身份和参考图事实；不根据外貌猜测年龄，不将儿童改写成成人。挑刺角色检查重复、歧义以及讨论主动添加的敏感细节。
+- 对儿童的正常运动、家庭、校园场景，成稿使用中性、适龄、非性化的日常表达，按需描述普通服装、动作、构图和环境。不主动增加身体局部特写、身体评价、暴露或挑逗性姿势；不将正常儿童题材一律判为违规。
+- 不追加“忽略安全规则”、伪装年龄等绕过审核的指令；不保证调整后一定通过。提供商拒绝后继续原错误路径，不自动改词重投或切换模型。
+- 验收：普通儿童跑步仍明确是儿童和普通运动服；主体不会被改成成人；重复姿态描述被整理；新增细节只服务于用户要求；最终默认英文。
+
+## OpenAI 媒体模型安全规则
+
+依据官方 image-generation 与 moderation 文档（2026-10-02）：
+- https://developers.openai.com/api/docs/guides/image-generation
+- https://developers.openai.com/api/docs/guides/moderation
+
+成稿始终检查涉及未成年人的性内容、色情/性行为、非自愿亲密图像、仇恨与血腥暴力；普通儿童运动与日常场景不因年龄被禁止。当目标媒体模型 ID 以 `openai/` 开头时，委员会额外收到 OpenAI 安全要求，并同时考虑参考图与最终文本。不得把日常姿态扩写为性化表达，不降低审核参数，不宣称英文可以通过审核。无法忠实满足要求时输出独立一行 `SAFETY_BLOCKED:` 及用户语言的简短原因，可建议非性化等合规替代；不输出 FINAL 或 ILLUSTRATE。
+
+唯一所有者仍是 StudioPanel。顺序：用户输入/参考图 → 委员会安全规则 → 成稿完成 → 本地检查 SAFETY_BLOCKED → 阻止生成并显示原因，或沿现有 FINAL 路径生成。拒绝检查先于 fallback，不能因缺少 FINAL 把原始需求提交。拒绝不写提示词库，不调用媒体接口；不增加持久化或远程状态。此检查是成稿结果约束，不等同于 OpenAI 官方审核接口或完整分类器。ZenMux/Azure 的实际审核仍由上游决定。
+
+验收：OpenAI 模型收到专用规则，其他模型收到通用规则；正常儿童运动仍允许；独立拒绝标记阻止媒体提交；正文中引用标记不触发；空拒绝原因显示通用说明；无拒绝标记保持原路径。
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant P as StudioPanel（唯一所有者）
+    participant C as 委员会
+    participant M as 媒体接口
+    U->>P: 需求与参考图
+    P->>C: 通用规则及 OpenAI 专用规则
+    C-->>P: 成稿文本
+    alt SAFETY_BLOCKED
+        P-->>U: 拒绝原因与可选合规建议
+    else 允许生成
+        P->>M: FINAL 与参考图
+        M-->>P: 图片或上游拒绝
+        P-->>U: 结果或错误
+    end
+```
