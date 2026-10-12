@@ -3,15 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ZenCode 3.14.26：内置源码 IDE 的 AI 桌面，支持生图、生视频和写幻灯片</title>
+    <title id="page-title">ZenCode 3.14.32：AI coding workspace, creative studio, and desktop control</title>
     <meta
       name="description"
-      content="ZenCode 是内置源码 IDE 的 AI 桌面应用：文件留在本机工作区，模型统一通过 ZenMux 调用，可生图、生视频、写幻灯片，并在微信里收发结果。"
+      id="page-description"
+      content="ZenCode is an AI coding workspace with a built-in IDE, model dispatch, shared context, creative tools, WeChat control, and native computer use."
     />
     <link rel="icon" href="packages/desktop/build/icon.png" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="ZenCode 3.14.26：内置源码 IDE 的 AI 桌面" />
-    <meta property="og:description" content="写代码，也出图、出视频、出幻灯片。文件留在本机，模型统一走 ZenMux。" />
+    <meta id="og-title" property="og:title" content="ZenCode 3.14.32: AI coding workspace" />
+    <meta id="og-description" property="og:description" content="Code, create, and control your desktop with ZenCode. Files stay in your local workspace; model requests use ZenMux." />
     <meta property="og:image" content="https://bennix.github.io/ZenMuxDev/media/ui-desk.png" />
     <meta property="og:url" content="https://bennix.github.io/ZenMuxDev/" />
     <style>
@@ -74,6 +75,16 @@
         padding: 6px 14px;
       }
       nav a.cta:hover { color: var(--ink); }
+      .lang-switch {
+        flex: 0 0 auto;
+        padding: 7px 12px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ivory);
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
       :focus-visible {
         outline: 2px solid var(--brass);
         outline-offset: 3px;
@@ -161,6 +172,26 @@
       }
       .points h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
       .points p { margin: 0; color: var(--muted); }
+      .download-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 28px;
+      }
+      .download-card {
+        display: flex;
+        min-height: 180px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 20px;
+        border: 1px solid var(--line);
+      }
+      .download-card strong { font-size: 18px; }
+      .download-card small { color: var(--muted); font-size: 13px; }
+      .package-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+      .package-links a { padding: 5px 9px; border: 1px solid var(--line); text-decoration: none; }
+      .package-links a:hover { border-color: var(--brass); }
       #studio, #relay { background: #f4efe6; color: #1c1915; }
       #studio .index, #relay .index { color: var(--brass-deep); }
       #studio .chapter, #relay .chapter { border-top-color: rgba(28, 25, 21, 0.14); }
@@ -206,7 +237,8 @@
         .wrap { width: min(100% - 32px, 1180px); }
         nav { display: none; }
         .hero { padding-top: 40px; }
-        .chapter, .facts, .points, .downloads { grid-template-columns: 1fr; }
+        .chapter, .facts, .points, .download-grid { grid-template-columns: 1fr; }
+        .bar { gap: 12px; }
         .facts div { padding-right: 0; }
         section { padding: 56px 0; }
       }
@@ -217,267 +249,404 @@
       <div class="wrap bar">
         <a class="brand" href="#top">
           <img src="packages/desktop/build/icon.png" alt="" width="34" height="34" />
-          ZenCode
+          <span>ZenCode</span>
         </a>
-        <nav>
-          <a href="#ide">源码</a>
-          <a href="#studio">成稿</a>
-          <a href="#relay">微信</a>
-          <a href="#model">模型</a>
-          <a href="#faq">常见问题</a>
-          <a class="cta" href="#download">下载</a>
-          <a href="https://github.com/bennix/ZenMuxDev">源码库</a>
+        <nav aria-label="Main navigation">
+          <a href="#features" data-i18n="nav.features">功能</a>
+          <a href="#release" data-i18n="nav.release">3.14.32 更新</a>
+          <a href="#download" class="cta" data-i18n="nav.download">下载</a>
+          <a href="https://github.com/bennix/ZenMuxDev" data-i18n="nav.source">源码库</a>
         </nav>
+        <button id="language-toggle" class="lang-switch" type="button" aria-label="切换语言">English</button>
       </div>
     </header>
 
     <main id="top">
       <div class="wrap hero">
-        <div class="hero-grid">
-          <div>
-            <p class="kicker">Desktop · 3.14.26</p>
-            <h1>写代码，也出图、出片、出幻灯片。</h1>
-            <p class="lede">
-              ZenCode 是一个桌面应用，把源码 IDE 和 AI 对话放进同一个窗口。文件留在本机工作区，模型统一通过 ZenMux 调用。选中代码，或从文件树拖进输入框，就能直接交给 AI 处理。
-            </p>
-            <div class="actions">
-              <a class="primary" href="#download">下载 3.14.26</a>
-              <a href="#ide">看源码工作台</a>
-            </div>
-            <div class="facts">
-              <div>
-                <strong>内置源码 IDE</strong>
-                <span>文件、搜索、Git、终端、扩展</span>
-              </div>
-              <div>
-                <strong>本机工作区</strong>
-                <span>AI 与编辑器读写同一目录</span>
-              </div>
-              <div>
-                <strong>只接 ZenMux</strong>
-                <span>密钥留在本机</span>
-              </div>
-            </div>
-          </div>
-          <figure class="shot">
-            <img src="media/ui-desk.png" alt="ZenCode 桌面：晚间问候、当前工作区输入框，以及右上角的源码 IDE" />
-            <figcaption>当前桌面。源码 IDE 在右上角，创作和本机操作在输入框里。</figcaption>
-          </figure>
+        <p class="kicker" data-i18n="hero.kicker">DESKTOP · 3.14.32</p>
+        <h1 data-i18n="hero.title">在一个工作台里，编程、创作并推进任务。</h1>
+        <p class="lede" data-i18n="hero.lede">ZenCode 将源码 IDE、AI 对话、多 Agent 任务、创作工具和桌面控制放在一起。文件留在本机工作区，模型通过 ZenMux 调用。</p>
+        <div class="actions">
+          <a class="primary" href="#download" data-i18n="hero.download">下载 ZenCode 3.14.32</a>
+          <a href="#features" data-i18n="hero.features">查看功能</a>
         </div>
+        <div class="facts">
+          <div><strong data-i18n="hero.fact1.title">内置源码 IDE</strong><span data-i18n="hero.fact1.text">文件、搜索、Git、终端与扩展</span></div>
+          <div><strong data-i18n="hero.fact2.title">任务与 Agent 调度</strong><span data-i18n="hero.fact2.text">统一查看任务和阶段进展</span></div>
+          <div><strong data-i18n="hero.fact3.title">微信控制</strong><span data-i18n="hero.fact3.text">配对桌面后续接同一任务</span></div>
+        </div>
+        <figure class="shot">
+          <img src="media/ui-desk.png" width="1600" height="900" alt="ZenCode 桌面工作区" data-i18n-alt="hero.imageAlt" />
+          <figcaption data-i18n="hero.caption">桌面工作区：源码 IDE、对话与本地任务一处协作。</figcaption>
+        </figure>
         <figure class="stage">
           <video controls playsinline preload="none" poster="media/ui-desk.png" src="ZenCode-Promo.mp4">
-            <a href="ZenCode-Promo.mp4">观看介绍</a>
+            <a href="ZenCode-Promo.mp4" data-i18n="hero.videoFallback">观看产品介绍</a>
           </video>
-          <figcaption>产品介绍视频</figcaption>
+          <figcaption data-i18n="hero.videoCaption">ZenCode 产品介绍</figcaption>
         </figure>
       </div>
 
-      <section id="changes">
+      <section id="release">
         <div class="wrap chapter">
-          <p class="index">更新</p>
+          <p class="index" data-i18n="release.index">最新版本</p>
           <div>
-            <h2>3.14.26 包含什么。</h2>
+            <h2 data-i18n="release.title">ZenCode 3.14.32</h2>
+            <p class="prose" data-i18n="release.lede">本版移除插件市场卡片与详情标题上的“编程套餐”徽标。套餐元数据和插件权限逻辑保持不变。</p>
             <ul class="changes">
-              <li><strong>内置源码 IDE：</strong>随安装包带上，首次打开不再下载运行时。</li>
-              <li><strong>幻灯片：</strong>可编辑 PPT、保真 PPT，以及 A4 PDF 导出。桌面端保真 PPT 由 OfficeCLI 把整页图片做成已校验的 PPTX，元素不能单独改。</li>
-              <li><strong>版面评估：</strong>PPT 修复可选用 JEV 评估模型，默认 typesafe/jev-1.13，只提供建议。留空则关闭；评估失败时继续本地检查。</li>
-              <li><strong>生图与视频：</strong>交给模型的最终描述默认用英文，画面里要出现的文字保留原文。无法按安全约束完成时会说明原因并停止生成，不会自动改词重试。</li>
-              <li><strong>视频模型：</strong>内置目录只保留本次实测能完整出片的模型。每个模型按自己的协议和合法时长提交，取消后不再重复提交。失败会显示模型和错误类型。</li>
-              <li><strong>微信：</strong>中断的任务可从检查点继续，失败会说明停在哪一步。</li>
-              <li><strong>稳定性：</strong>IDE 启动失败会显示退出码和脱敏后的原因；模型连续失败三次后可切到备用模型。</li>
-              <li><strong>安装版工作台：</strong>运行时依赖完整打进安装包，打开不再因缺少 @coder/logger 失败。</li>
-              <li><strong>界面：</strong>创作和多 Agent 一次只打开一个。草稿空态显示 ZenCode 字标。IDE 专注时隐藏浏览器地址栏，窗口按钮区域保持空白可拖动。</li>
-              <li><strong>电脑控制：</strong>默认关闭，需要手动开启。macOS、Windows、Linux 各带本平台的原生执行器；没有对应程序时不会显示为可用。内置浏览器用浏览器控制，外部桌面应用用电脑控制。</li>
+              <li data-i18n="release.item1">macOS Apple Silicon DMG 已通过 Apple 公证、票据装订与 Gatekeeper 检查。</li>
+              <li data-i18n="release.item2">Windows x64/ARM64 与 Linux x64/ARM64 安装包通过构建和安装验收。</li>
+              <li data-i18n="release.item3">中英文自动更新清单已更新并核验安装包摘要。</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <section id="ide">
+      <section id="features">
         <div class="wrap chapter">
-          <p class="index">01 · 源码</p>
+          <p class="index" data-i18n="features.index">产品能力</p>
           <div>
-            <h2>工作台占满主区，AI 停在右下。</h2>
-            <p class="prose">
-              不用另装编辑器，打开就能用，而且只在本机运行（基于随安装包附带的 code-server）。打开 IDE 后，对话里的草稿、附件和进行中的任务都保留，可以收成一条标题栏。启动失败时会给出退出码和脱敏后的原因，可以重试。
-            </p>
+            <h2 data-i18n="features.title">从理解上下文，到完成交付。</h2>
+            <p class="prose" data-i18n="features.lede">ZenCode 展示当前版本已提供的能力。具体操作会根据平台、权限和工作区类型显示。</p>
             <div class="points">
-              <article>
-                <h3>完整工作台</h3>
-                <p>资源管理器、多文件保存、搜索、Git、终端和扩展宿主都在应用里。首次打开不再下载运行时。</p>
-              </article>
-              <article>
-                <h3>把代码交给 AI 对话</h3>
-                <p>选中代码并写上要求，会进入当前工作区的输入草稿。从文件树拖进来的是文件引用，按磁盘上已保存的内容读取。</p>
-              </article>
-              <article>
-                <h3>扩展从 Open VSX 安装</h3>
-                <p>可以粘贴扩展页面链接，或选择本地 VSIX。安装由工作台自己完成。微软商店里的专有扩展不保证可用。</p>
-              </article>
-              <article>
-                <h3>只用于本机工作区</h3>
-                <p>远程工作区这一版没有源码 IDE 入口。网页版也不显示这个按钮。</p>
-              </article>
+              <article><h3 data-i18n="feature.ide.title">源码 IDE 与本地工作区</h3><p data-i18n="feature.ide.text">IDE 内含文件浏览、编辑、搜索、Git、终端和扩展入口。选中文本或拖入文件引用即可把工作区上下文带进对话。IDE 用于本机工作区。</p></article>
+              <article><h3 data-i18n="feature.agents.title">多 Agent 任务与调度</h3><p data-i18n="feature.agents.text">在任务区组织并跟进多个 Agent 工作。可配置独立调度模型，为新任务选择执行模型；续接任务沿用当前模型。调度器不会自动把一个任务拆成多个子 Agent。</p></article>
+              <article><h3 data-i18n="feature.context.title">共享对话与工作区上下文</h3><p data-i18n="feature.context.text">模型切换使用同一会话已提交的对话历史，未发送草稿不会被带入。发送时可附上当前文件、可见 Diff、终端、预览和 Git 摘要。</p></article>
+              <article><h3 data-i18n="feature.plan.title">计划卡片、进度与写入范围</h3><p data-i18n="feature.plan.text">复杂任务可以报告阶段进度，并先列出候选文件供用户勾选。确认后，无法验证写入范围的工具调用会被拒绝，既有权限检查继续生效。</p></article>
+              <article><h3 data-i18n="feature.computer.title">原生 Computer Use</h3><p data-i18n="feature.computer.text">桌面控制默认关闭，可手动启用。macOS、Windows 和 Linux 使用各自原生执行器；可用操作取决于系统权限、图形会话和桌面环境。</p></article>
+              <article><h3 data-i18n="feature.wechat.title">微信远程控制</h3><p data-i18n="feature.wechat.text">通过现有微信配对入口连接桌面 Host，在同一任务和会话中查看进度、续接工作并收取文件。账号与工作区权限由运行时校验。</p></article>
+              <article><h3 data-i18n="feature.studio.title">图像、视频、幻灯片与 PDF</h3><p data-i18n="feature.studio.text">在创作工作区讨论并生成图像、视频和幻灯片。幻灯片可导出为可编辑 PPT、保真 PPT 或 A4 PDF；结果可预览并保存到本地。</p></article>
+              <article><h3 data-i18n="feature.plugins.title">插件与扩展</h3><p data-i18n="feature.plugins.text">通过插件市场安装和管理技能、命令、子智能体及 MCP 服务。IDE 扩展从 Open VSX 或本地 VSIX 安装。</p></article>
+              <article><h3 data-i18n="feature.remote.title">SSH/WSL 远程工作区</h3><p data-i18n="feature.remote.text">桌面端可连接 SSH 与 WSL 工作区。远程文件操作仍路由到对应工作区，不会因本机没有文件通道而回退到本地执行。</p></article>
+              <article><h3 data-i18n="feature.clients.title">桌面、Web 与 CLI</h3><p data-i18n="feature.clients.text">使用桌面应用、浏览器工作区或命令行 TUI、Web、Agent 入口。会话上下文和可用工具受当前连接方式与权限约束。</p></article>
+              <article><h3 data-i18n="feature.models.title">ZenMux 模型连接</h3><p data-i18n="feature.models.text">通过 ZenMux 调用模型。API Key 加密保存在本机；模型用量和费用以 ZenMux 账户为准。</p></article>
+              <article><h3 data-i18n="feature.tokens.title">减少重复上下文</h3><p data-i18n="feature.tokens.text">同一会话共享已提交的上下文，帮助避免切换模型时重复组织任务信息。不同供应商之间不保证缓存复用，也不承诺固定 Token 节省比例。</p></article>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="studio">
-        <div class="wrap chapter">
-          <p class="index">02 · 成稿</p>
-          <div>
-            <h2>图、视频和幻灯片，在同一个对话框里完成。</h2>
-            <p class="prose">
-              不用切换到别的工具。比例、时长和页数按所选模型和你的指定来。生成结果可以留下，也可以存到本地。
-            </p>
-            <div class="points">
-              <article>
-                <h3>先讨论，再生成</h3>
-                <p>意图、美术、挑刺、成稿按顺序发言。成稿的最终提示词单独列出，然后才交给生图或生视频模型。</p>
-              </article>
-              <article>
-                <h3>按页写幻灯片</h3>
-                <p>页数可以指定。一页写完就能预览。深色代码用浅色字。讲流程、分支或步骤的页面自带示意图。</p>
-              </article>
-              <article>
-                <h3>两种 PPT，外加 A4 PDF</h3>
-                <p>可编辑 PPT 按预览量到的位置放文本框。保真 PPT 每一页是一张完整图片，元素不能单独改。全部页面也能导出成 A4 PDF，横页横向，竖页纵向。</p>
-              </article>
-              <article>
-                <h3>历史和局部修改</h3>
-                <p>写完的页留在本机，重新打开可恢复。可以选择元素再交给模型，只替换这些元素。手绘默认出照片；盖在已有照片上时，只改笔迹底下的区域。</p>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="relay">
-        <div class="wrap chapter">
-          <p class="index">03 · 微信</p>
-          <div>
-            <h2>同一套模型，在微信里也能把事情做完。</h2>
-            <p class="prose">
-              在微信里发一句话，就能收到图、PDF 或图表。它们走本机已有的网络和任务，文件真正写出来才会发回；失败时会说明停在模型请求、下载还是上传。
-            </p>
-            <div class="points">
-              <article>
-                <h3>出图、PDF 和图表</h3>
-                <p>先判断这是聊天、出图、PDF 还是图表。PDF 和图表写成工作区里的真实文件后再发送。</p>
-              </article>
-              <article>
-                <h3>工作区文件可以发回去</h3>
-                <p>最近绑定的微信会话可以收到工作区里的文件。远程工作区没有文件通道时，不会改在本机执行。</p>
-              </article>
-              <article>
-                <h3>任务可以接着做</h3>
-                <p>紧凑界面可以继续未完成的微信任务，也可以改已经排队的输入。中断之后按检查点继续。</p>
-              </article>
-              <article>
-                <h3>工作区记得说过的话</h3>
-                <p>记忆开启时，原文按工作区留在本机。本机嵌入模型可用时按内容检索；不可用时原文保留，对话继续。</p>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="model">
-        <div class="wrap chapter">
-          <p class="index">04 · 模型</p>
-          <div>
-            <h2>只接 ZenMux。</h2>
-            <p class="prose">
-              需要自备 ZenMux API Key，费用由你自己承担。在欢迎页或设置里填写，加密显示，保存在本机。没有 Key 时给出
-              <a href="https://zenmux.ai/invite/GBQMC5">ZenMux 邀请链接</a>（https://zenmux.ai/invite/GBQMC5）。
-              请求发往 zenmux.ai。默认模型包括 openai/gpt-6-sol、anthropic/claude-opus-5.5 和 x-ai/grok-4.7，也可以自己增改。
-              连接连续失败三次后，可以换到你设置的备用模型。进行中的对话会显示当前在做什么。
-            </p>
           </div>
         </div>
       </section>
 
       <section id="download">
         <div class="wrap">
-          <p class="index">下载</p>
-          <h2>3.14.26</h2>
-          <p class="prose">
-            四个安装包都在
-            <a href="https://github.com/bennix/ZenMuxDev/releases/tag/v3.14.26">GitHub Release</a>。
-            macOS 包由开发者签名并完成公证。
+          <p class="index" data-i18n="download.index">下载</p>
+          <h2 data-i18n="download.title">选择你的平台</h2>
+          <p class="prose"><span data-i18n="download.lede">所有安装包与更新清单均来自 ZenCode 的 GitHub 正式发行版：</span>
+            <a href="https://github.com/bennix/ZCode/releases/tag/v3.14.32" data-i18n="download.releaseLink">ZenCode 3.14.32 Release</a>。
           </p>
-          <p class="note">目前 macOS 只提供 Apple 芯片版本。</p>
-          <!-- TODO: 补文件大小和 SHA256 -->
-          <div class="downloads">
-            <a id="mac" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.26/ZenCode-3.14.26-mac-arm64.dmg">
-              <strong>macOS</strong>
-              <small>Apple 芯片 · 已公证 DMG</small>
-            </a>
-            <a id="win" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.26/ZenCode-3.14.26-win-x64.exe">
-              <strong>Windows</strong>
-              <small>x64 安装包</small>
-            </a>
-            <a id="deb" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.26/ZenCode-3.14.26-linux-amd64.deb">
-              <strong>Ubuntu / Debian</strong>
-              <small>amd64 deb</small>
-            </a>
-            <a id="rpm" href="https://github.com/bennix/ZenMuxDev/releases/download/v3.14.26/ZenCode-3.14.26-linux-x86_64.rpm">
-              <strong>Linux RPM</strong>
-              <small>x86_64 rpm</small>
-            </a>
+          <div class="download-grid">
+            <div class="download-card" id="mac-download">
+              <strong data-i18n="download.mac.title">macOS · Apple Silicon</strong>
+              <small data-i18n="download.mac.note">ARM64 · Apple 已公证并装订票据</small>
+              <div class="package-links"><a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-mac-arm64.dmg" data-i18n="download.dmg">下载 DMG</a></div>
+            </div>
+            <div class="download-card" id="win-download">
+              <strong data-i18n="download.win.title">Windows</strong>
+              <small data-i18n="download.win.note">x64 与 ARM64 安装程序</small>
+              <div class="package-links">
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-win-x64.exe">x64</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-win-arm64.exe">ARM64</a>
+              </div>
+            </div>
+            <div class="download-card" id="linux-x64-download">
+              <strong data-i18n="download.linuxX64.title">Linux · x64</strong>
+              <small data-i18n="download.linuxX64.note">DEB 与 RPM</small>
+              <div class="package-links">
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-linux-amd64.deb">DEB</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-linux-x86_64.rpm">RPM</a>
+              </div>
+            </div>
+            <div class="download-card" id="linux-arm-download">
+              <strong data-i18n="download.linuxArm.title">Linux · ARM64</strong>
+              <small data-i18n="download.linuxArm.note">DEB 与 RPM</small>
+              <div class="package-links">
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-linux-arm64.deb">DEB</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.32/ZenCode-3.14.32-linux-aarch64.rpm">RPM</a>
+              </div>
+            </div>
           </div>
+          <p class="note" data-i18n="download.note">Windows 和 Linux 原生 Computer Use 的可用性取决于图形会话与系统权限。</p>
         </div>
       </section>
 
       <section id="faq">
         <div class="wrap chapter">
-          <p class="index">常见问题</p>
+          <p class="index" data-i18n="faq.index">常见问题</p>
           <div>
-            <h2>常见问题</h2>
-            <details>
-              <summary>用它要花钱吗？</summary>
-              <p>需要使用你自己的 ZenMux API Key，模型调用的费用由你直接向 ZenMux 支付，用量和计费以 ZenMux 为准。</p>
-            </details>
-            <details>
-              <summary>我的数据会去哪里？</summary>
-              <p>文件留在本机工作区，API Key 加密保存在本机，记忆开启时原文也按工作区留在本机。对话内容会发往 zenmux.ai 用于调用模型。</p>
-            </details>
-            <details>
-              <summary>和 ZCode 有什么区别？</summary>
-              <p>ZenCode 改自智谱开源的 ZCode：产品名改为 ZenCode，模型供应商改为 ZenMux，并加入了内置源码 IDE、成稿和微信能力。</p>
-            </details>
-            <details>
-              <summary>远程工作区能用源码 IDE 吗？</summary>
-              <p>这一版不能。源码 IDE 只用于本机工作区，远程工作区和网页版都不显示入口。</p>
-            </details>
+            <h2 data-i18n="faq.title">常见问题</h2>
+            <details><summary data-i18n="faq.cost.q">使用 ZenCode 要花钱吗？</summary><p data-i18n="faq.cost.a">ZenCode 连接 ZenMux。你需要自己的 API Key，模型费用由 ZenMux 账户按实际用量结算。</p></details>
+            <details><summary data-i18n="faq.data.q">文件和密钥会发到哪里？</summary><p data-i18n="faq.data.a">文件保留在对应工作区，API Key 加密保存在本机。模型请求会发送到 ZenMux。</p></details>
+            <details><summary data-i18n="faq.dispatch.q">调度模型会自动创建子 Agent 吗？</summary><p data-i18n="faq.dispatch.a">不会。调度模型为新任务选择执行模型；子 Agent 的创建由当前任务和用户控制。</p></details>
+            <details><summary data-i18n="faq.tokens.q">切换模型一定能节省 Token 吗？</summary><p data-i18n="faq.tokens.a">不能保证固定节省。会话可共享已提交历史，但不同模型供应商的缓存策略并不相同。</p></details>
+            <details><summary data-i18n="faq.platform.q">支持哪些平台？</summary><p data-i18n="faq.platform.a">macOS Apple Silicon、Windows x64/ARM64、Linux x64/ARM64；Linux 提供 DEB 和 RPM。</p></details>
+            <details><summary data-i18n="faq.source.q">ZenCode 的源码在哪里？</summary><p><a href="https://github.com/bennix/ZenMuxDev">ZenMuxDev</a>。产品基于开源 <a href="https://github.com/zai-org/ZCode">ZCode</a> 开发。</p></details>
           </div>
         </div>
       </section>
 
-      <section id="origin">
+      <section id="source">
         <div class="wrap">
-          <p class="index">来源</p>
-          <h2>改自 ZCode。</h2>
+          <p class="index" data-i18n="source.index">来源</p>
+          <h2 data-i18n="source.title">围绕 ZenMux 打造的 ZCode 分支。</h2>
           <p class="origin">
-            ZenCode 改自智谱开源的 <a href="https://github.com/zai-org/ZCode">ZCode</a>。
-            仓库结构沿用上游，产品名是 ZenCode，模型供应商是 ZenMux。
-            当前源码在 <a href="https://github.com/bennix/ZenMuxDev">bennix/ZenMuxDev</a> 的
-            <a href="https://github.com/bennix/ZenMuxDev/tree/cursor/zenmux-zencode-provider">cursor/zenmux-zencode-provider</a> 分支。
+            <span data-i18n="source.copy">ZenCode 基于智谱开源的</span>
+            <a href="https://github.com/zai-org/ZCode">ZCode</a>
+            <span data-i18n="source.copy2">。此分支将产品品牌统一为 ZenCode，并通过 ZenMux 提供模型连接。</span>
           </p>
         </div>
       </section>
     </main>
-    <footer>
-      <div class="wrap">ZenCode · 基于 ZCode · 模型由 ZenMux 提供</div>
-    </footer>
+
+    <footer><div class="wrap" data-i18n="footer">ZenCode · 基于 ZCode · 模型服务由 ZenMux 提供</div></footer>
     <script>
       (function () {
-        var ua = navigator.userAgent;
-        var id = /Windows/i.test(ua) ? "win" : /Mac/i.test(ua) ? "mac" : /Linux/i.test(ua) ? "deb" : "";
-        if (!id) return;
-        var card = document.getElementById(id);
-        if (card) card.classList.add("rec");
+        var messages = {
+          "zh-CN": {
+            "meta.title": "ZenCode 3.14.32：AI 编程工作台、创作工具与电脑控制",
+            "meta.description": "ZenCode 将源码 IDE、Agent 调度、共享上下文、图像/视频/幻灯片创作、微信远程控制和原生电脑操作带进一个工作区。",
+            "og.title": "ZenCode 3.14.32：AI 编程与创作工作台",
+            "og.description": "在一个工作台里编程、创作并推进任务。文件留在本机工作区，模型通过 ZenMux 调用。",
+            "language.label": "English",
+            "language.aria": "切换为 English",
+            "nav.features": "功能",
+            "nav.release": "3.14.32 更新",
+            "nav.download": "下载",
+            "nav.source": "源码库",
+            "hero.kicker": "DESKTOP · 3.14.32",
+            "hero.title": "在一个工作台里，编程、创作并推进任务。",
+            "hero.lede": "ZenCode 将源码 IDE、AI 对话、多 Agent 任务、创作工具和桌面控制放在一起。文件留在本机工作区，模型通过 ZenMux 调用。",
+            "hero.download": "下载 ZenCode 3.14.32",
+            "hero.features": "查看功能",
+            "hero.fact1.title": "内置源码 IDE",
+            "hero.fact1.text": "文件、搜索、Git、终端与扩展",
+            "hero.fact2.title": "任务与 Agent 调度",
+            "hero.fact2.text": "统一查看任务和阶段进展",
+            "hero.fact3.title": "微信控制",
+            "hero.fact3.text": "配对桌面后续接同一任务",
+            "hero.imageAlt": "ZenCode 桌面工作区",
+            "hero.caption": "桌面工作区：源码 IDE、对话与本地任务一处协作。",
+            "hero.videoFallback": "观看产品介绍",
+            "hero.videoCaption": "ZenCode 产品介绍",
+            "release.index": "最新版本",
+            "release.title": "ZenCode 3.14.32",
+            "release.lede": "本版移除插件市场卡片与详情标题上的“编程套餐”徽标。套餐元数据和插件权限逻辑保持不变。",
+            "release.item1": "macOS Apple Silicon DMG 已通过 Apple 公证、票据装订与 Gatekeeper 检查。",
+            "release.item2": "Windows x64/ARM64 与 Linux x64/ARM64 安装包通过构建和安装验收。",
+            "release.item3": "中英文自动更新清单已更新并核验安装包摘要。",
+            "features.index": "产品能力",
+            "features.title": "从理解上下文，到完成交付。",
+            "features.lede": "ZenCode 展示当前版本已提供的能力。具体操作会根据平台、权限和工作区类型显示。",
+            "feature.ide.title": "源码 IDE 与本地工作区",
+            "feature.ide.text": "IDE 内含文件浏览、编辑、搜索、Git、终端和扩展入口。选中文本或拖入文件引用即可把工作区上下文带进对话。IDE 用于本机工作区。",
+            "feature.agents.title": "多 Agent 任务与调度",
+            "feature.agents.text": "在任务区组织并跟进多个 Agent 工作。可配置独立调度模型，为新任务选择执行模型；续接任务沿用当前模型。调度器不会自动把一个任务拆成多个子 Agent。",
+            "feature.context.title": "共享对话与工作区上下文",
+            "feature.context.text": "模型切换使用同一会话已提交的对话历史，未发送草稿不会被带入。发送时可附上当前文件、可见 Diff、终端、预览和 Git 摘要。",
+            "feature.plan.title": "计划卡片、进度与写入范围",
+            "feature.plan.text": "复杂任务可以报告阶段进度，并先列出候选文件供用户勾选。确认后，无法验证写入范围的工具调用会被拒绝，既有权限检查继续生效。",
+            "feature.computer.title": "原生 Computer Use",
+            "feature.computer.text": "桌面控制默认关闭，可手动启用。macOS、Windows 和 Linux 使用各自原生执行器；可用操作取决于系统权限、图形会话和桌面环境。",
+            "feature.wechat.title": "微信远程控制",
+            "feature.wechat.text": "通过现有微信配对入口连接桌面 Host，在同一任务和会话中查看进度、续接工作并收取文件。账号与工作区权限由运行时校验。",
+            "feature.studio.title": "图像、视频、幻灯片与 PDF",
+            "feature.studio.text": "在创作工作区讨论并生成图像、视频和幻灯片。幻灯片可导出为可编辑 PPT、保真 PPT 或 A4 PDF；结果可预览并保存到本地。",
+            "feature.plugins.title": "插件与扩展",
+            "feature.plugins.text": "通过插件市场安装和管理技能、命令、子智能体及 MCP 服务。IDE 扩展从 Open VSX 或本地 VSIX 安装。",
+            "feature.remote.title": "SSH/WSL 远程工作区",
+            "feature.remote.text": "桌面端可连接 SSH 与 WSL 工作区。远程文件操作仍路由到对应工作区，不会因本机没有文件通道而回退到本地执行。",
+            "feature.clients.title": "桌面、Web 与 CLI",
+            "feature.clients.text": "使用桌面应用、浏览器工作区或命令行 TUI、Web、Agent 入口。会话上下文和可用工具受当前连接方式与权限约束。",
+            "feature.models.title": "ZenMux 模型连接",
+            "feature.models.text": "通过 ZenMux 调用模型。API Key 加密保存在本机；模型用量和费用以 ZenMux 账户为准。",
+            "feature.tokens.title": "减少重复上下文",
+            "feature.tokens.text": "同一会话共享已提交的上下文，帮助避免切换模型时重复组织任务信息。不同供应商之间不保证缓存复用，也不承诺固定 Token 节省比例。",
+            "download.index": "下载",
+            "download.title": "选择你的平台",
+            "download.lede": "所有安装包与更新清单均来自 ZenCode 的 GitHub 正式发行版：",
+            "download.releaseLink": "ZenCode 3.14.32 Release",
+            "download.mac.title": "macOS · Apple Silicon",
+            "download.mac.note": "ARM64 · Apple 已公证并装订票据",
+            "download.win.title": "Windows",
+            "download.win.note": "x64 与 ARM64 安装程序",
+            "download.linuxX64.title": "Linux · x64",
+            "download.linuxX64.note": "DEB 与 RPM",
+            "download.linuxArm.title": "Linux · ARM64",
+            "download.linuxArm.note": "DEB 与 RPM",
+            "download.dmg": "下载 DMG",
+            "download.note": "Windows 和 Linux 原生 Computer Use 的可用性取决于图形会话与系统权限。",
+            "faq.index": "常见问题",
+            "faq.title": "常见问题",
+            "faq.cost.q": "使用 ZenCode 要花钱吗？",
+            "faq.cost.a": "ZenCode 连接 ZenMux。你需要自己的 API Key，模型费用由 ZenMux 账户按实际用量结算。",
+            "faq.data.q": "文件和密钥会发到哪里？",
+            "faq.data.a": "文件保留在对应工作区，API Key 加密保存在本机。模型请求会发送到 ZenMux。",
+            "faq.dispatch.q": "调度模型会自动创建子 Agent 吗？",
+            "faq.dispatch.a": "不会。调度模型为新任务选择执行模型；子 Agent 的创建由当前任务和用户控制。",
+            "faq.tokens.q": "切换模型一定能节省 Token 吗？",
+            "faq.tokens.a": "不能保证固定节省。会话可共享已提交历史，但不同模型供应商的缓存策略并不相同。",
+            "faq.platform.q": "支持哪些平台？",
+            "faq.platform.a": "macOS Apple Silicon、Windows x64/ARM64、Linux x64/ARM64；Linux 提供 DEB 和 RPM。",
+            "faq.source.q": "ZenCode 的源码在哪里？",
+            "faq.source.a": "ZenMuxDev。产品基于开源 ZCode 开发。",
+            "source.index": "来源",
+            "source.title": "围绕 ZenMux 打造的 ZCode 分支。",
+            "source.copy": "ZenCode 基于智谱开源的",
+            "source.copy2": "。此分支将产品品牌统一为 ZenCode，并通过 ZenMux 提供模型连接。",
+            "footer": "ZenCode · 基于 ZCode · 模型服务由 ZenMux 提供"
+          },
+          en: {
+            "meta.title": "ZenCode 3.14.32: AI coding workspace, creative tools, and computer use",
+            "meta.description": "ZenCode brings a source IDE, agent dispatch, shared context, image/video/slide creation, WeChat control, and native computer use into one workspace.",
+            "og.title": "ZenCode 3.14.32: AI coding and creative workspace",
+            "og.description": "Code, create, and move work forward in one workspace. Files stay in your local workspace; models run through ZenMux.",
+            "language.label": "简体中文",
+            "language.aria": "切换为简体中文",
+            "nav.features": "Features",
+            "nav.release": "What's new",
+            "nav.download": "Download",
+            "nav.source": "Source",
+            "hero.kicker": "DESKTOP · 3.14.32",
+            "hero.title": "Code, create, and move work forward in one workspace.",
+            "hero.lede": "ZenCode brings a source IDE, AI chat, multi-agent tasks, creative tools, and desktop control together. Files stay in your local workspace; models run through ZenMux.",
+            "hero.download": "Download ZenCode 3.14.32",
+            "hero.features": "Explore features",
+            "hero.fact1.title": "Built-in source IDE",
+            "hero.fact1.text": "Files, search, Git, terminal, and extensions",
+            "hero.fact2.title": "Task and agent dispatch",
+            "hero.fact2.text": "Track tasks and milestones in one place",
+            "hero.fact3.title": "WeChat control",
+            "hero.fact3.text": "Continue the paired desktop task",
+            "hero.imageAlt": "ZenCode desktop workspace",
+            "hero.caption": "A desktop workspace for the IDE, conversation, and local tasks.",
+            "hero.videoFallback": "Watch the product introduction",
+            "hero.videoCaption": "ZenCode product introduction",
+            "release.index": "LATEST RELEASE",
+            "release.title": "ZenCode 3.14.32",
+            "release.lede": "Removed the “Programming Plan” badge from plugin marketplace cards and detail titles. Plan metadata and plugin permissions are unchanged.",
+            "release.item1": "The macOS Apple Silicon DMG passed Apple notarization, ticket stapling, and Gatekeeper checks.",
+            "release.item2": "Windows x64/ARM64 and Linux x64/ARM64 packages passed build and installation checks.",
+            "release.item3": "Updated and verified the macOS and Windows auto-update manifests.",
+            "features.index": "CAPABILITIES",
+            "features.title": "From understanding context to shipping results.",
+            "features.lede": "ZenCode describes the capabilities available in the current release. Available actions depend on the platform, permissions, and workspace type.",
+            "feature.ide.title": "Source IDE and local workspace",
+            "feature.ide.text": "The IDE includes file browsing, editing, search, Git, a terminal, and extension support. Select text or drag in a file reference to bring workspace context into chat. The IDE is for local workspaces.",
+            "feature.agents.title": "Multi-agent tasks and dispatch",
+            "feature.agents.text": "Organize and track multiple agent tasks. A separate dispatch model can choose the execution model for new tasks; follow-up turns stay with the current model. The dispatcher does not automatically split one task into child agents.",
+            "feature.context.title": "Shared conversation and workspace context",
+            "feature.context.text": "Model switches use the conversation's committed history; unsent drafts are not included. A prompt can include the active file, visible diff, terminal, preview, and Git summary.",
+            "feature.plan.title": "Plans, progress, and write scope",
+            "feature.plan.text": "Complex tasks can report milestones and present candidate files for user selection. After confirmation, tool calls with unverifiable write scope are rejected while existing permission checks remain in force.",
+            "feature.computer.title": "Native Computer Use",
+            "feature.computer.text": "Desktop control is off by default and can be enabled manually. macOS, Windows, and Linux use their native executors; available actions depend on system permissions, graphical sessions, and desktop environments.",
+            "feature.wechat.title": "WeChat remote control",
+            "feature.wechat.text": "Use the existing WeChat pairing flow to connect to the desktop Host, continue the same task and session, and receive files. The runtime checks account and workspace authorization.",
+            "feature.studio.title": "Images, video, slides, and PDF",
+            "feature.studio.text": "Discuss and create images, videos, and slide decks in the creative workspace. Export slides as editable PPT, fidelity-first PPT, or A4 PDF; preview and save results locally.",
+            "feature.plugins.title": "Plugins and extensions",
+            "feature.plugins.text": "Install and manage skills, commands, subagents, and MCP services through the plugin marketplace. Install IDE extensions from Open VSX or a local VSIX file.",
+            "feature.remote.title": "SSH/WSL remote workspaces",
+            "feature.remote.text": "The desktop app can connect to SSH and WSL workspaces. File operations stay routed to their workspace instead of falling back to the local machine.",
+            "feature.clients.title": "Desktop, Web, and CLI",
+            "feature.clients.text": "Use the desktop app, browser workspace, or CLI TUI, Web, and Agent entry points. Session context and tools depend on the connection mode and permissions.",
+            "feature.models.title": "ZenMux model connection",
+            "feature.models.text": "Call models through ZenMux. Your API key is encrypted and stored locally; usage and charges follow your ZenMux account.",
+            "feature.tokens.title": "Less repeated context",
+            "feature.tokens.text": "A conversation shares committed context to avoid rebuilding task information when switching models. Cross-provider cache reuse is not guaranteed, and no fixed token savings are promised.",
+            "download.index": "DOWNLOAD",
+            "download.title": "Choose your platform",
+            "download.lede": "Installers and update manifests are published in the official ZenCode GitHub release:",
+            "download.releaseLink": "ZenCode 3.14.32 release",
+            "download.mac.title": "macOS · Apple Silicon",
+            "download.mac.note": "ARM64 · notarized and stapled by Apple",
+            "download.win.title": "Windows",
+            "download.win.note": "x64 and ARM64 installers",
+            "download.linuxX64.title": "Linux · x64",
+            "download.linuxX64.note": "DEB and RPM",
+            "download.linuxArm.title": "Linux · ARM64",
+            "download.linuxArm.note": "DEB and RPM",
+            "download.dmg": "Download DMG",
+            "download.note": "Native Computer Use on Windows and Linux depends on the graphical session and system permissions.",
+            "faq.index": "FAQ",
+            "faq.title": "Frequently asked questions",
+            "faq.cost.q": "Does ZenCode cost money?",
+            "faq.cost.a": "ZenCode connects to ZenMux. Bring your own API key; model charges are billed by ZenMux according to usage.",
+            "faq.data.q": "Where do files and keys go?",
+            "faq.data.a": "Files stay in their workspace, and the API key is encrypted locally. Model requests are sent to ZenMux.",
+            "faq.dispatch.q": "Does the dispatch model automatically create child agents?",
+            "faq.dispatch.a": "No. The dispatch model chooses an execution model for a new task; child-agent creation remains controlled by the task and user.",
+            "faq.tokens.q": "Will model switching always save tokens?",
+            "faq.tokens.a": "No fixed savings are guaranteed. A conversation can share committed history, but model providers have different cache policies.",
+            "faq.platform.q": "Which platforms are supported?",
+            "faq.platform.a": "macOS Apple Silicon, Windows x64/ARM64, and Linux x64/ARM64; Linux packages include DEB and RPM.",
+            "faq.source.q": "Where is the ZenCode source?",
+            "faq.source.a": "ZenMuxDev. The product is based on the open-source ZCode project.",
+            "source.index": "ORIGIN",
+            "source.title": "A ZCode branch built around ZenMux.",
+            "source.copy": "ZenCode is based on ZCode, open-sourced by Zhipu AI",
+            "source.copy2": ". This branch uses the ZenCode product name and ZenMux for model access.",
+            "footer": "ZenCode · Based on ZCode · Models provided through ZenMux"
+          }
+        };
+
+        var title = document.getElementById("page-title");
+        var description = document.getElementById("page-description");
+        var ogTitle = document.getElementById("og-title");
+        var ogDescription = document.getElementById("og-description");
+        var toggle = document.getElementById("language-toggle");
+        var currentLocale;
+
+        function applyLocale(locale, persist) {
+          var copy = messages[locale];
+          if (!copy) return;
+          currentLocale = locale;
+          document.documentElement.lang = locale;
+          document.title = copy["meta.title"];
+          title.textContent = copy["meta.title"];
+          description.content = copy["meta.description"];
+          ogTitle.content = copy["og.title"];
+          ogDescription.content = copy["og.description"];
+          document.querySelectorAll("[data-i18n]").forEach(function (element) {
+            var key = element.dataset.i18n;
+            if (copy[key] !== undefined) element.textContent = copy[key];
+          });
+          document.querySelectorAll("[data-i18n-alt]").forEach(function (element) {
+            var key = element.dataset.i18nAlt;
+            if (copy[key] !== undefined) element.alt = copy[key];
+          });
+          toggle.textContent = copy["language.label"];
+          toggle.setAttribute("aria-label", copy["language.aria"]);
+          if (persist) {
+            try {
+              localStorage.setItem("zencode-landing-locale", locale);
+            } catch {
+              // The page still switches in memory when browser storage is unavailable.
+            }
+          }
+        }
+
+        var savedLocale = null;
+        try {
+          savedLocale = localStorage.getItem("zencode-landing-locale");
+        } catch {
+          savedLocale = null;
+        }
+        var initialLocale =
+          savedLocale === "en" || savedLocale === "zh-CN"
+            ? savedLocale
+            : navigator.language.toLowerCase().startsWith("en")
+              ? "en"
+              : "zh-CN";
+        applyLocale(initialLocale, false);
+        toggle.addEventListener("click", function () {
+          applyLocale(currentLocale === "zh-CN" ? "en" : "zh-CN", true);
+        });
+
+        var userAgent = navigator.userAgent;
+        var recommendedId = /Windows/i.test(userAgent) ? "win-download" : /Mac/i.test(userAgent) ? "mac-download" : /Linux/i.test(userAgent) ? "linux-x64-download" : "";
+        if (recommendedId) {
+          var card = document.getElementById(recommendedId);
+          if (card) card.classList.add("rec");
+        }
       })();
     </script>
   </body>
