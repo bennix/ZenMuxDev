@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <meta id="og-title" property="og:title" content="ZenCode 3.14.32: AI coding workspace" />
     <meta id="og-description" property="og:description" content="Code, create, and control your desktop with ZenCode. Files stay in your local workspace; model requests use ZenMux." />
-    <meta property="og:image" content="https://bennix.github.io/ZenMuxDev/media/ui-desk.png" />
+    <meta property="og:image" content="https://bennix.github.io/ZenMuxDev/media/ide-ai-composer.png" />
     <meta property="og:url" content="https://bennix.github.io/ZenMuxDev/" />
     <style>
       :root {
@@ -220,10 +220,18 @@
       .demo-note { max-width: 60em; color: var(--muted); font-size: 14px; }
       .showcase-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
       .showcase-card { min-width: 0; margin: 0; }
+      .showcase-image-button { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; line-height: 0; }
       .showcase-card img { display: block; width: 100%; height: auto; aspect-ratio: 3024 / 1790; object-fit: contain; border: 1px solid var(--line); background: var(--panel); }
       .showcase-card figcaption { margin-top: 12px; }
       .showcase-card strong { display: block; margin-bottom: 4px; font-size: 16px; }
       .showcase-card span { display: block; color: var(--muted); font-size: 14px; }
+      .automation-note { max-width: 58em; margin: 18px 0 0; color: var(--muted); font-size: 14px; }
+      .image-viewer { width: min(1200px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: 94vh; padding: 16px; border: 1px solid var(--line); background: var(--panel); color: var(--ivory); }
+      .image-viewer::backdrop { background: rgba(0, 0, 0, 0.84); }
+      .image-viewer figure { margin: 0; }
+      .image-viewer img { display: block; max-width: 100%; max-height: calc(94vh - 88px); margin: 0 auto; object-fit: contain; }
+      .image-viewer figcaption { margin-top: 12px; color: var(--muted); font-size: 14px; }
+      .image-viewer-close { display: block; margin: 0 0 12px auto; padding: 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--ivory); font: inherit; cursor: pointer; }
       .repo-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
       .repo-links a { padding: 9px 12px; border: 1px solid var(--line); text-decoration: none; }
       .repo-links a:hover { border-color: var(--brass); }
@@ -281,6 +289,9 @@
         .facts div { padding-right: 0; }
         section { padding: 56px 0; }
       }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+      }
     </style>
   </head>
   <body>
@@ -315,11 +326,11 @@
           <div><strong data-i18n="hero.fact3.title">微信控制</strong><span data-i18n="hero.fact3.text">微信配对后续接桌面任务</span></div>
         </div>
         <figure class="shot">
-          <img src="media/ui-desk.png" width="1600" height="900" alt="ZenCode 桌面工作区" data-i18n-alt="hero.imageAlt" />
-          <figcaption data-i18n="hero.caption">桌面工作区：源码 IDE、对话与本地任务一处协作。</figcaption>
+          <img src="media/ide-ai-composer.png" width="3024" height="1790" alt="ZenCode 源码 IDE 文件浏览器与 AI 面板并排显示" data-i18n-alt="hero.imageAlt" />
+          <figcaption data-i18n="hero.caption">源码 IDE 文件浏览器与 ZenCode AI 面板并排显示；可从同一工作区进入代码和桌面操作。</figcaption>
         </figure>
         <figure class="stage">
-          <video controls playsinline preload="none" poster="media/ui-desk.png" src="ZenCode-Promo.mp4">
+          <video controls playsinline preload="none" poster="media/ide-ai-composer.png" src="ZenCode-Promo.mp4">
             <a href="ZenCode-Promo.mp4" data-i18n="hero.videoFallback">观看产品介绍</a>
           </video>
           <figcaption data-i18n="hero.videoCaption">产品演示 · 创作工作区与可编辑幻灯片导出</figcaption>
@@ -373,15 +384,21 @@
           <p class="prose" data-i18n="showcase.lede">以下为 ZenCode 产品界面截图，展示自动化工作流、全局操作搜索，以及 IDE 中的 AI 面板。</p>
           <div class="showcase-grid">
             <figure class="showcase-card">
-              <img src="media/automation-workflows.png" width="3024" height="1790" loading="lazy" alt="自动化工作流页面，展示定时任务和任务模板" data-i18n-alt="showcase.automation.alt" />
+              <button class="showcase-image-button" type="button" data-viewer-caption="showcase.automation.text" aria-label="放大查看自动化工作流截图" data-i18n-aria-label="showcase.automation.zoom">
+                <img src="media/automation-workflows.png" width="3024" height="1790" loading="lazy" alt="自动化工作流页面，展示定时任务和任务模板" data-i18n-alt="showcase.automation.alt" />
+              </button>
               <figcaption><strong data-i18n="showcase.automation.title">自动化工作流</strong><span data-i18n="showcase.automation.text">创建定时任务，或将工作排入闲时队列，并查看可复用模板。</span></figcaption>
             </figure>
             <figure class="showcase-card">
-              <img src="media/command-palette.png" width="3024" height="1790" loading="lazy" alt="全局命令面板，可搜索操作、任务和文件" data-i18n-alt="showcase.palette.alt" />
+              <button class="showcase-image-button" type="button" data-viewer-caption="showcase.palette.text" aria-label="放大全局命令面板截图" data-i18n-aria-label="showcase.palette.zoom">
+                <img src="media/command-palette.png" width="3024" height="1790" loading="lazy" alt="全局命令面板，可搜索操作、任务和文件" data-i18n-alt="showcase.palette.alt" />
+              </button>
               <figcaption><strong data-i18n="showcase.palette.title">全局命令面板</strong><span data-i18n="showcase.palette.text">搜索操作、任务和文件，并从快捷入口切换常用面板。</span></figcaption>
             </figure>
             <figure class="showcase-card">
-              <img src="media/ide-ai-composer.png" width="3024" height="1790" loading="lazy" alt="IDE 文件浏览器与 ZenCode AI 面板并排显示" data-i18n-alt="showcase.ide.alt" />
+              <button class="showcase-image-button" type="button" data-viewer-caption="showcase.ide.text" aria-label="放大查看 IDE 与 AI 面板截图" data-i18n-aria-label="showcase.ide.zoom">
+                <img src="media/ide-ai-composer.png" width="3024" height="1790" loading="lazy" alt="IDE 文件浏览器与 ZenCode AI 面板并排显示" data-i18n-alt="showcase.ide.alt" />
+              </button>
               <figcaption><strong data-i18n="showcase.ide.title">IDE 与 AI 并肩工作</strong><span data-i18n="showcase.ide.text">在代码工作区里打开 AI 面板，使用电脑控制、浏览器控制、工作区和创作入口。</span></figcaption>
             </figure>
           </div>
@@ -402,8 +419,10 @@
                   <tr><td data-i18n="compare.dispatch.label">模型选择</td><td data-i18n="compare.dispatch.zencode">独立调度模型可为新任务选择执行模型；续接沿用当前模型。</td><td data-i18n="compare.dispatch.split">在不同工具或任务间手动选择模型。</td></tr>
                   <tr><td data-i18n="compare.creation.label">代码与创作</td><td data-i18n="compare.creation.zencode">同一产品提供源码 IDE、创作工作区和幻灯片导出。</td><td data-i18n="compare.creation.split">代码助手与创作软件分别管理。</td></tr>
                   <tr><td data-i18n="compare.control.label">桌面操作</td><td data-i18n="compare.control.zencode">原生 Computer Use 可选启用，并受平台与系统权限限制。</td><td data-i18n="compare.control.split">按所用产品单独安装和授权桌面控制工具。</td></tr>
+                  <tr><td data-i18n="compare.automation.label">定时与后台自动化</td><td data-i18n="compare.automation.zencode">桌面应用内置本地调度器；任务到点时需要应用运行、电脑唤醒。</td><td data-i18n="compare.automation.split">分散工具可能需要各自运行的调度器或常驻主机。</td></tr>
                 </tbody>
               </table>
+              <p class="automation-note" data-i18n="automation.availability">定时任务由桌面应用本机调度，需保持 ZenCode 运行且电脑唤醒。开启“保持电脑运行”可防止闲置休眠，但不能阻止合盖或手动睡眠；错过计划时间超过 5 分钟的任务可能跳过。</p>
             </div>
           </div>
         </div>
@@ -483,6 +502,13 @@
     </main>
 
     <footer><div class="wrap" data-i18n="footer">ZenCode · 基于 ZCode · 模型服务由 ZenMux 提供</div></footer>
+    <dialog class="image-viewer" id="image-viewer" aria-labelledby="image-viewer-caption">
+      <button class="image-viewer-close" type="button" data-i18n="viewer.close">关闭</button>
+      <figure>
+        <img id="image-viewer-image" alt="" />
+        <figcaption id="image-viewer-caption"></figcaption>
+      </figure>
+    </dialog>
     <script>
       (function () {
         var messages = {
@@ -509,8 +535,8 @@
             "hero.fact2.text": "为新任务选择执行模型",
             "hero.fact3.title": "微信控制",
             "hero.fact3.text": "微信配对后续接桌面任务",
-            "hero.imageAlt": "ZenCode 桌面工作区",
-            "hero.caption": "桌面工作区：源码 IDE、对话与本地任务一处协作。",
+            "hero.imageAlt": "ZenCode 源码 IDE 文件浏览器与 AI 面板并排显示",
+            "hero.caption": "源码 IDE 文件浏览器与 ZenCode AI 面板并排显示；可从同一工作区进入代码和桌面操作。",
             "hero.videoFallback": "观看产品介绍",
             "hero.videoCaption": "ZenCode 产品介绍",
             "release.item1": "macOS Apple Silicon DMG 已通过 Apple 公证、票据装订与 Gatekeeper 检查。",
@@ -620,13 +646,21 @@
             "showcase.lede": "以下为 ZenCode 产品界面截图，展示自动化工作流、全局操作搜索，以及 IDE 中的 AI 面板。",
             "showcase.automation.alt": "自动化工作流页面，展示定时任务和任务模板",
             "showcase.automation.title": "自动化工作流",
-            "showcase.automation.text": "创建定时任务，或将工作排入闲时队列，并查看可复用模板。",
+            "showcase.automation.text": "查看定时任务、闲时队列和可复用任务模板，并在这里找到运行期间保持电脑唤醒的开关。",
+            "showcase.automation.zoom": "放大查看自动化工作流截图",
             "showcase.palette.alt": "全局命令面板，可搜索操作、任务和文件",
             "showcase.palette.title": "全局命令面板",
-            "showcase.palette.text": "搜索操作、任务和文件，并从快捷入口切换常用面板。",
+            "showcase.palette.text": "搜索命令、最近任务和工作区文件，并快速打开设置或切换侧边栏、终端与预览。",
+            "showcase.palette.zoom": "放大全局命令面板截图",
             "showcase.ide.alt": "IDE 文件浏览器与 ZenCode AI 面板并排显示",
             "showcase.ide.title": "IDE 与 AI 并肩工作",
-            "showcase.ide.text": "在代码工作区里打开 AI 面板，使用电脑控制、浏览器控制、工作区和创作入口。",
+            "showcase.ide.text": "IDE 文件树与 ZenCode AI 面板并排；从面板进入电脑控制、浏览器控制、工作区上下文和创作。",
+            "showcase.ide.zoom": "放大查看 IDE 与 AI 面板截图",
+            "automation.availability": "定时任务由桌面应用本机调度，需保持 ZenCode 运行且电脑唤醒。开启设置中的“保持电脑运行”可在会话执行期间防止闲置休眠，但不能阻止合盖或手动睡眠；错过计划时间 5 分钟及以上的任务可能跳过。",
+            "compare.automation.label": "定时与后台自动化",
+            "compare.automation.zencode": "桌面应用内置本地调度器；任务到点时需要应用运行、电脑唤醒。",
+            "compare.automation.split": "分散工具可能需要各自运行的调度器或常驻主机。",
+            "viewer.close": "关闭",
             "source.index": "来源",
             "source.title": "基于 ZCode，重点增强跨端 Agent 工作流。",
             "source.copy": "ZenCode 基于智谱开源的",
@@ -656,8 +690,8 @@
             "hero.fact2.text": "Choose an execution model for new tasks",
             "hero.fact3.title": "WeChat task continuity",
             "hero.fact3.text": "Continue the same task from WeChat",
-            "hero.imageAlt": "ZenCode desktop workspace",
-            "hero.caption": "A desktop workspace for the IDE, conversation, and local tasks.",
+            "hero.imageAlt": "ZenCode source IDE file browser beside the AI panel",
+            "hero.caption": "The source IDE file browser and ZenCode AI panel side by side, with code and desktop controls available in one workspace.",
             "hero.videoFallback": "Watch the product introduction",
             "hero.videoCaption": "ZenCode product introduction",
             "release.item1": "The macOS Apple Silicon DMG passed Apple notarization, ticket stapling, and Gatekeeper checks.",
@@ -767,13 +801,21 @@
             "showcase.lede": "These ZenCode screenshots show automation workflows, global action search, and the AI panel inside the IDE.",
             "showcase.automation.alt": "Automation workflow page showing scheduled tasks and templates",
             "showcase.automation.title": "Automation workflows",
-            "showcase.automation.text": "Create scheduled tasks, queue work for off-peak hours, and browse reusable templates.",
+            "showcase.automation.text": "Review scheduled tasks, off-peak queues, and reusable templates; find the keep-awake toggle for active runs here.",
+            "showcase.automation.zoom": "Enlarge the automation workflow screenshot",
             "showcase.palette.alt": "Global command palette for searching actions, tasks, and files",
             "showcase.palette.title": "Global command palette",
-            "showcase.palette.text": "Search actions, tasks, and files, then open common panels from quick commands.",
+            "showcase.palette.text": "Search commands, recent tasks, and workspace files, or quickly open settings, the sidebar, terminal, and preview.",
+            "showcase.palette.zoom": "Enlarge the global command palette screenshot",
             "showcase.ide.alt": "IDE file browser beside the ZenCode AI panel",
             "showcase.ide.title": "AI alongside your IDE",
-            "showcase.ide.text": "Open the AI panel in your code workspace with entry points for computer use, browser control, workspace context, and creation.",
+            "showcase.ide.text": "Keep the IDE file tree beside ZenCode AI, with entry points for computer and browser control, workspace context, and creation.",
+            "showcase.ide.zoom": "Enlarge the IDE and AI panel screenshot",
+            "automation.availability": "Scheduled tasks run through the desktop app's local scheduler, so keep ZenCode running and the computer awake. The “Keep computer running” setting blocks idle sleep while a session is executing, but not lid-close or manual sleep; runs five or more minutes past their scheduled window may be skipped.",
+            "compare.automation.label": "Scheduled and background automation",
+            "compare.automation.zencode": "A local scheduler runs inside the desktop app; the app must be running and the computer awake at trigger time.",
+            "compare.automation.split": "Separate tools may need their own running scheduler or always-on host.",
+            "viewer.close": "Close",
             "source.index": "ORIGIN",
             "source.title": "Built on ZCode, with a focus on cross-device agent workflows.",
             "source.copy": "ZenCode is based on ZCode, open-sourced by Zhipu AI",
@@ -787,6 +829,11 @@
         var ogTitle = document.getElementById("og-title");
         var ogDescription = document.getElementById("og-description");
         var toggle = document.getElementById("language-toggle");
+        var imageViewer = document.getElementById("image-viewer");
+        var imageViewerImage = document.getElementById("image-viewer-image");
+        var imageViewerCaption = document.getElementById("image-viewer-caption");
+        var imageViewerClose = imageViewer.querySelector(".image-viewer-close");
+        var activeImageButton = null;
         var currentLocale;
 
         function applyLocale(locale, persist) {
@@ -811,6 +858,11 @@
             var key = element.dataset.i18nAriaLabel;
             if (copy[key] !== undefined) element.setAttribute("aria-label", copy[key]);
           });
+          if (imageViewer.open && activeImageButton) {
+            imageViewerCaption.textContent = copy[activeImageButton.dataset.viewerCaption] || "";
+            var activeImage = activeImageButton.querySelector("img");
+            if (activeImage) imageViewerImage.alt = activeImage.alt;
+          }
           toggle.textContent = copy["language.label"];
           toggle.setAttribute("aria-label", copy["language.aria"]);
           if (persist) {
@@ -837,6 +889,28 @@
         applyLocale(initialLocale, false);
         toggle.addEventListener("click", function () {
           applyLocale(currentLocale === "zh-CN" ? "en" : "zh-CN", true);
+        });
+
+        document.querySelectorAll(".showcase-image-button").forEach(function (button) {
+          button.addEventListener("click", function () {
+            var image = button.querySelector("img");
+            if (!image) return;
+            activeImageButton = button;
+            imageViewerImage.src = image.currentSrc || image.src;
+            imageViewerImage.alt = image.alt;
+            imageViewerCaption.textContent = messages[currentLocale][button.dataset.viewerCaption] || "";
+            imageViewer.showModal();
+          });
+        });
+        imageViewerClose.addEventListener("click", function () {
+          imageViewer.close();
+        });
+        imageViewer.addEventListener("click", function (event) {
+          if (event.target === imageViewer) imageViewer.close();
+        });
+        imageViewer.addEventListener("close", function () {
+          activeImageButton = null;
+          imageViewerImage.removeAttribute("src");
         });
 
         var userAgent = navigator.userAgent;
