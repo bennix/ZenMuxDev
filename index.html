@@ -134,6 +134,7 @@
         box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
       }
       .shot img { background: #f4f4f5; }
+      .shot img { display: block; height: clamp(220px, 40vw, 520px); max-height: min(58vh, 620px); object-fit: cover; object-position: center 42%; }
       .stage { margin-top: 28px; }
       .stage video { aspect-ratio: 16 / 9; background: #000; }
       .shot figcaption, .stage figcaption {
@@ -326,11 +327,11 @@
           <div><strong data-i18n="hero.fact3.title">微信控制</strong><span data-i18n="hero.fact3.text">微信配对后续接桌面任务</span></div>
         </div>
         <figure class="shot">
-          <img src="media/ide-ai-composer.png" width="3024" height="1790" alt="ZenCode 源码 IDE 文件浏览器与 AI 面板并排显示" data-i18n-alt="hero.imageAlt" />
-          <figcaption data-i18n="hero.caption">源码 IDE 文件浏览器与 ZenCode AI 面板并排显示；可从同一工作区进入代码和桌面操作。</figcaption>
+          <img src="media/automation-workflows.png" width="3024" height="1790" alt="ZenCode 自动化工作流、定时任务模板与保持电脑唤醒设置" data-i18n-alt="hero.imageAlt" />
+          <figcaption data-i18n="hero.caption">自动化工作流界面：查看定时任务模板，并控制运行期间的电脑唤醒状态。</figcaption>
         </figure>
         <figure class="stage">
-          <video controls playsinline preload="none" poster="media/ide-ai-composer.png" src="ZenCode-Promo.mp4">
+          <video controls playsinline preload="none" poster="media/automation-workflows.png" src="ZenCode-Promo.mp4">
             <a href="ZenCode-Promo.mp4" data-i18n="hero.videoFallback">观看产品介绍</a>
           </video>
           <figcaption data-i18n="hero.videoCaption">产品演示 · 创作工作区与可编辑幻灯片导出</figcaption>
@@ -535,8 +536,8 @@
             "hero.fact2.text": "为新任务选择执行模型",
             "hero.fact3.title": "微信控制",
             "hero.fact3.text": "微信配对后续接桌面任务",
-            "hero.imageAlt": "ZenCode 源码 IDE 文件浏览器与 AI 面板并排显示",
-            "hero.caption": "源码 IDE 文件浏览器与 ZenCode AI 面板并排显示；可从同一工作区进入代码和桌面操作。",
+            "hero.imageAlt": "ZenCode 自动化工作流、定时任务模板与保持电脑唤醒设置",
+            "hero.caption": "自动化工作流界面：查看定时任务模板，并控制运行期间的电脑唤醒状态。",
             "hero.videoFallback": "观看产品介绍",
             "hero.videoCaption": "ZenCode 产品介绍",
             "release.item1": "macOS Apple Silicon DMG 已通过 Apple 公证、票据装订与 Gatekeeper 检查。",
@@ -690,8 +691,8 @@
             "hero.fact2.text": "Choose an execution model for new tasks",
             "hero.fact3.title": "WeChat task continuity",
             "hero.fact3.text": "Continue the same task from WeChat",
-            "hero.imageAlt": "ZenCode source IDE file browser beside the AI panel",
-            "hero.caption": "The source IDE file browser and ZenCode AI panel side by side, with code and desktop controls available in one workspace.",
+            "hero.imageAlt": "ZenCode automation workflows, scheduled task templates, and keep-awake setting",
+            "hero.caption": "The automation workspace shows scheduled task templates and the keep-awake control for active runs.",
             "hero.videoFallback": "Watch the product introduction",
             "hero.videoCaption": "ZenCode product introduction",
             "release.item1": "The macOS Apple Silicon DMG passed Apple notarization, ticket stapling, and Gatekeeper checks.",
