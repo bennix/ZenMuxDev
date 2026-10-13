@@ -137,6 +137,7 @@
       .shot img { display: block; height: clamp(220px, 40vw, 520px); max-height: min(58vh, 620px); object-fit: cover; object-position: center 42%; }
       .stage { margin-top: 28px; }
       .stage video { aspect-ratio: 16 / 9; background: #000; }
+      .square-stage video { display: block; width: min(100%, 640px); height: auto; max-height: min(76vh, 760px); margin-inline: auto; aspect-ratio: auto; object-fit: contain; }
       .shot figcaption, .stage figcaption {
         margin-top: 10px;
         color: var(--muted);
@@ -423,6 +424,23 @@
         </div>
       </section>
 
+      <section id="wechat-demo">
+        <div class="wrap chapter">
+          <p class="index" data-i18n="wechatDemo.index">微信实操</p>
+          <div>
+            <h2 data-i18n="wechatDemo.title">微信发出指令，桌面任务把结果送回来。</h2>
+            <p class="prose" data-i18n="wechatDemo.lede">这段实录展示了在微信里发送图片生成请求，并在同一聊天中收到生成结果。</p>
+            <figure class="stage square-stage">
+              <video controls playsinline preload="metadata" poster="media/wechat-task-demo-poster.jpg" aria-label="微信发送图片请求并收到结果的实操录屏" data-i18n-aria-label="wechatDemo.videoLabel">
+                <source src="media/wechat-task-demo.mp4" type="video/mp4" />
+                <a href="media/wechat-task-demo.mp4" data-i18n="wechatDemo.fallback">播放或下载微信操作演示</a>
+              </video>
+              <figcaption data-i18n="wechatDemo.caption">微信实际操作 · 发送图片生成指令并接收结果 · 约 5 秒</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
       <section id="compare">
         <div class="wrap chapter">
           <p class="index" data-i18n="compare.index">工作流对照</p>
@@ -680,6 +698,12 @@
             "demo.caption": "华数艺术动效 · 真实工作流录屏 · 约 59 秒",
             "demo.videoLabel": "华数艺术动效真实创作录屏",
             "demo.fallback": "播放或下载创作演示",
+            "wechatDemo.index": "微信实操",
+            "wechatDemo.title": "微信发出指令，桌面任务把结果送回来。",
+            "wechatDemo.lede": "这段实录展示了在微信里发送图片生成请求，并在同一聊天中收到生成结果。",
+            "wechatDemo.caption": "微信实际操作 · 发送图片生成指令并接收结果 · 约 5 秒",
+            "wechatDemo.videoLabel": "微信发送图片请求并收到结果的实操录屏",
+            "wechatDemo.fallback": "播放或下载微信操作演示",
             "automation.availability": "定时任务由桌面应用本机调度，需保持 ZenCode 运行且电脑唤醒。开启设置中的“保持电脑运行”可在会话执行期间防止闲置休眠，但不能阻止合盖或手动睡眠；错过计划时间 5 分钟及以上的任务可能跳过。",
             "compare.automation.label": "定时与后台自动化",
             "compare.automation.zencode": "桌面应用内置本地调度器；任务到点时需要应用运行、电脑唤醒。",
@@ -841,6 +865,12 @@
             "demo.caption": "Huashu Art Motion · Real workflow recording · About 59 seconds",
             "demo.videoLabel": "Real Huashu Art Motion creation recording",
             "demo.fallback": "Play or download the creation demo",
+            "wechatDemo.index": "WECHAT IN ACTION",
+            "wechatDemo.title": "Send a request in WeChat; get the result back.",
+            "wechatDemo.lede": "This real clip shows an image-generation request sent in WeChat and the result returned in the same chat.",
+            "wechatDemo.caption": "Real WeChat interaction · Send an image request and receive the result · About 5 seconds",
+            "wechatDemo.videoLabel": "Real WeChat image request and result recording",
+            "wechatDemo.fallback": "Play or download the WeChat demo",
             "automation.availability": "Scheduled tasks run through the desktop app's local scheduler, so keep ZenCode running and the computer awake. The “Keep computer running” setting blocks idle sleep while a session is executing, but not lid-close or manual sleep; runs five or more minutes past their scheduled window may be skipped.",
             "compare.automation.label": "Scheduled and background automation",
             "compare.automation.zencode": "A local scheduler runs inside the desktop app; the app must be running and the computer awake at trigger time.",
