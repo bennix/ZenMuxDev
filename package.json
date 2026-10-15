@@ -2,7 +2,7 @@
   "name": "zcode",
   "version": "3.14.26",
   "private": true,
-  "license": "Apache-2.0",
+  "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev:web": "concurrently -k -n server,web -c blue,green \"pnpm --filter @zcode/server dev\" \"pnpm --filter @zcode/web dev\"",
