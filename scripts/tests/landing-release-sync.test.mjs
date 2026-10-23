@@ -58,11 +58,17 @@ test("landing release copy, locale persistence and seven installer links on desk
       ),
       new Set(expected),
     );
-    for (const width of [1280, 390]) {
+    for (const width of [1280, 1920, 390]) {
       await page.setViewportSize({ width, height: 900 });
       for (const language of ["zh-CN", "en"]) {
         if ((await page.locator("html").getAttribute("lang")) !== language)
           await page.locator("#language-toggle").click();
+        const gridBox = await page.locator(".download-grid").boundingBox();
+        const trailingNoteBox = await page.locator('[data-i18n="download.note"]').boundingBox();
+        assert.ok(
+          trailingNoteBox.y - (gridBox.y + gridBox.height) >= 12,
+          `download note must clear the cards by 12px (${width}px, ${language})`,
+        );
         const note = await page.locator('[data-i18n="download.refreshNote"]').textContent();
         assert.match(note, /2026-10-23/u);
         assert.match(note, language === "en" ? /reinstall/iu : /重新安装/u);

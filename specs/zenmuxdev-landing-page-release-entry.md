@@ -65,3 +65,11 @@ language button → page locale state → translated DOM + html[lang] + metadata
 - Acceptance: Chinese and English release/feature/FAQ copy updates completely; refresh/reinstall note persists after locale switching and reload; all seven installer URLs remain correct; desktop and 390px phone layouts have no horizontal overflow. No screenshots or video files are regenerated.
 
 Validation: Node 24 browser checks passed at 1280px and 390px in both languages, including locale persistence, seven exact installer links and the release heading below the sticky header. Lint passed with 75 existing warnings and no errors; architecture check passed with zero violations. Full application typecheck did not pass in this standalone page checkout: workspace package resolution errors include missing `@zcode/shared` / `@zcode/services`. This is not reported as a successful application typecheck.
+
+## Download note spacing regression
+
+- The static page owns download layout; locale switching only changes text.
+- Keep the platform availability note at least 12 CSS pixels below the download grid at 390px, 1280px, and 1920px in both languages. Preserve the refresh note spacing above the cards.
+- Browser acceptance measures the grid bottom and trailing note top after each viewport/locale update; neither text nor card borders may overlap.
+
+Validation: The new spacing assertion reproduced the overlap before the CSS fix and passed afterward for both languages at all three widths. Architecture passed with zero violations; lint passed with 75 existing warnings and zero errors. Full application typecheck still fails on missing workspace modules and consequent errors in this standalone checkout.
