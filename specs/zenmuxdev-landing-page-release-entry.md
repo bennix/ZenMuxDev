@@ -22,7 +22,7 @@ language button → page locale state → translated DOM + html[lang] + metadata
 - A first visit in Chinese or English receives the corresponding complete page.
 - The language button switches every visible section and can switch back; reloading preserves the chosen language.
 - Mobile layout keeps the language button reachable when the navigation links collapse.
-- All download links resolve to the exact assets in the published `v3.14.32` release; the page reports the Apple notarization status only for the DMG.
+- All download links resolve to the exact assets in the published `v3.14.35` release; the page reports the Apple notarization status only for the DMG.
 - Feature statements match the shipped README and current runtime behavior.
 
 # Landing page positioning and proof points
@@ -30,8 +30,8 @@ language button → page locale state → translated DOM + html[lang] + metadata
 ## Product rules
 
 - Lead with the shipped differentiators: paired WeChat control of the same desktop task and a separately configurable model dispatcher. Do not imply automatic multi-agent task fan-out.
-- Present recent product capabilities across releases 3.14.26–3.14.32. Clearly separate user-facing capabilities from 3.14.32 packaging and marketplace maintenance notes.
-- Use the existing 43-second promotional video as a visual proof point for creation and editable slide export. Do not label it as a live UI recording or imply it demonstrates WeChat or native Computer Use.
+- Present recent product capabilities across releases 3.14.26–3.14.35. Clearly separate user-facing capabilities from current packaging and maintenance notes.
+- Keep the current 22-second code-built product introduction and existing real workflow demos. Do not label the introduction as a live recording or imply it demonstrates native Computer Use or model dispatch.
 - State that Intel Mac has no installer; current macOS download is Apple Silicon only. Do not link unavailable builds.
 - Route product source, release, and feedback links to the `bennix/ZCode` repository. Explain ZenMuxDev as the Landing Page repository only where relevant.
 - Comparison content describes workflows, not unsupported claims against named competitors. Include limitations and keep cross-provider cache reuse and token savings unpromised.
@@ -41,7 +41,7 @@ language button → page locale state → translated DOM + html[lang] + metadata
 ## Acceptance
 
 - Hero title names WeChat task continuity and model dispatch directly.
-- Recent capability timeline highlights shipped functions and accurately labels the 3.14.32 maintenance release.
+- Recent capability timeline highlights shipped functions and accurately labels the dated 3.14.35 refresh.
 - Promotional video appears in a labeled demo section with its actual scope disclosed; no fabricated GIF or screenshots are used.
 - Source/release/feedback URLs consistently point to `bennix/ZCode`; Landing Page source may be labeled separately as ZenMuxDev.
 - Comparison table uses cautious, factual workflow language and does not name or misrepresent specific competitors.
@@ -54,3 +54,14 @@ language button → page locale state → translated DOM + html[lang] + metadata
 - Add the three supplied screenshots as a visual feature gallery: automation workflows, command search/palette, and IDE with the AI composer.
 - Preserve the screenshots as supplied; use descriptive Chinese/English captions and alt text. Keep image proportions responsive and avoid cropping important UI.
 - Place the gallery alongside the existing product demo so screenshots substantiate relevant shipped capabilities without claiming that the promotional video demonstrates them.
+
+## 2026-10-23 same-version release synchronization
+
+- Keep the bilingual page, existing screenshots, opt-in videos, download-card hierarchy, and referral disclosure. This change updates copy, not page interactions or layout ownership.
+- All seven installer links remain exact v3.14.35 asset URLs; GitHub Release owns the binaries. Show the 2026-10-23 refresh date and explain that existing 3.14.35 users must download and reinstall to receive the refresh.
+- Describe recoverable tool-output compression without a fixed token/billing reduction claim; clean prompt copying; Windows/Linux observe-before-action validation; per-model video duration and English-first media prompts.
+- State that the refreshed video catalog contains 20 models verified in this subscription test, with account entitlement and upstream availability still applying. Do not promise every subscription or all parameter combinations.
+- Billing copy must cover subscription and pay-as-you-go keys, preserving the referral disclosure.
+- Acceptance: Chinese and English release/feature/FAQ copy updates completely; refresh/reinstall note persists after locale switching and reload; all seven installer URLs remain correct; desktop and 390px phone layouts have no horizontal overflow. No screenshots or video files are regenerated.
+
+Validation: Node 24 browser checks passed at 1280px and 390px in both languages, including locale persistence, seven exact installer links and the release heading below the sticky header. Lint passed with 75 existing warnings and no errors; architecture check passed with zero violations. Full application typecheck did not pass in this standalone page checkout: workspace package resolution errors include missing `@zcode/shared` / `@zcode/services`. This is not reported as a successful application typecheck.
