@@ -79,3 +79,10 @@ Validation: The new spacing assertion reproduced the overlap before the CSS fix 
 - Add the user's exact Chinese theme sentence directly beneath the hero title, before the existing capability introduction. Render as an emphasized editorial statement using the page's existing typography and brass accent.
 - Static page and existing locale dictionary own the copy; use `hero.statement` through the existing locale update path, with a complete English translation. No runtime or download behavior changes.
 - Acceptance: Chinese text matches the supplied sentence; English expresses the same motivation and model/workflow independence; switching languages and reloading preserves the statement. Both locales remain visible without horizontal overflow at 390px, 1280px, and 1920px.
+
+## Flagship shared foundation positioning
+
+- Introduce “几个旗舰产品，共用一个 ZenMux 底座。” after the independence statement in the hero, with a concise bilingual explanation of ZenMux routing, local credential management and multi-agent workflows as the shared direction.
+- Keep this scoped to several flagship products, not all products or identical capabilities in every product. The current page documents ZenCode only; do not invent other product names, links or cross-product credential synchronization.
+- Static HTML and existing locale dictionaries own this content; no new state or interaction. Preserve current hero capabilities, actions and download links.
+- Acceptance: shared-foundation heading and copy appear in Chinese and English through existing locale switching, remain before the capability introduction, and fit 390px/1280px/1920px without overflow.

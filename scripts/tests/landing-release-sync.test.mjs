@@ -71,6 +71,15 @@ test("landing release copy, locale persistence and seven installer links on desk
             : "受够了单一厂商的封号、封闭和不可控，干脆自己做：客户端和调度握在自己手里，模型可以随时换，工作流不用换。",
         );
         assert.ok(await statement.isVisible());
+        assert.equal(
+          await page.locator('[data-i18n="hero.foundationTitle"]').textContent(),
+          language === "en"
+            ? "Several flagship products. One shared ZenMux foundation."
+            : "几个旗舰产品，共用一个 ZenMux 底座。",
+        );
+        const foundation = page.locator('[data-i18n="hero.foundationText"]');
+        assert.ok(await foundation.isVisible());
+        assert.match(await foundation.textContent(), language === "en" ? /local credential management/u : /本地凭证管理/u);
         const gridBox = await page.locator(".download-grid").boundingBox();
         const trailingNoteBox = await page.locator('[data-i18n="download.note"]').boundingBox();
         assert.ok(
