@@ -73,3 +73,9 @@ Validation: Node 24 browser checks passed at 1280px and 390px in both languages,
 - Browser acceptance measures the grid bottom and trailing note top after each viewport/locale update; neither text nor card borders may overlap.
 
 Validation: The new spacing assertion reproduced the overlap before the CSS fix and passed afterward for both languages at all three widths. Architecture passed with zero violations; lint passed with 75 existing warnings and zero errors. Full application typecheck still fails on missing workspace modules and consequent errors in this standalone checkout.
+
+## Hero independence statement
+
+- Add the user's exact Chinese theme sentence directly beneath the hero title, before the existing capability introduction. Render as an emphasized editorial statement using the page's existing typography and brass accent.
+- Static page and existing locale dictionary own the copy; use `hero.statement` through the existing locale update path, with a complete English translation. No runtime or download behavior changes.
+- Acceptance: Chinese text matches the supplied sentence; English expresses the same motivation and model/workflow independence; switching languages and reloading preserves the statement. Both locales remain visible without horizontal overflow at 390px, 1280px, and 1920px.

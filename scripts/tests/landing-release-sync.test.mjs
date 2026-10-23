@@ -63,6 +63,14 @@ test("landing release copy, locale persistence and seven installer links on desk
       for (const language of ["zh-CN", "en"]) {
         if ((await page.locator("html").getAttribute("lang")) !== language)
           await page.locator("#language-toggle").click();
+        const statement = page.locator('[data-i18n="hero.statement"]');
+        assert.equal(
+          await statement.textContent(),
+          language === "en"
+            ? "Fed up with account bans, closed ecosystems, and the lack of control that come with relying on a single vendor, I built my own: keep the client and model routing in your hands, switch models whenever you want, and keep your workflow."
+            : "受够了单一厂商的封号、封闭和不可控，干脆自己做：客户端和调度握在自己手里，模型可以随时换，工作流不用换。",
+        );
+        assert.ok(await statement.isVisible());
         const gridBox = await page.locator(".download-grid").boundingBox();
         const trailingNoteBox = await page.locator('[data-i18n="download.note"]').boundingBox();
         assert.ok(
