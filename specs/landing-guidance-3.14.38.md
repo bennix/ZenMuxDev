@@ -10,3 +10,5 @@
 - 本地 Chrome 在 390/1440px 的中英文切换、语言持久化、七个精确安装器地址、更新卡片、媒体保留和无横向溢出检查通过。内联 JavaScript 语法检查通过。
 - 此独立页面 checkout 没有安装其随附的应用依赖，`pnpm typecheck` 和 `pnpm lint` 分别因缺少 tsc/oxlint 无法执行。应用发布 checkout 的 Typecheck 和架构检查通过，完整 Lint 有既有 max-lines 错误。
 - 新下载入口在全平台验收与 Apple 公证通过后上线。
+
+源码问答和源码链接统一指向实际发行仓库 `bennix/ZCode`。
