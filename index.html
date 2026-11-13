@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title id="page-title">ZenCode 3.14.39：AI coding workspace, creative studio, and desktop control</title>
+    <title id="page-title">ZenCode 3.14.40：AI coding workspace, creative studio, and desktop control</title>
     <meta
       name="description"
       id="page-description"
@@ -11,7 +11,7 @@
     />
     <link rel="icon" href="packages/desktop/build/icon.png" />
     <meta property="og:type" content="website" />
-    <meta id="og-title" property="og:title" content="ZenCode 3.14.39: AI coding workspace" />
+    <meta id="og-title" property="og:title" content="ZenCode 3.14.40: AI coding workspace" />
     <meta id="og-description" property="og:description" content="Code, create, and control your desktop with ZenCode. Files stay in your local workspace; model requests use ZenMux." />
     <meta property="og:image" content="https://bennix.github.io/ZenMuxDev/media/ide-ai-composer.png" />
     <meta property="og:url" content="https://bennix.github.io/ZenMuxDev/" />
@@ -339,7 +339,7 @@
         </a>
         <nav aria-label="主导航" data-i18n-aria-label="nav.aria">
           <a href="#features" data-i18n="nav.features">功能</a>
-          <a href="#release" data-i18n="nav.release">3.14.39 更新</a>
+          <a href="#release" data-i18n="nav.release">3.14.40 更新</a>
           <a href="#download" class="cta" data-i18n="nav.download">下载</a>
           <a href="https://github.com/bennix/ZCode" data-i18n="nav.source">源码库</a>
         </nav>
@@ -349,7 +349,7 @@
 
     <main id="top">
       <div class="wrap hero">
-        <p class="kicker" data-i18n="hero.kicker">DESKTOP · 3.14.39</p>
+        <p class="kicker" data-i18n="hero.kicker">DESKTOP · 3.14.40</p>
         <h1 data-i18n="hero.title">从想法到成果，每一步都有引导。</h1>
         <p class="lede hero-statement" data-i18n="hero.statement">在 ZenCode 内打开 WorkCoder，分配编码、只读研究和顾问模型，选择工作目录后启动。执行中可回到普通对话继续引导。</p>
         <div class="hero-foundation">
@@ -358,7 +358,7 @@
         </div>
         <p class="lede" data-i18n="hero.lede">在同一工作区里编程、协作，创作图像、视频、幻灯片和设计。人偶编辑按需打开，设计先确定用途、内容结构与视觉规则；也可从微信继续桌面上的同一任务。</p>
         <div class="actions">
-          <a class="primary" href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-mac-arm64.dmg" data-i18n="hero.download">下载 macOS 版 (Apple Silicon DMG)</a>
+          <a class="primary" href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-mac-arm64.dmg" data-i18n="hero.download">下载 macOS 版 (Apple Silicon DMG)</a>
           <a href="#download" data-i18n="hero.otherPlatforms">Windows / Linux 下载</a>
           <a href="#features" data-i18n="hero.features">查看功能</a>
         </div>
@@ -386,8 +386,9 @@
           <p class="index" data-i18n="release.index">近期更新</p>
           <div>
             <h2 data-i18n="release.title">最近几版，持续补齐工作流。</h2>
-            <p class="prose" data-i18n="release.lede">2026-11-06 发布 3.14.39：WorkCoder 融入 ZenCode，按角色分配模型，启动后在普通对话中继续引导。</p>
+            <p class="prose" data-i18n="release.lede">2026-11-13 发布 3.14.40：减少重复请求和上下文开销，改进模型分工与历史维护。</p>
             <div class="release-grid">
+              <article class="release-card"><time datetime="2026-11-13">3.14.40 · 2026-11-13</time><h3 data-i18n="release.40.title">降低模型请求开销</h3><p data-i18n="release.40.text">有限重试、提前清理旧工具输出、精简工具说明，标题优先使用已配置的检索模型。</p></article>
               <article class="release-card"><time datetime="2026-11-06">3.14.39 · 2026-11-06</time><h3 data-i18n="release.39.title">WorkCoder 三角色协作</h3><p data-i18n="release.39.text">主模型编码、研究模型只读检索，顾问在关键节点审查。启动前选择目录及可选自动批准；启动后回到普通对话继续引导。研究探针默认关闭，支持 JSON/CSV 导出与图表查看。</p></article>
               <article class="release-card"><time datetime="2026-11-04">3.14.38 · 2026-11-04</time><h3 data-i18n="release.38.title">引导式协作与创作</h3><p data-i18n="release.38.text">工作区按描述任务、确认协作、执行验收展开；创作按想法、素材、确认生成、结果修改推进。设计先定用途、内容结构与视觉规则，返回保留草稿，人偶按需打开。</p></article>
               <article class="release-card"><time datetime="2026-10-30">3.14.37 · 2026-10-30</time><h3 data-i18n="release.37.title">内置 TokenEconomizer</h3><p data-i18n="release.37.text">通过跨会话环境观察、未用 MCP 工具重复描述去重和重复失败提醒，减少无效工作。默认启用，不额外调用模型或禁用工具；实际 Token 节省尚未测量。</p></article>
@@ -515,39 +516,39 @@
           <p class="index" data-i18n="download.index">下载</p>
           <h2 data-i18n="download.title">选择你的平台</h2>
           <p class="prose"><span data-i18n="download.lede">所有安装包与更新清单均来自 ZenCode 的 GitHub 正式发行版：</span>
-            <a href="https://github.com/bennix/ZCode/releases/tag/v3.14.39" data-i18n="download.releaseLink">ZenCode 3.14.39 Release</a>。
+            <a href="https://github.com/bennix/ZCode/releases/tag/v3.14.40" data-i18n="download.releaseLink">ZenCode 3.14.40 Release</a>。
           </p>
-          <p class="note" data-i18n="download.refreshNote">2026-11-06 发布 3.14.39，新增 WorkCoder 三角色协作、可选自动批准与研究探针，修复底部入口重叠。选择你的平台下载最新版本。</p>
+          <p class="note" data-i18n="download.refreshNote">2026-11-13 发布 3.14.40，优化重试预算、上下文维护和标题模型分工。选择你的平台下载最新版本。</p>
           <div class="download-grid">
             <div class="download-card featured" id="mac-download">
               <span class="download-badge" data-i18n="download.mac.badge">主力推荐 · 原生 Computer Use 最佳支持</span>
               <strong data-i18n="download.mac.title">macOS · Apple Silicon</strong>
               <small data-i18n="download.mac.note">ARM64 · Apple 已公证并装订，支持原生桌面控制与微信任务续接</small>
               <small data-i18n="download.intel.note">暂无 Intel Mac 安装包；目前仅提供 Apple Silicon 版。</small>
-              <div class="package-links"><a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-mac-arm64.dmg" data-i18n="download.dmg">下载 macOS DMG (3.14.39)</a></div>
+              <div class="package-links"><a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-mac-arm64.dmg" data-i18n="download.dmg">下载 macOS DMG (3.14.40)</a></div>
             </div>
             <div class="download-card" id="win-download">
               <strong data-i18n="download.win.title">Windows</strong>
               <small data-i18n="download.win.note">x64 与 ARM64 安装程序</small>
               <div class="package-links">
-                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-win-x64.exe">x64</a>
-                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-win-arm64.exe">ARM64</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-win-x64.exe">x64</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-win-arm64.exe">ARM64</a>
               </div>
             </div>
             <div class="download-card" id="linux-x64-download">
               <strong data-i18n="download.linuxX64.title">Linux · x64</strong>
               <small data-i18n="download.linuxX64.note">DEB 与 RPM</small>
               <div class="package-links">
-                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-linux-amd64.deb">DEB</a>
-                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-linux-x86_64.rpm">RPM</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-linux-amd64.deb">DEB</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-linux-x86_64.rpm">RPM</a>
               </div>
             </div>
             <div class="download-card" id="linux-arm-download">
               <strong data-i18n="download.linuxArm.title">Linux · ARM64</strong>
               <small data-i18n="download.linuxArm.note">DEB 与 RPM</small>
               <div class="package-links">
-                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-linux-arm64.deb">DEB</a>
-                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.39/ZenCode-3.14.39-linux-aarch64.rpm">RPM</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-linux-arm64.deb">DEB</a>
+                <a href="https://github.com/bennix/ZCode/releases/download/v3.14.40/ZenCode-3.14.40-linux-aarch64.rpm">RPM</a>
               </div>
             </div>
           </div>
@@ -597,18 +598,18 @@
       (function () {
         var messages = {
           "zh-CN": {
-            "meta.title": "ZenCode 3.14.39：AI 编程工作台、创作工具与电脑控制",
+            "meta.title": "ZenCode 3.14.40：AI 编程工作台、创作工具与电脑控制",
             "meta.description": "ZenCode 将源码 IDE、Agent 调度、共享上下文、图像/视频/幻灯片创作、微信远程控制和原生电脑操作带进一个工作区。",
-            "og.title": "ZenCode 3.14.39：AI 编程与创作工作台",
+            "og.title": "ZenCode 3.14.40：AI 编程与创作工作台",
             "og.description": "在一个工作台里编程、创作并推进任务。文件留在本机工作区，模型通过 ZenMux 调用。",
             "language.label": "English",
             "language.aria": "切换为 English",
             "nav.aria": "主导航",
             "nav.features": "功能",
-            "nav.release": "3.14.39 更新",
+            "nav.release": "3.14.40 更新",
             "nav.download": "下载",
             "nav.source": "源码库",
-            "hero.kicker": "MACOS FLAGSHIP · DESKTOP 3.14.39",
+            "hero.kicker": "MACOS FLAGSHIP · DESKTOP 3.14.40",
             "hero.title": "从想法到成果，每一步都有引导。",
             "hero.statement": "在 ZenCode 内打开 WorkCoder，分配编码、只读研究和顾问模型，选择工作目录后启动。执行中可回到普通对话继续引导。",
             "hero.foundationTitle": "几个旗舰产品，共用一个 ZenMux 底座。",
@@ -664,8 +665,8 @@
             "download.index": "下载",
             "download.title": "选择你的平台",
             "download.lede": "所有安装包与更新清单均来自 ZenCode 的 GitHub 正式发行版：",
-            "download.releaseLink": "ZenCode 3.14.39 Release",
-            "download.refreshNote": "2026-11-06 发布 3.14.39，新增 WorkCoder 三角色协作、可选自动批准与研究探针，修复底部入口重叠。选择你的平台下载最新版本。",
+            "download.releaseLink": "ZenCode 3.14.40 Release",
+            "download.refreshNote": "2026-11-13 发布 3.14.40，优化重试预算、上下文维护和标题模型分工。选择你的平台下载最新版本。",
             "download.mac.badge": "主力推荐 · 原生 Computer Use 最佳支持",
             "download.mac.title": "macOS · Apple Silicon",
             "download.mac.note": "ARM64 · Apple 已公证并装订，支持原生桌面控制与微信任务续接",
@@ -675,7 +676,7 @@
             "download.linuxX64.note": "DEB 与 RPM",
             "download.linuxArm.title": "Linux · ARM64",
             "download.linuxArm.note": "DEB 与 RPM",
-            "download.dmg": "下载 macOS DMG (3.14.39)",
+            "download.dmg": "下载 macOS DMG (3.14.40)",
             "download.note": "推荐使用 macOS (Apple Silicon) 以获得最完整的原生 Computer Use 体验；Windows 和 Linux 的原生 Computer Use 可用性取决于图形会话与系统权限。",
             "faq.index": "常见问题",
             "faq.title": "常见问题",
@@ -696,13 +697,17 @@
             "hero.videoNote": "这是代码制作的功能示意，不是实时录屏。画面上的字只来自已写明的产品行为：从微信继续桌面上的同一任务，并在同一任务和会话里查看进度、续接工作并收取文件。这段片子不演示原生 Computer Use，也不演示模型调度。",
             "release.index": "近期更新",
             "release.title": "最近几版，持续补齐工作流。",
+            "release.40.title": "降低模型请求开销",
+            "release.40.text": "有限重试、提前清理旧工具输出、精简工具说明，标题优先使用已配置的检索模型。实际用量因任务而异。",
+            "release.40.title": "Lower model request overhead",
+            "release.40.text": "Bounded retries, earlier tool-history cleanup, concise tool instructions and titles routed to the configured research model. Usage varies by task.",
             "release.39.title": "WorkCoder 三角色协作",
             "release.39.text": "主模型编码、研究模型只读检索，顾问在关键节点审查。启动前选择目录及可选自动批准；启动后回到普通对话继续引导。研究探针默认关闭，支持 JSON/CSV 导出与图表查看。",
             "release.38.title": "引导式协作与创作",
             "release.38.text": "工作区按描述任务、确认协作、执行验收展开；创作按想法、素材、确认生成、结果修改推进。设计先定用途、内容结构与视觉规则，返回保留草稿，人偶按需打开。",
             "release.37.title": "内置 TokenEconomizer",
             "release.37.text": "通过跨会话环境观察、未用 MCP 工具重复描述去重和重复失败提醒，减少无效工作。默认启用，不额外调用模型或禁用工具；实际 Token 节省尚未测量。",
-            "release.lede": "2026-11-06 发布 3.14.39：WorkCoder 融入 ZenCode，按角色分配模型，启动后在普通对话中继续引导。",
+            "release.lede": "2026-11-13 发布 3.14.40：减少重复请求和上下文开销，改进模型分工与历史维护。",
             "release.26.title": "IDE 与任务引导",
             "release.26.text": "更新 IDE 主题和全屏布局，并改进任务创建与多 Agent 引导。",
             "release.29.title": "原生 Computer Use",
@@ -784,9 +789,9 @@
             "footer": "ZenCode · 基于 ZCode · 模型服务由 ZenMux 提供"
           },
           en: {
-            "meta.title": "ZenCode 3.14.39: AI coding workspace, creative tools, and computer use",
+            "meta.title": "ZenCode 3.14.40: AI coding workspace, creative tools, and computer use",
             "meta.description": "ZenCode combines paired WeChat control of desktop tasks, model dispatch, a source IDE, creative tools, and optional native computer use.",
-            "og.title": "ZenCode 3.14.39: AI coding and creative workspace",
+            "og.title": "ZenCode 3.14.40: AI coding and creative workspace",
             "og.description": "Continue from WeChat. Let ZenCode route the model. Files stay in your local workspace; models run through ZenMux.",
             "language.label": "简体中文",
             "language.aria": "切换为简体中文",
@@ -795,7 +800,7 @@
             "nav.release": "What's new",
             "nav.download": "Download",
             "nav.source": "Source",
-            "hero.kicker": "MACOS FLAGSHIP · DESKTOP 3.14.39",
+            "hero.kicker": "MACOS FLAGSHIP · DESKTOP 3.14.40",
             "hero.title": "From idea to outcome, one guided step at a time.",
             "hero.statement": "Open WorkCoder inside ZenCode, assign coding, read-only research and advisor models, then choose a working directory. Continue guiding the running task in the regular conversation.",
             "hero.foundationTitle": "Several flagship products. One shared ZenMux foundation.",
@@ -851,8 +856,8 @@
             "download.index": "DOWNLOAD",
             "download.title": "Choose your platform",
             "download.lede": "Installers and update manifests are published in the official ZenCode GitHub release:",
-            "download.releaseLink": "ZenCode 3.14.39 release",
-            "download.refreshNote": "Version 3.14.39 adds integrated WorkCoder collaboration, optional automatic approval and research probes, and fixes overlapping bottom entries. Choose your platform to download the latest release.",
+            "download.releaseLink": "ZenCode 3.14.40 release",
+            "download.refreshNote": "Version 3.14.40 improves retry budgets, context maintenance and title-model routing. Choose your platform to download the latest release.",
             "download.mac.badge": "Flagship · Best for Native Computer Use",
             "download.mac.title": "macOS · Apple Silicon",
             "download.mac.note": "ARM64 · Notarized and stapled, with native desktop control and WeChat task continuity",
@@ -862,7 +867,7 @@
             "download.linuxX64.note": "DEB and RPM",
             "download.linuxArm.title": "Linux · ARM64",
             "download.linuxArm.note": "DEB and RPM",
-            "download.dmg": "Download macOS DMG (3.14.39)",
+            "download.dmg": "Download macOS DMG (3.14.40)",
             "download.note": "macOS (Apple Silicon) is the primary recommended platform for full native Computer Use; Windows and Linux availability depends on the graphical session and system permissions.",
             "faq.index": "FAQ",
             "faq.title": "Frequently asked questions",
@@ -889,7 +894,7 @@
             "release.38.text": "Describe the task, review the team, then run and review. Creation moves from idea and materials to generation and refinement. Define the purpose, content and visual rules before designing. Going back preserves drafts, and pose editing opens on demand.",
             "release.37.title": "Built-in TokenEconomizer",
             "release.37.text": "Local cross-session environment observations, duplicate-description reduction for unused MCP tools, and bounded failure-loop reminders. Enabled by default, without extra model calls or disabled tools. Actual token savings have not been measured.",
-            "release.lede": "Released November 6, 2026: version 3.14.39 integrates WorkCoder into ZenCode with role-based models and in-conversation guidance after launch.",
+            "release.lede": "Released November 13, 2026: version 3.14.40 reduces repeated request overhead and improves model routing and history maintenance.",
             "release.26.title": "IDE and task guidance",
             "release.26.text": "Updated IDE themes and full-screen layout, with improved task creation and multi-agent onboarding.",
             "release.29.title": "Native Computer Use",
