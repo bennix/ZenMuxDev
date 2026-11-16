@@ -3,16 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title id="page-title">ZenCode 3.14.41：AI coding workspace, creative studio, and desktop control</title>
+    <title id="page-title">ZenCode：有引导、有分工的 AI 工作台</title>
     <meta
       name="description"
       id="page-description"
-      content="ZenCode combines paired WeChat control of desktop tasks, model dispatch, a source IDE, creative tools, and optional native computer use."
+      content="在 ZenCode 中编程、研究、分析与创作：用引导式流程明确任务，按需加载专业技能，自选模型分工，在工作区完成并验证成果。"
     />
     <link rel="icon" href="packages/desktop/build/icon.png" />
     <meta property="og:type" content="website" />
-    <meta id="og-title" property="og:title" content="ZenCode 3.14.41: AI coding workspace" />
-    <meta id="og-description" property="og:description" content="Code, create, and control your desktop with ZenCode. Files stay in your local workspace; model requests use ZenMux." />
+    <meta id="og-title" property="og:title" content="ZenCode · 从任务到交付的 AI 工作台" />
+    <meta id="og-description" property="og:description" content="引导式任务、专业技能、模型分工与创作工具，共用同一个工作区。" />
     <meta property="og:image" content="https://bennix.github.io/ZenMuxDev/media/ide-ai-composer.png" />
     <meta property="og:url" content="https://bennix.github.io/ZenMuxDev/" />
     <style>
@@ -325,6 +325,18 @@
         .facts div { padding-right: 0; }
         section { padding: 56px 0; }
       }
+      .hero h1 { white-space: pre-line; }
+      .feature-pillars article { border-top: 1px solid var(--line); padding-top: 22px; }
+      .feature-number { display: block; color: var(--brass); margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+      .feature-pillars .feature-detail { margin-top: 14px; opacity: .8; }
+      .workflow-route { margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--line); }
+      .workflow-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; padding: 0; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .workflow-steps li { background: var(--ink); padding: 18px; display: flex; gap: 14px; align-items: baseline; }
+      .workflow-steps span { color: var(--brass); }
+      .release-history { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 22px; }
+      .release-history summary { cursor: pointer; color: var(--brass); padding: 8px 0; }
+      .release-history .release-grid { margin-top: 22px; }
+      @media (max-width: 860px) { .workflow-steps { grid-template-columns: 1fr; } }
       @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
       }
@@ -338,7 +350,7 @@
           <span>ZenCode</span>
         </a>
         <nav aria-label="主导航" data-i18n-aria-label="nav.aria">
-          <a href="#features" data-i18n="nav.features">功能</a>
+          <a href="#features" data-i18n="nav.features">产品特点</a>
           <a href="#release" data-i18n="nav.release">3.14.41 更新</a>
           <a href="#download" class="cta" data-i18n="nav.download">下载</a>
           <a href="https://github.com/bennix/ZCode" data-i18n="nav.source">源码库</a>
@@ -349,47 +361,63 @@
 
     <main id="top">
       <div class="wrap hero">
-        <p class="kicker" data-i18n="hero.kicker">DESKTOP · 3.14.41</p>
-        <h1 data-i18n="hero.title">从想法到成果，每一步都有引导。</h1>
-        <p class="lede hero-statement" data-i18n="hero.statement">在 ZenCode 内打开 WorkCoder，分配编码、只读研究和顾问模型，选择工作目录后启动。执行中可回到普通对话继续引导。</p>
+        <p class="kicker" data-i18n="hero.kicker">MACOS FLAGSHIP · DESKTOP 3.14.41</p>
+        <h1 data-i18n="hero.title">把任务说清楚，
+把成果做出来。</h1>
+        <p class="lede hero-statement" data-i18n="hero.statement">ZenCode 将编程、研究、分析与创作放进同一个 AI 工作台。选好工作目录，跟随引导明确目标，再让合适的模型和工具推进任务。</p>
         <div class="hero-foundation">
-          <h2 data-i18n="hero.foundationTitle">几个旗舰产品，共用一个 ZenMux 底座。</h2>
-          <p data-i18n="hero.foundationText">从 ZenMux 模型路由、本地凭证管理，到多智能体工作流，几款旗舰产品沿着同一套底座展开，分别服务不同的工作场景。模型可以换，工具各有所长，贯穿其中的始终是同一个方向：把选择权和工作流掌握在自己手里。</p>
+          <h2 data-i18n="hero.foundationTitle">流程有引导，模型可选择，过程能接手。</h2>
+          <p data-i18n="hero.foundationText">从普通对话开始，也可进入 WorkCoder、专业工作或创作。执行中继续对话补充要求；文件、修改和结果留在对应工作区，方便查看与验收。</p>
         </div>
-        <p class="lede" data-i18n="hero.lede">在同一工作区里编程、协作，创作图像、视频、幻灯片和设计。人偶编辑按需打开，设计先确定用途、内容结构与视觉规则；也可从微信继续桌面上的同一任务。</p>
+        <p class="lede" data-i18n="hero.lede">3.14.41 新增专业工作向导与工程六阶段流程，接入 Chrome DevTools，结合 ZenMux 成本档位与 TokenEconomizer 管理重复开销。</p>
         <div class="actions">
           <a class="primary" href="https://github.com/bennix/ZCode/releases/download/v3.14.41/ZenCode-3.14.41-mac-arm64.dmg" data-i18n="hero.download">下载 macOS 版 (Apple Silicon DMG)</a>
           <a href="#download" data-i18n="hero.otherPlatforms">Windows / Linux 下载</a>
           <a href="#features" data-i18n="hero.features">查看功能</a>
         </div>
-        <p class="hero-platform-note" data-i18n="hero.platformNote">★ 主推平台 macOS (Apple Silicon)：原生 Computer Use 桌面控制、微信远程续接与创作工作区支持最完整（已通过 Apple 公证）。</p>
+        <p class="hero-platform-note" data-i18n="hero.platformNote">macOS Apple Silicon 已通过 Apple 公证。Windows 与 Linux 提供 x64 / ARM64 安装包；Linux 可选 DEB 或 RPM。</p>
         <div class="facts">
-          <div><strong data-i18n="hero.fact1.title">内置源码 IDE</strong><span data-i18n="hero.fact1.text">文件、搜索、Git、终端与扩展</span></div>
-          <div><strong data-i18n="hero.fact2.title">独立模型调度</strong><span data-i18n="hero.fact2.text">为新任务选择执行模型</span></div>
-          <div><strong data-i18n="hero.fact3.title">微信控制</strong><span data-i18n="hero.fact3.text">微信配对后续接桌面任务</span></div>
+          <div><strong data-i18n="hero.fact1.title">按任务进入</strong><span data-i18n="hero.fact1.text">对话 · 编程 · 专业工作 · 创作</span></div>
+          <div><strong data-i18n="hero.fact2.title">按需组合</strong><span data-i18n="hero.fact2.text">专业技能 · 自选模型 · 工具</span></div>
+          <div><strong data-i18n="hero.fact3.title">按结果验收</strong><span data-i18n="hero.fact3.text">文件与修改 · 运行证据 · 用量观察</span></div>
         </div>
-        <figure class="shot">
-          <img src="media/automation-workflows.png" width="3024" height="1790" alt="ZenCode 自动化工作流、定时任务模板与保持电脑唤醒设置" data-i18n-alt="hero.imageAlt" />
-          <figcaption data-i18n="hero.caption">自动化工作流界面：查看定时任务模板，并控制运行期间的电脑唤醒状态。</figcaption>
-        </figure>
-        <figure class="stage">
-          <video controls playsinline preload="none" poster="media/zencode-product-intro-poster.jpg" src="media/zencode-product-intro.mp4" aria-label="播放 ZenCode 22 秒产品介绍" data-i18n-aria-label="hero.videoLabel">
-            <a href="media/zencode-product-intro.mp4" data-i18n="hero.videoFallback">观看产品介绍</a>
-          </video>
-          <figcaption data-i18n="hero.videoCaption">产品介绍 · 22 秒 · 按真实结构重建的界面</figcaption>
-          <p class="demo-note" data-i18n="hero.videoNote">这是代码制作的功能示意，不是实时录屏。画面上的字只来自已写明的产品行为：从微信继续桌面上的同一任务，并在同一任务和会话里查看进度、续接工作并收取文件。这段片子不演示原生 Computer Use，也不演示模型调度。</p>
-        </figure>
+
       </div>
+
+      <section id="features">
+        <div class="wrap chapter">
+          <p class="index" data-i18n="features.index">六个特点</p>
+          <div>
+            <h2 data-i18n="features.title">先明确怎么做，再决定用什么。</h2>
+            <p class="prose" data-i18n="features.lede">把目标、材料、模型和工具组织成可继续引导的工作过程。</p>
+            <div class="points feature-pillars">
+              <article><span class="feature-number">01</span><h3 data-i18n="pillar.guide.title">从目标开始的引导</h3><p data-i18n="pillar.guide.text">普通对话、WorkCoder、专业工作与创作各有入口。按步骤填写目标、选择目录和材料，确认后开始；执行中可以继续对话调整方向。</p><p class="feature-detail" data-i18n="pillar.guide.detail">专业工作先生成可编辑草稿，由你确认发送；引导填写本身不调用模型。</p></article>
+              <article><span class="feature-number">02</span><h3 data-i18n="pillar.professional.title">把专业方法带进任务</h3><p data-i18n="pillar.professional.text">内置销售、营销、客户支持、产品管理、效率管理、数据分析、财务、法律、生物研究、企业搜索和插件定制 11 个领域。选择当前需要的技能与命令。</p><p class="feature-detail" data-i18n="pillar.professional.detail">专业插件按需启用。材料可以来自本地文件或已授权连接器；选择领域不会自动连接外部账号。</p></article>
+              <article><span class="feature-number">03</span><h3 data-i18n="pillar.models.title">模型各有分工，也由你指定</h3><p data-i18n="pillar.models.text">WorkCoder 将执行、只读研究和顾问审查分开。主模型推进任务，研究模型查资料，顾问在计划确定前、重复错误和完成前介入。</p><p class="feature-detail" data-i18n="pillar.models.detail">依据 ZenMux 公开价格提供轻量、均衡、深度成本档建议，可手动覆盖。不绑定 Claude 型号；成本档不等于能力排名。</p></article>
+              <article><span class="feature-number">04</span><h3 data-i18n="pillar.tools.title">在工作区里完成实际工作</h3><p data-i18n="pillar.tools.text">源码 IDE 提供文件、搜索、Git 和终端；创作覆盖图像、视频、幻灯片与协同设计。设计先明确用途、内容和视觉规则，再预览与局部修改。</p><p class="feature-detail" data-i18n="pillar.tools.detail">浏览器分析可选启用 Chrome DevTools，调用性能、网络、内存等诊断工具；电脑控制也由你按需开启并授权。</p></article>
+              <article><span class="feature-number">05</span><h3 data-i18n="pillar.economy.title">管理开销，让过程可观察</h3><p data-i18n="pillar.economy.text">结合 TokenEconomizer 的本地经验复用、工具按需发现与重复失败提醒，配合有限重试、历史维护和工具输出精简，减少重复工作。</p><p class="feature-detail" data-i18n="pillar.economy.detail">研究探针默认关闭，可开启查看图表并导出 JSON / CSV。实际用量随模型和任务变化，不承诺固定节省比例。</p></article>
+              <article><span class="feature-number">06</span><h3 data-i18n="pillar.continue.title">离开桌面，也能续接任务</h3><p data-i18n="pillar.continue.text">微信配对后，可在同一任务中查看进度、补充要求和接收文件。也可使用 SSH / WSL 远程工作区，以及适用的 Web、CLI 入口。</p><p class="feature-detail" data-i18n="pillar.continue.detail">本地自动化支持定时任务；执行时桌面应用需运行且电脑保持唤醒。远程能力取决于连接与权限。</p></article>
+            </div>
+            <div class="workflow-route"><h3 data-i18n="workflow.title">工程开发，有一条清楚的路线</h3><p class="prose" data-i18n="workflow.text">专业工作 → 工程开发流程：25 个技能、9 个命令。可以从当前阶段进入，也可让 Meta Skill 选择适用技能；测试与发布结论仍须用实际证据确认。</p><ol class="workflow-steps"><li><span>01</span><strong data-i18n="workflow.spec">明确需求</strong></li><li><span>02</span><strong data-i18n="workflow.plan">拆分计划</strong></li><li><span>03</span><strong data-i18n="workflow.build">小步实现</strong></li><li><span>04</span><strong data-i18n="workflow.test">运行测试</strong></li><li><span>05</span><strong data-i18n="workflow.review">审查改动</strong></li><li><span>06</span><strong data-i18n="workflow.ship">检查与发布</strong></li></ol></div>
+          </div>
+        </div>
+      </section>
 
       <section id="release">
         <div class="wrap chapter">
-          <p class="index" data-i18n="release.index">近期更新</p>
+          <p class="index" data-i18n="release.index">本次更新</p>
           <div>
-            <h2 data-i18n="release.title">最近几版，持续补齐工作流。</h2>
-            <p class="prose" data-i18n="release.lede">2026-11-16 发布 3.14.41：新增专业工作与工程六阶段引导、模型成本档位和按需启用的 Chrome DevTools，继续优化重复上下文开销。</p>
+            <h2 data-i18n="release.title">3.14.41，把流程与工具接在一起。</h2>
+            <p class="prose" data-i18n="release.lede">2026-11-16 发布。此次重点是按需进入专业流程、按角色选择模型，并把诊断和用量观察纳入工作区。</p>
             <div class="release-grid">
-              <article class="release-card"><time datetime="2026-11-16">3.14.41 · 2026-11-16</time><h3 data-i18n="release.41.title">专业工作与工程流程</h3><p data-i18n="release.41.text">按需加载专业技能，引导需求、规划、实现、测试、审查和发布。按 ZenMux 模型成本档位选择模型，可选启用 Chrome DevTools。实际 Token 用量随任务而异。</p></article>
-              <article class="release-card"><time datetime="2026-11-13">3.14.40 · 2026-11-13</time><h3 data-i18n="release.40.title">降低模型请求开销</h3><p data-i18n="release.40.text">有限重试、提前清理旧工具输出、精简工具说明，标题优先使用已配置的检索模型。</p></article>
+              <article class="release-card"><h3 data-i18n="release.newWork.title">专业工作有了独立向导</h3><p data-i18n="release.newWork.text">领域 → 目标与材料 → 数据来源 → 确认。复用专业 Skills 与 Commands，仅启用所选领域，准备草稿后进入已有对话执行。</p></article>
+              <article class="release-card"><h3 data-i18n="release.newEngineering.title">工程开发覆盖六个阶段</h3><p data-i18n="release.newEngineering.text">整合 addyosmani/agent-skills 的 25 个技能与 9 个命令，保留共享检查表；支持自动选择适用技能，沿用当前模型，不全量注入会话。</p></article>
+              <article class="release-card"><h3 data-i18n="release.newBrowser.title">Chrome DevTools 内置接入</h3><p data-i18n="release.newBrowser.text">内置固定版本 1.13.0 的 MCP、CLI 与技能。通过插件市场按需启用，使用独立 Chrome 环境进行诊断，与原有内置浏览器操作入口并存。</p></article>
+              <article class="release-card"><h3 data-i18n="release.newEconomy.title">模型成本分级与 Token 管理</h3><p data-i18n="release.newEconomy.text">WorkCoder 与专业向导共用 ZenMux 成本档位建议。继续完善 TokenEconomizer 的经验复用、工具发现和重复失败处理，并保留探针图表与导出。</p></article>
+            </div>
+            <details class="release-history"><summary data-i18n="release.history">查看此前版本更新</summary>
+            <div class="release-grid">
+              <article class="release-card"><time datetime="2026-11-13">3.14.40 · 2026-11-13</time><h3 data-i18n="release.40.title">降低模型请求开销</h3><p data-i18n="release.40.text">有限重试、提前清理旧工具输出、精简工具说明，标题优先使用已配置的检索模型。实际用量因任务而异。</p></article>
               <article class="release-card"><time datetime="2026-11-06">3.14.39 · 2026-11-06</time><h3 data-i18n="release.39.title">WorkCoder 三角色协作</h3><p data-i18n="release.39.text">主模型编码、研究模型只读检索，顾问在关键节点审查。启动前选择目录及可选自动批准；启动后回到普通对话继续引导。研究探针默认关闭，支持 JSON/CSV 导出与图表查看。</p></article>
               <article class="release-card"><time datetime="2026-11-04">3.14.38 · 2026-11-04</time><h3 data-i18n="release.38.title">引导式协作与创作</h3><p data-i18n="release.38.text">工作区按描述任务、确认协作、执行验收展开；创作按想法、素材、确认生成、结果修改推进。设计先定用途、内容结构与视觉规则，返回保留草稿，人偶按需打开。</p></article>
               <article class="release-card"><time datetime="2026-10-30">3.14.37 · 2026-10-30</time><h3 data-i18n="release.37.title">内置 TokenEconomizer</h3><p data-i18n="release.37.text">通过跨会话环境观察、未用 MCP 工具重复描述去重和重复失败提醒，减少无效工作。默认启用，不额外调用模型或禁用工具；实际 Token 节省尚未测量。</p></article>
@@ -398,31 +426,7 @@
               <article class="release-card"><time>3.14.27–3.14.29</time><h3 data-i18n="release.29.title">原生 Computer Use</h3><p data-i18n="release.29.text">为 macOS、Windows 和 Linux 提供可选的原生桌面控制，并由用户手动启用、按系统权限运行。</p></article>
               <article class="release-card"><time>3.14.26</time><h3 data-i18n="release.26.title">IDE 与任务引导</h3><p data-i18n="release.26.text">更新 IDE 主题和全屏布局，并改进任务创建与多 Agent 引导。</p></article>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="features">
-        <div class="wrap chapter">
-          <p class="index" data-i18n="features.index">产品能力</p>
-          <div>
-            <h2 data-i18n="features.title">从理解上下文，到完成交付。</h2>
-            <p class="prose" data-i18n="features.lede">ZenCode 展示当前版本已提供的能力。具体操作会根据平台、权限和工作区类型显示。</p>
-            <div class="points">
-              <article><h3 data-i18n="feature.ide.title">源码 IDE 与本地工作区</h3><p data-i18n="feature.ide.text">IDE 内含文件浏览、编辑、搜索、Git、终端和扩展入口。选中文本或拖入文件引用即可把工作区上下文带进对话。IDE 用于本机工作区。</p></article>
-              <article><h3 data-i18n="feature.agents.title">WorkCoder：三角色协作，一个工作区</h3><p data-i18n="feature.agents.text">主模型推进编码与验证，只读模型检索仓库和文档，顾问在计划敲定前、同一错误第二次出现时及完成前审查。每个角色可指定模型与支持的思考选项。启动前选择目录，可选自动批准；研究探针默认关闭，开启后支持图表及 JSON/CSV 导出。普通对话、WorkCoder 和研究探针独立切换。</p></article>
-              <article><h3 data-i18n="feature.context.title">共享对话与工作区上下文</h3><p data-i18n="feature.context.text">模型切换使用同一会话已提交的对话历史，未发送草稿不会被带入。发送时可附上当前文件、可见 Diff、终端、预览和 Git 摘要；复制提示词只保留气泡可见正文，不夹带内部环境尾注。</p></article>
-              <article><h3 data-i18n="feature.plan.title">计划卡片、进度与写入范围</h3><p data-i18n="feature.plan.text">复杂任务可以报告阶段进度，并先列出候选文件供用户勾选。确认后，无法验证写入范围的工具调用会被拒绝，既有权限检查继续生效。</p></article>
-              <article><h3 data-i18n="feature.computer.title">原生 Computer Use</h3><p data-i18n="feature.computer.text">桌面控制默认关闭，可手动启用。macOS、Windows 和 Linux 使用各自原生执行器；Windows/Linux 操作前校验当前观察，坐标操作需要截图。可用操作仍取决于系统权限、图形会话和桌面环境。</p></article>
-              <article><h3 data-i18n="feature.wechat.title">微信远程控制</h3><p data-i18n="feature.wechat.text">通过现有微信配对入口连接桌面 Host，在同一任务和会话中查看进度、续接工作并收取文件。账号与工作区权限由运行时校验。</p></article>
-              <article><h3 data-i18n="feature.studio.title">按步骤创作，围绕成果修改</h3><p data-i18n="feature.studio.text">先描述想法，再补充可选素材与设置，确认后生成。工作区引导你确认协作方案；设计先明确用途、受众、内容结构和视觉规则，再预览、标注修改及导出。返回时保留草稿，人偶编辑按需打开。</p></article>
-              <article><h3 data-i18n="feature.codesign.title">协同设计与 AI 配图</h3><p data-i18n="feature.codesign.text">在创作中打开协同设计，制作原型、海报、报告和幻灯片；导入设计文件后可调节设计参数、点选区域修改，并用已配置的生图模型逐项生成配图。</p></article>
-              <article><h3 data-i18n="feature.plugins.title">插件与扩展</h3><p data-i18n="feature.plugins.text">通过插件市场安装和管理技能、命令、子智能体及 MCP 服务。IDE 扩展从 Open VSX 或本地 VSIX 安装。</p></article>
-              <article><h3 data-i18n="feature.remote.title">SSH/WSL 远程工作区</h3><p data-i18n="feature.remote.text">桌面端可连接 SSH 与 WSL 工作区。远程文件操作仍路由到对应工作区，不会因本机没有文件通道而回退到本地执行。</p></article>
-              <article><h3 data-i18n="feature.clients.title">桌面、Web 与 CLI</h3><p data-i18n="feature.clients.text">使用桌面应用、浏览器工作区或命令行 TUI、Web、Agent 入口。会话上下文和可用工具受当前连接方式与权限约束。</p></article>
-              <article><h3 data-i18n="feature.models.title">ZenMux 模型连接</h3><p data-i18n="feature.models.text">通过 ZenMux 调用模型。API Key 加密保存在本机；模型用量和费用以 ZenMux 账户为准。</p></article>
-              <article><h3 data-i18n="feature.tokens.title">精简工具输出，保留原文</h3><p data-i18n="feature.tokens.text">重复日志和冗长搜索结果可精简为模型预览，保留诊断信息和可读取的完整原文。不承诺固定 Token 或费用降幅，也不保证跨供应商缓存复用。</p></article>
-            </div>
+            </details>
           </div>
         </div>
       </section>
@@ -437,21 +441,28 @@
               <button class="showcase-image-button" type="button" data-viewer-caption="showcase.automation.text" aria-label="放大查看自动化工作流截图" data-i18n-aria-label="showcase.automation.zoom">
                 <img src="media/automation-workflows.png" width="3024" height="1790" loading="lazy" alt="自动化工作流页面，展示定时任务和任务模板" data-i18n-alt="showcase.automation.alt" />
               </button>
-              <figcaption><strong data-i18n="showcase.automation.title">自动化工作流</strong><span data-i18n="showcase.automation.text">创建定时任务，或将工作排入闲时队列，并查看可复用模板。</span></figcaption>
+              <figcaption><strong data-i18n="showcase.automation.title">自动化工作流</strong><span data-i18n="showcase.automation.text">查看定时任务、闲时队列和可复用任务模板，并在这里找到运行期间保持电脑唤醒的开关。</span></figcaption>
             </figure>
             <figure class="showcase-card">
               <button class="showcase-image-button" type="button" data-viewer-caption="showcase.palette.text" aria-label="放大全局命令面板截图" data-i18n-aria-label="showcase.palette.zoom">
                 <img src="media/command-palette.png" width="3024" height="1790" loading="lazy" alt="全局命令面板，可搜索操作、任务和文件" data-i18n-alt="showcase.palette.alt" />
               </button>
-              <figcaption><strong data-i18n="showcase.palette.title">全局命令面板</strong><span data-i18n="showcase.palette.text">搜索操作、任务和文件，并从快捷入口切换常用面板。</span></figcaption>
+              <figcaption><strong data-i18n="showcase.palette.title">全局命令面板</strong><span data-i18n="showcase.palette.text">搜索命令、最近任务和工作区文件，并快速打开设置或切换侧边栏、终端与预览。</span></figcaption>
             </figure>
             <figure class="showcase-card">
               <button class="showcase-image-button" type="button" data-viewer-caption="showcase.ide.text" aria-label="放大查看 IDE 与 AI 面板截图" data-i18n-aria-label="showcase.ide.zoom">
                 <img src="media/ide-ai-composer.png" width="3024" height="1790" loading="lazy" alt="IDE 文件浏览器与 ZenCode AI 面板并排显示" data-i18n-alt="showcase.ide.alt" />
               </button>
-              <figcaption><strong data-i18n="showcase.ide.title">IDE 与 AI 并肩工作</strong><span data-i18n="showcase.ide.text">在代码工作区里打开 AI 面板，使用电脑控制、浏览器控制、工作区和创作入口。</span></figcaption>
+              <figcaption><strong data-i18n="showcase.ide.title">IDE 与 AI 并肩工作</strong><span data-i18n="showcase.ide.text">IDE 文件树与 ZenCode AI 面板并排；从面板进入电脑控制、浏览器控制、工作区上下文和创作。</span></figcaption>
             </figure>
           </div>
+        <figure class="stage">
+          <video controls playsinline preload="none" poster="media/zencode-product-intro-poster.jpg" src="media/zencode-product-intro.mp4" aria-label="播放 ZenCode 22 秒产品介绍" data-i18n-aria-label="hero.videoLabel">
+            <a href="media/zencode-product-intro.mp4" data-i18n="hero.videoFallback">观看产品介绍</a>
+          </video>
+          <figcaption data-i18n="hero.videoCaption">产品介绍 · 22 秒 · 按真实结构重建的界面</figcaption>
+          <p class="demo-note" data-i18n="hero.videoNote">这是代码制作的功能示意，不是实时录屏。画面上的字只来自已写明的产品行为：从微信继续桌面上的同一任务，并在同一任务和会话里查看进度、续接工作并收取文件。这段片子不演示原生 Computer Use，也不演示模型调度。</p>
+        </figure>
         </div>
       </section>
 
@@ -500,13 +511,13 @@
                 <thead><tr><th data-i18n="compare.feature">工作流</th><th>ZenCode</th><th data-i18n="compare.split.label">分散工具流程</th></tr></thead>
                 <tbody>
                   <tr><td data-i18n="compare.wechat.label">手机续接</td><td data-i18n="compare.wechat.zencode">微信配对桌面 Host，消息进入同一任务和会话。</td><td data-i18n="compare.wechat.split">若聊天、远程桌面和创作工具彼此独立，用户需要在应用间切换并自行衔接任务上下文。</td></tr>
-                  <tr><td data-i18n="compare.dispatch.label">模型选择</td><td data-i18n="compare.dispatch.zencode">独立调度模型可为新任务选择执行模型；续接沿用当前模型。</td><td data-i18n="compare.dispatch.split">在不同工具或任务间手动选择模型。</td></tr>
+                  <tr><td data-i18n="compare.dispatch.label">模型选择</td><td data-i18n="compare.dispatch.zencode">WorkCoder 可分别指定执行、研究与顾问模型；专业向导提供成本档位建议，选择可手动覆盖。</td><td data-i18n="compare.dispatch.split">在不同工具或任务间手动选择模型。</td></tr>
                   <tr><td data-i18n="compare.creation.label">代码与创作</td><td data-i18n="compare.creation.zencode">同一产品提供源码 IDE、创作工作区和幻灯片导出。</td><td data-i18n="compare.creation.split">代码助手与创作软件分别管理。</td></tr>
                   <tr><td data-i18n="compare.control.label">桌面操作</td><td data-i18n="compare.control.zencode">原生 Computer Use 可选启用，并受平台与系统权限限制。</td><td data-i18n="compare.control.split">按所用产品单独安装和授权桌面控制工具。</td></tr>
                   <tr><td data-i18n="compare.automation.label">定时与后台自动化</td><td data-i18n="compare.automation.zencode">桌面应用内置本地调度器；任务到点时需要应用运行、电脑唤醒。</td><td data-i18n="compare.automation.split">分散工具可能需要各自运行的调度器或常驻主机。</td></tr>
                 </tbody>
               </table>
-              <p class="automation-note" data-i18n="automation.availability">定时任务由桌面应用本机调度，需保持 ZenCode 运行且电脑唤醒。开启“保持电脑运行”可防止闲置休眠，但不能阻止合盖或手动睡眠；错过计划时间超过 5 分钟的任务可能跳过。</p>
+              <p class="automation-note" data-i18n="automation.availability">定时任务由桌面应用本机调度，需保持 ZenCode 运行且电脑唤醒。开启设置中的“保持电脑运行”可在会话执行期间防止闲置休眠，但不能阻止合盖或手动睡眠；错过计划时间 5 分钟及以上的任务可能跳过。</p>
             </div>
           </div>
         </div>
@@ -519,7 +530,7 @@
           <p class="prose"><span data-i18n="download.lede">所有安装包与更新清单均来自 ZenCode 的 GitHub 正式发行版：</span>
             <a href="https://github.com/bennix/ZCode/releases/tag/v3.14.41" data-i18n="download.releaseLink">ZenCode 3.14.41 Release</a>。
           </p>
-          <p class="note" data-i18n="download.refreshNote">2026-11-16 发布 3.14.41：新增专业工作与工程六阶段引导、模型成本档位和按需启用的 Chrome DevTools，继续优化重复上下文开销。</p>
+          <p class="note" data-i18n="download.refreshNote">3.14.41 已发布：专业工作、工程六阶段、Chrome DevTools 与模型成本分级。Mac 已公证，Windows/Linux 双架构安装验证通过。</p>
           <div class="download-grid">
             <div class="download-card featured" id="mac-download">
               <span class="download-badge" data-i18n="download.mac.badge">主力推荐 · 原生 Computer Use 最佳支持</span>
@@ -553,7 +564,7 @@
               </div>
             </div>
           </div>
-          <p class="note" data-i18n="download.note">Windows 和 Linux 原生 Computer Use 的可用性取决于图形会话与系统权限。</p>
+          <p class="note" data-i18n="download.note">推荐使用 macOS (Apple Silicon) 以获得最完整的原生 Computer Use 体验；Windows 和 Linux 的原生 Computer Use 可用性取决于图形会话与系统权限。</p>
         </div>
       </section>
 
@@ -599,33 +610,33 @@
       (function () {
         var messages = {
           "zh-CN": {
-            "meta.title": "ZenCode 3.14.41：AI 编程工作台、创作工具与电脑控制",
-            "meta.description": "ZenCode 将源码 IDE、Agent 调度、共享上下文、图像/视频/幻灯片创作、微信远程控制和原生电脑操作带进一个工作区。",
-            "og.title": "ZenCode 3.14.41：AI 编程与创作工作台",
-            "og.description": "在一个工作台里编程、创作并推进任务。文件留在本机工作区，模型通过 ZenMux 调用。",
+            "meta.title": "ZenCode：有引导、有分工的 AI 工作台",
+            "meta.description": "在 ZenCode 中编程、研究、分析与创作：用引导式流程明确任务，按需加载专业技能，自选模型分工，在工作区完成并验证成果。",
+            "og.title": "ZenCode · 从任务到交付的 AI 工作台",
+            "og.description": "引导式任务、专业技能、模型分工与创作工具，共用同一个工作区。",
             "language.label": "English",
             "language.aria": "切换为 English",
             "nav.aria": "主导航",
-            "nav.features": "功能",
+            "nav.features": "产品特点",
             "nav.release": "3.14.41 更新",
             "nav.download": "下载",
             "nav.source": "源码库",
             "hero.kicker": "MACOS FLAGSHIP · DESKTOP 3.14.41",
-            "hero.title": "从想法到成果，每一步都有引导。",
-            "hero.statement": "在 ZenCode 内打开 WorkCoder，分配编码、只读研究和顾问模型，选择工作目录后启动。执行中可回到普通对话继续引导。",
-            "hero.foundationTitle": "几个旗舰产品，共用一个 ZenMux 底座。",
-            "hero.foundationText": "从 ZenMux 模型路由、本地凭证管理，到多智能体工作流，几款旗舰产品沿着同一套底座展开，分别服务不同的工作场景。模型可以换，工具各有所长，贯穿其中的始终是同一个方向：把选择权和工作流掌握在自己手里。",
-            "hero.lede": "在同一工作区里编程、协作，创作图像、视频、幻灯片和设计。人偶编辑按需打开，设计先确定用途、内容结构与视觉规则；也可从微信继续桌面上的同一任务。",
+            "hero.title": "把任务说清楚，\n把成果做出来。",
+            "hero.statement": "ZenCode 将编程、研究、分析与创作放进同一个 AI 工作台。选好工作目录，跟随引导明确目标，再让合适的模型和工具推进任务。",
+            "hero.foundationTitle": "流程有引导，模型可选择，过程能接手。",
+            "hero.foundationText": "从普通对话开始，也可进入 WorkCoder、专业工作或创作。执行中继续对话补充要求；文件、修改和结果留在对应工作区，方便查看与验收。",
+            "hero.lede": "3.14.41 新增专业工作向导与工程六阶段流程，接入 Chrome DevTools，结合 ZenMux 成本档位与 TokenEconomizer 管理重复开销。",
             "hero.download": "下载 macOS 版 (Apple Silicon DMG)",
             "hero.otherPlatforms": "Windows / Linux 下载",
-            "hero.platformNote": "★ 主推平台 macOS (Apple Silicon)：原生 Computer Use 桌面控制、微信远程续接与创作工作区支持最完整（已通过 Apple 公证）。",
+            "hero.platformNote": "macOS Apple Silicon 已通过 Apple 公证。Windows 与 Linux 提供 x64 / ARM64 安装包；Linux 可选 DEB 或 RPM。",
             "hero.features": "查看功能",
-            "hero.fact1.title": "内置源码 IDE",
-            "hero.fact1.text": "文件、搜索、Git、终端与扩展",
-            "hero.fact2.title": "独立模型调度",
-            "hero.fact2.text": "为新任务选择执行模型",
-            "hero.fact3.title": "微信控制",
-            "hero.fact3.text": "微信配对后续接桌面任务",
+            "hero.fact1.title": "按任务进入",
+            "hero.fact1.text": "对话 · 编程 · 专业工作 · 创作",
+            "hero.fact2.title": "按需组合",
+            "hero.fact2.text": "专业技能 · 自选模型 · 工具",
+            "hero.fact3.title": "按结果验收",
+            "hero.fact3.text": "文件与修改 · 运行证据 · 用量观察",
             "hero.imageAlt": "ZenCode 自动化工作流、定时任务模板与保持电脑唤醒设置",
             "hero.caption": "自动化工作流界面：查看定时任务模板，并控制运行期间的电脑唤醒状态。",
             "hero.videoFallback": "观看产品介绍",
@@ -634,9 +645,9 @@
             "release.item1": "macOS Apple Silicon DMG 已通过 Apple 公证、票据装订与 Gatekeeper 检查。",
             "release.item2": "Windows x64/ARM64 与 Linux x64/ARM64 安装包通过构建和安装验收。",
             "release.item3": "中英文自动更新清单已更新并核验安装包摘要。",
-            "features.index": "产品能力",
-            "features.title": "从理解上下文，到完成交付。",
-            "features.lede": "ZenCode 展示当前版本已提供的能力。具体操作会根据平台、权限和工作区类型显示。",
+            "features.index": "六个特点",
+            "features.title": "先明确怎么做，再决定用什么。",
+            "features.lede": "把目标、材料、模型和工具组织成可继续引导的工作过程。",
             "feature.ide.title": "源码 IDE 与本地工作区",
             "feature.ide.text": "IDE 内含文件浏览、编辑、搜索、Git、终端和扩展入口。选中文本或拖入文件引用即可把工作区上下文带进对话。IDE 用于本机工作区。",
             "feature.agents.title": "WorkCoder：三角色协作，一个工作区",
@@ -667,7 +678,7 @@
             "download.title": "选择你的平台",
             "download.lede": "所有安装包与更新清单均来自 ZenCode 的 GitHub 正式发行版：",
             "download.releaseLink": "ZenCode 3.14.41 Release",
-            "download.refreshNote": "2026-11-16 发布 3.14.41：新增专业工作与工程六阶段引导、模型成本档位和按需启用的 Chrome DevTools，继续优化重复上下文开销。",
+            "download.refreshNote": "3.14.41 已发布：专业工作、工程六阶段、Chrome DevTools 与模型成本分级。Mac 已公证，Windows/Linux 双架构安装验证通过。",
             "download.mac.badge": "主力推荐 · 原生 Computer Use 最佳支持",
             "download.mac.title": "macOS · Apple Silicon",
             "download.mac.note": "ARM64 · Apple 已公证并装订，支持原生桌面控制与微信任务续接",
@@ -696,8 +707,8 @@
             "faq.source.q": "ZenCode 的源码在哪里？",
             "faq.source.a": "源码与发行版维护在 bennix/ZCode，产品基于开源 ZCode 开发。",
             "hero.videoNote": "这是代码制作的功能示意，不是实时录屏。画面上的字只来自已写明的产品行为：从微信继续桌面上的同一任务，并在同一任务和会话里查看进度、续接工作并收取文件。这段片子不演示原生 Computer Use，也不演示模型调度。",
-            "release.index": "近期更新",
-            "release.title": "最近几版，持续补齐工作流。",
+            "release.index": "本次更新",
+            "release.title": "3.14.41，把流程与工具接在一起。",
             "release.41.title": "专业工作与工程流程",
             "release.41.text": "按需加载专业技能，引导需求、规划、实现、测试、审查和发布。按 ZenMux 模型成本档位选择模型，可选启用 Chrome DevTools。实际 Token 用量随任务而异。",
             "release.40.title": "降低模型请求开销",
@@ -708,7 +719,7 @@
             "release.38.text": "工作区按描述任务、确认协作、执行验收展开；创作按想法、素材、确认生成、结果修改推进。设计先定用途、内容结构与视觉规则，返回保留草稿，人偶按需打开。",
             "release.37.title": "内置 TokenEconomizer",
             "release.37.text": "通过跨会话环境观察、未用 MCP 工具重复描述去重和重复失败提醒，减少无效工作。默认启用，不额外调用模型或禁用工具；实际 Token 节省尚未测量。",
-            "release.lede": "2026-11-16 发布 3.14.41：新增专业工作与工程六阶段引导、模型成本档位和按需启用的 Chrome DevTools，继续优化重复上下文开销。",
+            "release.lede": "2026-11-16 发布。此次重点是按需进入专业流程、按角色选择模型，并把诊断和用量观察纳入工作区。",
             "release.26.title": "IDE 与任务引导",
             "release.26.text": "更新 IDE 主题和全屏布局，并改进任务创建与多 Agent 引导。",
             "release.29.title": "原生 Computer Use",
@@ -743,7 +754,7 @@
             "compare.wechat.zencode": "微信配对桌面 Host，消息进入同一任务和会话。",
             "compare.wechat.split": "若聊天、远程桌面和创作工具彼此独立，用户需要在应用间切换并自行衔接任务上下文。",
             "compare.dispatch.label": "模型选择",
-            "compare.dispatch.zencode": "独立调度模型可为新任务选择执行模型；续接沿用当前模型。",
+            "compare.dispatch.zencode": "WorkCoder 可分别指定执行、研究与顾问模型；专业向导提供成本档位建议，选择可手动覆盖。",
             "compare.dispatch.split": "在不同工具或任务间手动选择模型。",
             "compare.creation.label": "代码与创作",
             "compare.creation.zencode": "同一产品提供源码 IDE、创作工作区和幻灯片导出。",
@@ -787,36 +798,71 @@
             "source.title": "基于 ZCode，重点增强跨端 Agent 工作流。",
             "source.copy": "ZenCode 基于智谱开源的",
             "source.copy2": "。ZenCode 的新增重点是微信续接桌面任务、独立模型调度与共享上下文、创作工作区和可选原生 Computer Use；模型通过 ZenMux 连接。",
-            "footer": "ZenCode · 基于 ZCode · 模型服务由 ZenMux 提供"
+            "footer": "ZenCode · 基于 ZCode · 模型服务由 ZenMux 提供",
+            "pillar.guide.title": "从目标开始的引导",
+            "pillar.guide.text": "普通对话、WorkCoder、专业工作与创作各有入口。按步骤填写目标、选择目录和材料，确认后开始；执行中可以继续对话调整方向。",
+            "pillar.guide.detail": "专业工作先生成可编辑草稿，由你确认发送；引导填写本身不调用模型。",
+            "pillar.professional.title": "把专业方法带进任务",
+            "pillar.professional.text": "内置销售、营销、客户支持、产品管理、效率管理、数据分析、财务、法律、生物研究、企业搜索和插件定制 11 个领域。选择当前需要的技能与命令。",
+            "pillar.professional.detail": "专业插件按需启用。材料可以来自本地文件或已授权连接器；选择领域不会自动连接外部账号。",
+            "pillar.models.title": "模型各有分工，也由你指定",
+            "pillar.models.text": "WorkCoder 将执行、只读研究和顾问审查分开。主模型推进任务，研究模型查资料，顾问在计划确定前、重复错误和完成前介入。",
+            "pillar.models.detail": "依据 ZenMux 公开价格提供轻量、均衡、深度成本档建议，可手动覆盖。不绑定 Claude 型号；成本档不等于能力排名。",
+            "pillar.tools.title": "在工作区里完成实际工作",
+            "pillar.tools.text": "源码 IDE 提供文件、搜索、Git 和终端；创作覆盖图像、视频、幻灯片与协同设计。设计先明确用途、内容和视觉规则，再预览与局部修改。",
+            "pillar.tools.detail": "浏览器分析可选启用 Chrome DevTools，调用性能、网络、内存等诊断工具；电脑控制也由你按需开启并授权。",
+            "pillar.economy.title": "管理开销，让过程可观察",
+            "pillar.economy.text": "结合 TokenEconomizer 的本地经验复用、工具按需发现与重复失败提醒，配合有限重试、历史维护和工具输出精简，减少重复工作。",
+            "pillar.economy.detail": "研究探针默认关闭，可开启查看图表并导出 JSON / CSV。实际用量随模型和任务变化，不承诺固定节省比例。",
+            "pillar.continue.title": "离开桌面，也能续接任务",
+            "pillar.continue.text": "微信配对后，可在同一任务中查看进度、补充要求和接收文件。也可使用 SSH / WSL 远程工作区，以及适用的 Web、CLI 入口。",
+            "pillar.continue.detail": "本地自动化支持定时任务；执行时桌面应用需运行且电脑保持唤醒。远程能力取决于连接与权限。",
+            "workflow.title": "工程开发，有一条清楚的路线",
+            "workflow.text": "专业工作 → 工程开发流程：25 个技能、9 个命令。可以从当前阶段进入，也可让 Meta Skill 选择适用技能；测试与发布结论仍须用实际证据确认。",
+            "workflow.spec": "明确需求",
+            "workflow.plan": "拆分计划",
+            "workflow.build": "小步实现",
+            "workflow.test": "运行测试",
+            "workflow.review": "审查改动",
+            "workflow.ship": "检查与发布",
+            "release.newWork.title": "专业工作有了独立向导",
+            "release.newWork.text": "领域 → 目标与材料 → 数据来源 → 确认。复用专业 Skills 与 Commands，仅启用所选领域，准备草稿后进入已有对话执行。",
+            "release.newEngineering.title": "工程开发覆盖六个阶段",
+            "release.newEngineering.text": "整合 addyosmani/agent-skills 的 25 个技能与 9 个命令，保留共享检查表；支持自动选择适用技能，沿用当前模型，不全量注入会话。",
+            "release.newBrowser.title": "Chrome DevTools 内置接入",
+            "release.newBrowser.text": "内置固定版本 1.13.0 的 MCP、CLI 与技能。通过插件市场按需启用，使用独立 Chrome 环境进行诊断，与原有内置浏览器操作入口并存。",
+            "release.newEconomy.title": "模型成本分级与 Token 管理",
+            "release.newEconomy.text": "WorkCoder 与专业向导共用 ZenMux 成本档位建议。继续完善 TokenEconomizer 的经验复用、工具发现和重复失败处理，并保留探针图表与导出。",
+            "release.history": "查看此前版本更新"
           },
-          en: {
-            "meta.title": "ZenCode 3.14.41: AI coding workspace, creative tools, and computer use",
-            "meta.description": "ZenCode combines paired WeChat control of desktop tasks, model dispatch, a source IDE, creative tools, and optional native computer use.",
-            "og.title": "ZenCode 3.14.41: AI coding and creative workspace",
-            "og.description": "Continue from WeChat. Let ZenCode route the model. Files stay in your local workspace; models run through ZenMux.",
+          "en": {
+            "meta.title": "ZenCode: a guided AI workspace with models working together",
+            "meta.description": "Code, research, analyze and create in ZenCode. Define the task through guided steps, load relevant professional skills, choose models and verify work in your workspace.",
+            "og.title": "ZenCode · An AI workspace from task to delivery",
+            "og.description": "Guided tasks, professional skills, model collaboration and creative tools in one workspace.",
             "language.label": "简体中文",
             "language.aria": "切换为简体中文",
             "nav.aria": "Main navigation",
-            "nav.features": "Features",
+            "nav.features": "Product strengths",
             "nav.release": "What's new",
             "nav.download": "Download",
             "nav.source": "Source",
             "hero.kicker": "MACOS FLAGSHIP · DESKTOP 3.14.41",
-            "hero.title": "From idea to outcome, one guided step at a time.",
-            "hero.statement": "Open WorkCoder inside ZenCode, assign coding, read-only research and advisor models, then choose a working directory. Continue guiding the running task in the regular conversation.",
-            "hero.foundationTitle": "Several flagship products. One shared ZenMux foundation.",
-            "hero.foundationText": "From ZenMux model routing and local credential management to multi-agent workflows, several flagship products build on a shared foundation to serve different kinds of work. Switch models, choose the tool that fits, and keep control of your choices and workflow.",
-            "hero.lede": "Code, collaborate, and create images, videos, slides and designs in one workspace. Open pose editing when needed, define the purpose, content and visual rules before designing, and continue the same desktop task from WeChat.",
+            "hero.title": "Define the task.\nDeliver the work.",
+            "hero.statement": "ZenCode brings coding, research, analysis and creation into one AI workspace. Choose a working directory, define your goal with guided steps, then put the right models and tools to work.",
+            "hero.foundationTitle": "Guided workflows. Your choice of models. Room to steer.",
+            "hero.foundationText": "Start a conversation or open WorkCoder, Professional work or Creation. Add instructions as the task runs, then review files, changes and results in the relevant workspace.",
+            "hero.lede": "New in 3.14.41: guided professional work, a six-stage engineering workflow, Chrome DevTools, ZenMux cost tiers and further TokenEconomizer integration.",
             "hero.download": "Download for macOS (Apple Silicon DMG)",
             "hero.otherPlatforms": "Windows / Linux builds",
-            "hero.platformNote": "★ Recommended on macOS (Apple Silicon): Full native Computer Use, paired WeChat desktop control, and creative studio (Apple notarized).",
+            "hero.platformNote": "Notarized for macOS Apple Silicon. Windows and Linux installers are available for x64 and ARM64, with DEB and RPM options for Linux.",
             "hero.features": "Explore features",
-            "hero.fact1.title": "Built-in source IDE",
-            "hero.fact1.text": "Files, search, Git, terminal, and extensions",
-            "hero.fact2.title": "Task and agent dispatch",
-            "hero.fact2.text": "Choose an execution model for new tasks",
-            "hero.fact3.title": "WeChat task continuity",
-            "hero.fact3.text": "Continue the same task from WeChat",
+            "hero.fact1.title": "Choose a starting point",
+            "hero.fact1.text": "Chat · Coding · Professional work · Creation",
+            "hero.fact2.title": "Combine what you need",
+            "hero.fact2.text": "Professional skills · Models · Tools",
+            "hero.fact3.title": "Review the outcome",
+            "hero.fact3.text": "Files and changes · Evidence · Usage",
             "hero.imageAlt": "ZenCode automation workflows, scheduled task templates, and keep-awake setting",
             "hero.caption": "The automation workspace shows scheduled task templates and the keep-awake control for active runs.",
             "hero.videoFallback": "Watch the product introduction",
@@ -825,9 +871,9 @@
             "release.item1": "The macOS Apple Silicon DMG passed Apple notarization, ticket stapling, and Gatekeeper checks.",
             "release.item2": "Windows x64/ARM64 and Linux x64/ARM64 packages passed build and installation checks.",
             "release.item3": "Updated and verified the macOS and Windows auto-update manifests.",
-            "features.index": "CAPABILITIES",
-            "features.title": "From understanding context to shipping results.",
-            "features.lede": "ZenCode describes the capabilities available in the current release. Available actions depend on the platform, permissions, and workspace type.",
+            "features.index": "Six strengths",
+            "features.title": "Define the workflow. Choose the tools.",
+            "features.lede": "Bring goals, materials, models and tools into a process you can keep steering.",
             "feature.ide.title": "Source IDE and local workspace",
             "feature.ide.text": "The IDE includes file browsing, editing, search, Git, a terminal, and extension support. Select text or drag in a file reference to bring workspace context into chat. The IDE is for local workspaces.",
             "feature.agents.title": "WorkCoder: three roles, one workspace",
@@ -858,7 +904,7 @@
             "download.title": "Choose your platform",
             "download.lede": "Installers and update manifests are published in the official ZenCode GitHub release:",
             "download.releaseLink": "ZenCode 3.14.41 release",
-            "download.refreshNote": "Released November 16, 2026: guided professional work, a six-stage engineering workflow, model cost tiers, optional Chrome DevTools, and reduced repeated context overhead.",
+            "download.refreshNote": "3.14.41 is available: professional work, six-stage engineering, Chrome DevTools and model cost tiers. Mac is notarized; Windows/Linux installers passed checks on both architectures.",
             "download.mac.badge": "Flagship · Best for Native Computer Use",
             "download.mac.title": "macOS · Apple Silicon",
             "download.mac.note": "ARM64 · Notarized and stapled, with native desktop control and WeChat task continuity",
@@ -887,8 +933,8 @@
             "faq.source.q": "Where is the ZenCode source?",
             "faq.source.a": "Source and releases are maintained in bennix/ZCode, based on the open-source ZCode project.",
             "hero.videoNote": "This is a code-built illustration, not a screen recording. On-screen words quote documented behavior: continue the same desktop task from WeChat, then in that same task and session see progress, continue the work, and receive a file. This cut does not demonstrate native Computer Use or model dispatch.",
-            "release.index": "RECENT UPDATES",
-            "release.title": "Recent releases complete more of the workflow.",
+            "release.index": "This release",
+            "release.title": "3.14.41 connects workflows and tools.",
             "release.41.title": "Professional and engineering workflows",
             "release.41.text": "Load relevant skills on demand and follow requirements, planning, implementation, testing, review and release guidance. Choose models by ZenMux cost tier and optionally enable Chrome DevTools. Token usage varies by task.",
             "release.40.title": "Lower model request overhead",
@@ -899,7 +945,7 @@
             "release.38.text": "Describe the task, review the team, then run and review. Creation moves from idea and materials to generation and refinement. Define the purpose, content and visual rules before designing. Going back preserves drafts, and pose editing opens on demand.",
             "release.37.title": "Built-in TokenEconomizer",
             "release.37.text": "Local cross-session environment observations, duplicate-description reduction for unused MCP tools, and bounded failure-loop reminders. Enabled by default, without extra model calls or disabled tools. Actual token savings have not been measured.",
-            "release.lede": "Released November 16, 2026: guided professional work, a six-stage engineering workflow, model cost tiers, optional Chrome DevTools, and reduced repeated context overhead.",
+            "release.lede": "Released November 16, 2026. Enter professional workflows on demand, assign models by role, and bring diagnostics and usage observation into the workspace.",
             "release.26.title": "IDE and task guidance",
             "release.26.text": "Updated IDE themes and full-screen layout, with improved task creation and multi-agent onboarding.",
             "release.29.title": "Native Computer Use",
@@ -934,7 +980,7 @@
             "compare.wechat.zencode": "Pair WeChat with the desktop Host; messages return to the same task and session.",
             "compare.wechat.split": "With separate chat, remote desktop, and creative tools, users switch apps and carry task context between them.",
             "compare.dispatch.label": "Model selection",
-            "compare.dispatch.zencode": "A separate dispatch model can choose the execution model for new tasks; follow-up turns stay with the current model.",
+            "compare.dispatch.zencode": "Assign execution, research and advisor models in WorkCoder. Professional work suggests cost tiers; you can override the choice.",
             "compare.dispatch.split": "Choose a model manually across tools or tasks.",
             "compare.creation.label": "Code and creation",
             "compare.creation.zencode": "One product includes a source IDE, creative workspace, and slide export.",
@@ -978,7 +1024,42 @@
             "source.title": "Built on ZCode, with a focus on cross-device agent workflows.",
             "source.copy": "ZenCode is based on ZCode, open-sourced by Zhipu AI",
             "source.copy2": ". ZenCode adds paired WeChat task continuation, separate model dispatch and shared context, a creative workspace, and optional native Computer Use. Models connect through ZenMux.",
-            "footer": "ZenCode · Based on ZCode · Models provided through ZenMux"
+            "footer": "ZenCode · Based on ZCode · Models provided through ZenMux",
+            "pillar.guide.title": "Guidance that starts with a goal",
+            "pillar.guide.text": "Conversation, WorkCoder, Professional work and Creation have their own entry points. Define the goal, directory and materials before starting, then continue steering through conversation.",
+            "pillar.guide.detail": "Professional work prepares an editable draft for you to send. Filling in the guide does not make model calls.",
+            "pillar.professional.title": "Professional methods, ready for the task",
+            "pillar.professional.text": "Eleven domains cover sales, marketing, customer support, product management, productivity, data analysis, finance, legal, bio research, enterprise search and plugin customization.",
+            "pillar.professional.detail": "Enable the relevant plugin on demand. Use local materials or authorized connectors; selecting a domain does not connect external accounts automatically.",
+            "pillar.models.title": "Different roles. Models you choose.",
+            "pillar.models.text": "WorkCoder separates execution, read-only research and advisory review. The main model advances the task; the researcher gathers evidence; the advisor checks the plan, repeated errors and completion.",
+            "pillar.models.detail": "Light, balanced and deep cost tiers use public ZenMux pricing and can be overridden. There is no fixed Claude requirement; a cost tier is not a capability ranking.",
+            "pillar.tools.title": "Tools that produce work in your workspace",
+            "pillar.tools.text": "The source IDE provides files, search, Git and a terminal. Creation covers images, video, slides and collaborative design, starting with purpose, content and visual rules before preview and refinement.",
+            "pillar.tools.detail": "Optionally enable Chrome DevTools for performance, network and memory diagnostics. Computer control is also enabled and authorized separately.",
+            "pillar.economy.title": "Manage overhead. Observe the process.",
+            "pillar.economy.text": "TokenEconomizer combines local experience reuse, tool discovery and repeated-failure reminders with bounded retries, history maintenance and concise tool output to reduce repeated work.",
+            "pillar.economy.detail": "Research probes are off by default. Enable charts and JSON / CSV export when needed. Usage varies by model and task; no fixed saving is promised.",
+            "pillar.continue.title": "Continue beyond the desktop",
+            "pillar.continue.text": "Pair WeChat to follow progress, add instructions and receive files in the same task. SSH / WSL workspaces and applicable Web and CLI entry points extend where you can work.",
+            "pillar.continue.detail": "Scheduled tasks need the desktop app running and the computer awake. Remote capabilities depend on the connection and permissions.",
+            "workflow.title": "A clear route through engineering work",
+            "workflow.text": "Professional work → Engineering lifecycle: 25 skills and 9 commands. Enter at the relevant stage or let the Meta Skill choose. Test and release conclusions still require actual evidence.",
+            "workflow.spec": "Define requirements",
+            "workflow.plan": "Break down the plan",
+            "workflow.build": "Implement in steps",
+            "workflow.test": "Run tests",
+            "workflow.review": "Review changes",
+            "workflow.ship": "Check and ship",
+            "release.newWork.title": "A dedicated professional-work guide",
+            "release.newWork.text": "Domain → Goal and materials → Data sources → Review. Reuse professional skills and commands, enable only the selected domain, then prepare a draft for the existing conversation.",
+            "release.newEngineering.title": "Six stages of engineering work",
+            "release.newEngineering.text": "Integrates 25 skills and 9 commands from addyosmani/agent-skills, including shared checklists and automatic skill selection. Uses your chosen model without injecting every skill into each session.",
+            "release.newBrowser.title": "Chrome DevTools built in",
+            "release.newBrowser.text": "Bundles version 1.13.0 of the MCP, CLI and skills. Enable it in the plugin marketplace for diagnostics in a separate Chrome environment, alongside the existing embedded-browser tools.",
+            "release.newEconomy.title": "Model cost tiers and token management",
+            "release.newEconomy.text": "WorkCoder and the professional guide share ZenMux cost-tier suggestions. Further TokenEconomizer integration covers experience reuse, tool discovery and repeated failures, alongside probe charts and export.",
+            "release.history": "Explore earlier releases"
           }
         };
 
