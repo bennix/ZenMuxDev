@@ -86,3 +86,13 @@ Validation: The new spacing assertion reproduced the overlap before the CSS fix 
 - Keep this scoped to several flagship products, not all products or identical capabilities in every product. The current page documents ZenCode only; do not invent other product names, links or cross-product credential synchronization.
 - Static HTML and existing locale dictionaries own this content; no new state or interaction. Preserve current hero capabilities, actions and download links.
 - Acceptance: shared-foundation heading and copy appear in Chinese and English through existing locale switching, remain before the capability introduction, and fit 390px/1280px/1920px without overflow.
+
+## 3.14.42 workspace polish
+
+Update the current-release introduction and four update cards to describe the
+application's sidebar, task selection, wrapping entry strip, and rounded composer.
+Preserve the six product pillars and previous professional-work features in release
+history. Keep Chinese and English copy aligned. Switch seven installer links only
+when 3.14.42 has passed release validation; retain valid historical dates. No new
+runtime state or external connections. Verify both locales at phone/desktop widths,
+all download destinations, and static script syntax before publishing.
