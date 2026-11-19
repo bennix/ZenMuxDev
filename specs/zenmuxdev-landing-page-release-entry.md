@@ -96,3 +96,8 @@ history. Keep Chinese and English copy aligned. Switch seven installer links onl
 when 3.14.42 has passed release validation; retain valid historical dates. No new
 runtime state or external connections. Verify both locales at phone/desktop widths,
 all download destinations, and static script syntax before publishing.
+
+## 3.14.44 微信任务导航与产物
+更新中英首页、六张更新卡、功能一览和微信指令；介绍任务列表/进度/标题切换、已有产物只读取回、显式重新生成。明确取回范围为当前本地任务记录中仍存在的文件，先确认再发送，文件变化不自动重建。保留旧版本历史和演示视频。七个下载链接在正式发布后与 v3.14.44 对齐。验证 390/1440 宽度及语言切换持久化，不增加独立状态或新依赖。
+
+验证：390/1440px、中英文、语言持久化、六张更新卡、十项特性、七个新版下载入口及三个既有视频检查通过，未见横向溢出或脚本错误。静态页面 Lint 0 错误、2 条既有警告；架构检查通过。稀疏检出不含 packages/*/tsconfig.json，因此根 typecheck 未通过；landing 不在架构模块表中，无独立 context 包。
